@@ -170,7 +170,7 @@ Anti-cheat properties:
 **Goal**: Members can connect, scan a QR, and receive an attendance token.
 
 - [x] Smart contract: `AttendanceRegistry.sol` with soulbound ERC-1155, roles, createSession, mint
-- [ ] Foundry tests + deploy to Base Sepolia
+- [x] Foundry tests + deploy to Base Sepolia
 - [ ] Backend: session management, QR generation/verification, transaction relay
 - [ ] Frontend: Privy auth flow, QR scanner page, success/token confirmation screen
 - [ ] Backend: basic PostgreSQL schema (sessions, check-ins, members)
