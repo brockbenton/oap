@@ -1,4 +1,4 @@
-Read MASTER_PLAN.md and identify the next unchecked item (`- [ ]`) in the current phase. If multiple phases have unchecked items, work on the earliest phase first.
+Read CHECKPOINT.md (if it exists) to load prior session context — blockers, in-progress state, and decisions made. Then read MASTER_PLAN.md and identify the next unchecked item (`- [ ]`) in the current phase. If multiple phases have unchecked items, work on the earliest phase first.
 
 Then follow this sequence:
 

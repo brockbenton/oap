@@ -1,4 +1,4 @@
-Run a full review pass on recent changes using both review subagents in sequence.
+/Run a full review pass on recent changes using both review subagents in sequence.
 
 Steps:
 1. Run `git diff HEAD~1` (or against the branch base if on a feature branch) to identify what changed.
