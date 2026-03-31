@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Member {
+  id            String   @id @default(cuid())
+  walletAddress String   @unique @map("wallet_address")
+  privyUserId   String?  @unique @map("privy_user_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  checkIns    CheckIn[]
+  tokenEvents TokenEvent[]
+
+  @@map("members")
+}
+
+model Session {
+  id               String    @id @default(cuid())
+  sessionIdOnchain String    @unique @map("session_id_onchain")
+  name             String
+  date             DateTime
+  semester         String
+  createdBy        String    @map("created_by")
+  txHash           String?   @map("tx_hash")
+  onchainStatus    TxStatus  @default(PENDING) @map("onchain_status")
+  closedAt         DateTime? @map("closed_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  checkIns    CheckIn[]
+  tokenEvents TokenEvent[]
+
+  @@map("sessions")
+}
+
+enum TxStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+}
+
+model CheckIn {
+  id          String   @id @default(cuid())
+  memberId    String   @map("member_id")
+  sessionId   String   @map("session_id")
+  nonce       String
+  txHash      String?  @map("tx_hash")
+  mintStatus  TxStatus @default(PENDING) @map("mint_status")
+  checkedInAt DateTime @default(now()) @map("checked_in_at")
+
+  member  Member  @relation(fields: [memberId], references: [id])
+  session Session @relation(fields: [sessionId], references: [id])
+
+  @@unique([memberId, sessionId])
+  @@map("check_ins")
+}
+
+model TokenEvent {
+  id          String   @id @default(cuid())
+  memberId    String   @map("member_id")
+  sessionId   String   @map("session_id")
+  tokenId     String   @map("token_id")
+  blockNumber BigInt   @map("block_number")
+  txHash      String   @map("tx_hash")
+  indexedAt   DateTime @default(now()) @map("indexed_at")
+
+  member  Member  @relation(fields: [memberId], references: [id])
+  session Session @relation(fields: [sessionId], references: [id])
+
+  @@map("token_events")
+}
+
+model AdminRole {
+  id            String    @id @default(cuid())
+  walletAddress String    @map("wallet_address")
+  grantedBy     String    @map("granted_by")
+  grantedAt     DateTime  @default(now()) @map("granted_at")
+  revokedAt     DateTime? @map("revoked_at")
+
+  @@map("admin_roles")
+}
