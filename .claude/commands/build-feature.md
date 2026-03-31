@@ -1,19 +1,15 @@
-Read CHECKPOINT.md (if it exists) to load prior session context — blockers, in-progress state, and decisions made. Then read MASTER_PLAN.md and identify the next unchecked item (`- [ ]`) in the current phase. If multiple phases have unchecked items, work on the earliest phase first.
+Read CHECKPOINT.md (if it exists), then MASTER_PLAN.md. Identify the next unchecked item (`- [ ]`) in the earliest phase with open items.
 
-Then follow this sequence:
+1. **Announce** the item and phase. Ask if unclear before proceeding.
 
-1. **Announce** which item you are implementing and which phase it belongs to. Confirm this is the right item before proceeding (ask if unclear).
+2. **Implement** following the conventions in the relevant layer's CLAUDE.md. Touch only what is necessary — no scope creep.
 
-2. **Architect review** — before writing any code, use the `architect` subagent to evaluate the approach. Pass it the feature description and any relevant existing code. If the verdict is REVISE or DISCUSS, resolve it before continuing.
+3. **Verify** — build and tests must pass before continuing. Fix any failures.
 
-3. **Implement** the feature following the conventions in the relevant CLAUDE.md file(s). Touch only what is necessary for this feature — no scope creep.
+4. **Security check** — run the `security-reviewer` subagent ONLY if the feature touches any of: auth/JWT, QR payload signing or verification, private keys, contract role assignments, or user input that reaches the database or chain. Skip otherwise.
 
-4. **Review** — use the `code-reviewer` subagent on the implementation. Fix any MUST CHANGE items before continuing.
+5. **Tests** — run the `test-writer` subagent ONLY if the feature introduces new logic with no test coverage. Skip if tests already exist and pass.
 
-5. **Security check** — if the feature involves auth, signing, QR payloads, contract roles, private keys, or user input handling, run the `security-reviewer` subagent. Fix any CRITICAL or HIGH findings.
+6. **Mark done** — check off the item in MASTER_PLAN.md (`- [x]`). Update CHECKPOINT.md.
 
-6. **Tests** — use the `test-writer` subagent to write tests for the implementation.
-
-7. **Mark done** — check off the completed item in MASTER_PLAN.md (`- [x]`).
-
-8. **Report** — summarize what was built, what files were changed, and any open questions or follow-up items discovered during implementation.
+7. **Report** — what was built, files changed, any open questions.
