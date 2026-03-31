@@ -8,6 +8,14 @@ remappings = [
     "forge-std/=lib/forge-std/src/",
 ]
 
+[rpc_endpoints]
+base_sepolia = "https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
+base_mainnet = "https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
+
+[etherscan]
+base_sepolia = { key = "${BASESCAN_API_KEY}", chain = 84532, url = "https://api-sepolia.basescan.org/api" }
+base_mainnet = { key = "${BASESCAN_API_KEY}", chain = 8453, url = "https://api.basescan.org/api" }
+
 [lint]
 # s_ prefix for storage variables is the project convention (see CLAUDE.md)
 exclude_lints = ["mixed-case-variable"]

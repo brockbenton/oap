@@ -1,45 +1,55 @@
-# CHECKPOINT — 2026-03-30
+# CHECKPOINT — 2026-03-31
 
 ## Current Phase
 Phase 1 — MVP (Core Check-In)
 
 ## Last Completed
-None — no items checked off yet. Project is at initial commit state.
-
-## Next Up
-**Phase 1, Item 1**: Smart contract `AttendanceRegistry.sol` with soulbound ERC-1155, roles, createSession, mint.
-
-The `/build-feature` command was invoked and this item was identified. Architect review was initiated but interrupted.
+**Phase 1, Item 1**: `AttendanceRegistry.sol` — already complete from previous session.
 
 ## In Progress
-Nothing partially implemented. All source directories (`smart-contract/`, `frontend/`, `backend/`) contain only their `CLAUDE.md` convention files — no code yet.
+**Phase 1, Item 2**: Foundry tests + deploy to Base Sepolia
+
+### Tests — DONE ✅
+- 45/45 tests pass (`forge test`)
+- `AttendanceRegistry.sol` coverage: 100% lines, 100% statements, 100% branches, 100% functions
+- Deploy script simulates successfully (~3.1M gas): `forge script script/Deploy.s.sol --sender 0x... --dry-run`
+- `foundry.toml` configured with Base Sepolia and Base Mainnet RPC endpoints + Basescan etherscan config
+
+### Deployment — BLOCKED on env vars
+To actually deploy to Base Sepolia, create `smart-contract/.env` with:
+```
+PRIVATE_KEY=<deployer EOA private key>
+RELAY_WALLET=<relay wallet address — backend wallet that will call mint()>
+BASE_CID=<IPFS CID for token metadata folder>
+ALCHEMY_API_KEY=<Alchemy API key — used for Base Sepolia RPC>
+BASESCAN_API_KEY=<Basescan API key — for contract verification>
+```
+
+Then run:
+```bash
+cd smart-contract
+source .env
+forge script script/Deploy.s.sol \
+  --rpc-url base_sepolia \
+  --private-key $PRIVATE_KEY \
+  --broadcast \
+  --verify
+```
+
+After deploy:
+- Commit deployed address to `addresses.json` at repo root (CLAUDE.md convention)
+- Mark Phase 1 Item 2 as `[x]` in MASTER_PLAN.md
+
+## Next Up (after deployment)
+**Phase 1, Item 3**: Backend — session management, QR generation/verification, transaction relay
 
 ## Decisions Made This Session
-None beyond what is already recorded in MASTER_PLAN.md.
+- Used `~/.foundry/bin/forge` (Foundry is installed at `~/.foundry/bin/` — `/usr/bin/forge` is a ZOE music library binary that shadows it in PATH)
+- `foundry.toml` RPC: `https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}` and `https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
+- Basescan chain IDs: Base Sepolia = 84532, Base Mainnet = 8453
 
-## Blockers / Open Questions
-
-### CRITICAL BLOCKER: Foundry not installed
-`/usr/bin/forge` resolves to a **ZOE music library binary**, not Foundry's forge tool.
-Foundry (`forge`, `cast`, `anvil`) needs to be installed before the smart contract can be compiled or tested.
-
-**To fix:** Run the following in the terminal:
-```bash
-curl -L https://foundry.paradigm.xyz | bash
-# then open a new shell or source the profile, then:
-foundryup
-```
-After installation, verify with:
-```bash
-forge --version  # should print something like "forge 0.2.0 (..."
-```
-
-### Next Steps After Foundry is Installed
-1. `cd smart-contract && forge init --no-git` (or manually scaffold)
-2. Install OZ v5: `forge install OpenZeppelin/openzeppelin-contracts@v5.0.0 --no-git`
-3. Write `src/AttendanceRegistry.sol` per the spec in `smart-contract/CLAUDE.md`
-4. Write `src/interfaces/IAttendanceRegistry.sol`
-5. Write `script/Deploy.s.sol`
-6. Run architect + code-reviewer + security-reviewer subagents
-7. Write tests via test-writer subagent
-8. Mark Phase 1 Item 1 checked off in MASTER_PLAN.md
+## Open Items from Code/Security Review (non-blocking)
+- SHOULD CHANGE: cache `s_sessions[sessionId]` in memory in `mint()` and `closeSession()` to avoid redundant SLOADs
+- SHOULD CHANGE: add explicit `address(0)` guard on `mint()`'s `to` param for clearer relay error messages
+- LOW: transfer `DEFAULT_ADMIN_ROLE` to a multisig before mainnet (CLAUDE.md already notes "Multisig in prod")
+- LOW: add empty-string guard to `setBaseCid()`
