@@ -172,8 +172,8 @@ Anti-cheat properties:
 - [x] Smart contract: `AttendanceRegistry.sol` with soulbound ERC-1155, roles, createSession, mint
 - [x] Foundry tests + deploy to Base Sepolia
 - [x] Backend: session management, QR generation/verification, transaction relay
-- [ ] Frontend: Privy auth flow, QR scanner page, success/token confirmation screen
-- [ ] Backend: basic PostgreSQL schema (sessions, check-ins, members)
+- [x] Frontend: Privy auth flow, QR scanner page, success/token confirmation screen
+- [x] Backend: basic PostgreSQL schema (sessions, check-ins, members)
 - [ ] Deploy: Vercel + Railway
 
 **Done when**: Admin creates session → QR displayed → member scans → token minted → visible in wallet.

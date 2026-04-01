@@ -4,66 +4,93 @@
 Phase 1 — Core MVP
 
 ## Last Completed
-Phase 1 Item 3: **Backend — session management, QR generation/verification, transaction relay**
-
-### What was built
-Full backend scaffold from scratch. All TypeScript compiles clean (`tsc --noEmit`).
-
-**Files created:**
-- `backend/package.json`, `tsconfig.json`, `.env.example`
-- `backend/prisma/schema.prisma` — members, sessions, check_ins, token_events, admin_roles
-- `backend/src/lib/logger.ts` — pino singleton
-- `backend/src/lib/prisma.ts` — Prisma client singleton
-- `backend/src/lib/abi.ts` — compact AttendanceRegistry ABI (functions + events used by backend)
-- `backend/src/lib/contract.ts` — viem public/wallet clients (relay + admin), typed `Chain`
-- `backend/src/lib/queue.ts` — BullMQ `mint` queue + `MintJobData` type
-- `backend/src/types/index.ts` — shared types (`AuthUser`, `QRPayload`, `QREnvelope`)
-- `backend/src/middleware/auth.ts` — Privy JWT verification via `getUser({idToken})`; sets `req.user.{privyUserId,walletAddress}`
-- `backend/src/middleware/admin.ts` — DB admin role check using Privy-verified wallet
-- `backend/src/middleware/validate.ts` — Zod schema validation wrapper
-- `backend/src/services/qr.service.ts` — QR payload sign (admin key) + verify (signature + expiry)
-- `backend/src/services/relay.service.ts` — `createSessionOnChain`, `closeSessionOnChain`, `mintOnChain` via viem + Alchemy RPC
-- `backend/src/jobs/mint.job.ts` — BullMQ Worker; concurrency=1 to avoid nonce collisions; updates check_in on success/failure
-- `backend/src/routes/sessions.ts` — `POST /`, `GET /:id`, `POST /:id/close`, `GET /:id/qr`
-- `backend/src/routes/check-in.ts` — `POST /` — verifies QR + member sig + freshness, queues mint
-- `backend/src/index.ts` — Express app with env validation, routes, error handler, starts worker
-
-### Security issues addressed
-- CRITICAL: Admin auth now uses Privy-verified wallet (not client-supplied header)
-- HIGH: Check-in message includes `privyWalletAddress` to bind sig to identity; recovered address verified against Privy wallet
-- HIGH: `signedAt` freshness check (±60s window) added
-- MEDIUM: Nonce removed from `@unique` on `check_ins` — multiple members can scan same QR; duplicate prevention is `@@unique([memberId, sessionId])`
-- MEDIUM: Worker concurrency set to 1 (prevents on-chain nonce collisions)
-- LOW: `isAddress()` validation in admin middleware
-- LOW: `waitForTransactionReceipt` timeout (120s) on all relay calls
-
-## Next Up
 Phase 1 Item 4: **Frontend — Privy auth flow, QR scanner page, success/token confirmation screen**
+- Next.js 14 project scaffolded in `frontend/` (App Router, TypeScript strict, Tailwind)
+- Privy v3 + TanStack Query providers in `AppProviders.tsx`
+- Home page (`/`) with connect button and sign-in CTA
+- Check-in page (`/check-in`) with auth guard (redirects to `/` if unauthenticated)
+- `QrScanner.tsx` — html5-qrcode camera scanner (lazy loaded, SSR-safe)
+- `CheckInFlow.tsx` — full scan → sign → submit → success/error flow
+- Typed API client (`lib/api/client.ts`) with `credentials: 'omit'`
+- Check-in API call (`lib/api/check-in.ts`) — POST /api/v1/check-in
+- `.env.example` with all required vars
+- `tsc --noEmit` passes, `next build` passes clean
+
+Phase 1 Item 5: **Backend PostgreSQL schema** — already completed as part of Item 3 (`prisma/schema.prisma`)
+
+## Remaining Phase 1 Items
+- [ ] Deploy: Vercel + Railway
+
+## Frontend Files Created
+```
+frontend/
+  .env.example
+  app/
+    layout.tsx                  Root layout with AppProviders
+    page.tsx                    Home/landing page (Privy login CTA)
+    globals.css                 Tailwind base styles (from create-next-app)
+    check-in/
+      page.tsx                  QR scanner page (auth-gated)
+  components/
+    providers/
+      AppProviders.tsx          Privy + TanStack Query providers
+    shared/
+      ConnectButton.tsx         Sign-in/out button using usePrivy
+    features/
+      check-in/
+        CheckInFlow.tsx         Full check-in state machine (scan→sign→submit→confirm)
+        QrScanner.tsx           html5-qrcode camera scanner component
+  lib/
+    api/
+      client.ts                 Base fetch wrapper (ApiRequestError, credentials: omit)
+      check-in.ts               submitCheckIn() typed wrapper
+      queryKeys.ts              TanStack Query key constants
+    contracts/
+      abi.ts                    AttendanceRegistry ABI (read-only subset)
+      addresses.ts              getContractAddress() from env
+  types/
+    index.ts                    QRPayload, QREnvelope, Session, CheckInResponse, API wrappers
+```
+
+## Check-In Flow (user perspective)
+1. User visits `/`, signs in via Privy (email / Google / Discord)
+2. Privy creates embedded wallet automatically
+3. User navigates to `/check-in`
+4. Camera opens, user points at projected QR
+5. QR decoded → sessionId validated (numeric string, max 78 chars)
+6. Privy sign modal: `"I am checking into session {id} as {addr} at {ts}"`
+7. POST `/api/v1/check-in` with `{ qrPayload, memberSignature, signedAt }` + Bearer identity token
+8. Success screen: "You're checked in! Token minting..."
 
 ## In Progress
-Nothing. Working tree is dirty (new `backend/` files, `MASTER_PLAN.md` update).
+- `feat/backend-session-checkin-relay` branch (backend PR #2) still open, awaiting merge
 
 ## Decisions Made This Session
-- **`@types/express`**: Using v4 (`^4.17.21`) — app runs Express 4, v5 types have incompatible `req.params` typing
-- **Admin identity source**: Privy `getUser({idToken})` overload used in auth middleware — avoids rate limits; wallet comes from Privy, not client header
-- **QR nonce**: NOT globally unique in DB. Multiple members scan the same QR (nonce is same for all). Duplicate prevention is via `@@unique([memberId, sessionId])` on check_ins. Nonce stored for audit trail only.
-- **Mint worker concurrency = 1**: Single relay wallet on-chain; concurrent nonce racing avoided by serializing BullMQ job processing
-- **`createSession` / `closeSession` on-chain**: Called directly from route handler (blocking until confirmed). Admin action, infrequent, acceptable UX. `RELAY_ROLE`-only mint goes through queue.
-- **`ADMIN_SIGNER_PRIVATE_KEY`**: Used for both QR payload signing AND on-chain `createSession`/`closeSession` (both are ADMIN_ROLE operations). This key must have ADMIN_ROLE on the contract.
+- **Privy v3 embeddedWallets config**: `ethereum.createOnLogin` (nested, not top-level `createOnLogin`)
+- **SSR guard in AppProviders**: `typeof window === 'undefined'` check prevents Privy from initializing during SSR/static generation (Privy validates app ID at render time, throws on empty string)
+- **`force-dynamic`** on `/` and `/check-in` pages: prevents static prerendering
+- **sessionId validation**: `/^\d+$/` regex + max 78 chars before signing (prevents QR-injection into signed message)
+- **`credentials: 'omit'`** on all API fetches: explicit, prevents cookie attachment if frontend/backend ever share origin
+- **Error message truncation**: `slice(0, 200)` on all user-facing error strings from backend
 
-## Foundry PATH Note
-`/usr/bin/forge` is a ZOE music library binary — NOT Foundry. Always use `~/.foundry/bin/forge` for all forge commands.
+## Security Issues Addressed (Frontend)
+| Severity | Issue | Fix |
+|---|---|---|
+| LOW | Unvalidated sessionId from QR before signing | `/^\d+$/` regex + length check |
+| LOW | No explicit credentials policy on fetch | `credentials: 'omit'` added |
+| MEDIUM (defense-in-depth) | Raw server error message rendered | Truncated to 200 chars |
 
 ## Open Items (carry forward)
-### Contract (non-blocking)
-- SHOULD CHANGE: cache `s_sessions[sessionId]` in memory in `mint()` and `closeSession()` to avoid redundant SLOADs
-- SHOULD CHANGE: add explicit `address(0)` guard on `mint()`'s `to` param
-- LOW: transfer `DEFAULT_ADMIN_ROLE` to a multisig before mainnet
-- LOW: add empty-string guard to `setBaseCid()`
+### Backend (non-blocking, from PR #2)
+- LOW: `admin_roles.wallet_address` has no unique constraint
+- INFO: `ADMIN_SIGNER_PRIVATE_KEY` used for both QR signing and on-chain txs — consider separate keys before mainnet
 
-### Backend (non-blocking, carry forward)
-- LOW: `adminRole.walletAddress` has no unique constraint — duplicate active rows possible. Add app-level uniqueness enforcement when admin role management is built (Phase 3)
-- INFO: `ADMIN_SIGNER_PRIVATE_KEY` is used for on-chain transactions AND QR signing. Key compromise = both attack surfaces. Consider separating roles before mainnet.
+### Phase 1 Remaining
+- **Deploy** (Phase 1 final item): Vercel (frontend) + Railway (backend + PostgreSQL)
+
+## Next Up
+Phase 1 Item 6: **Deploy — Vercel + Railway**
 
 ## Blockers
-None. Backend install + `tsc --noEmit` pass. Needs `DATABASE_URL` + `REDIS_URL` + other env vars to run (`prisma migrate dev`, then `npm run dev`).
+None. Frontend `tsc --noEmit` and `next build` both pass clean.
+To run locally: populate `frontend/.env.local` from `.env.example`, then `npm run dev`.
