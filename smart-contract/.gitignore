@@ -2,3 +2,9 @@ cache/
 out/
 lib/
 .env
+.env.example
+node_modules/
+dist/
+coverage/
+*.log
+*.tsbuildinfo

@@ -93,4 +93,67 @@ Phase 1 Item 6: **Deploy — Vercel + Railway**
 
 ## Blockers
 None. Frontend `tsc --noEmit` and `next build` both pass clean.
-To run locally: populate `frontend/.env.local` from `.env.example`, then `npm run dev`.
+
+---
+
+## Local Testing Setup
+
+### Secrets Management
+All secrets live outside the project directory in `~/secrets/`. Never fill in real values inside the project.
+
+Files:
+- `~/secrets/onchain-attendance-backend.env` — copied from `backend/.env.example`
+- `~/secrets/onchain-attendance-frontend.env` — copied from `frontend/.env.example`
+- `~/secrets/onchain-attendance-contract.env` — moved from `smart-contract/.env`
+
+`~/secrets/` is added to `~/.gitignore_global` so it can never be committed.
+
+### Running Locally
+```bash
+# Install dotenv-cli if needed
+npm install -g dotenv-cli
+
+# Terminal 1 — backend
+cd ~/Projects/onchain-attendance/backend
+dotenv -e ~/secrets/onchain-attendance-backend.env -- npm run dev
+
+# Terminal 2 — frontend
+cd ~/Projects/onchain-attendance/frontend
+dotenv -e ~/secrets/onchain-attendance-frontend.env -- npm run dev
+
+# Forge commands
+cd ~/Projects/onchain-attendance/smart-contract
+dotenv -e ~/secrets/onchain-attendance-contract.env -- ~/.foundry/bin/forge script ...
+```
+
+### API Keys Needed
+| Key | File | Notes |
+|---|---|---|
+| `PRIVY_APP_ID` + `PRIVY_APP_SECRET` | backend + frontend | Rotate secret — was exposed in a conversation |
+| `ALCHEMY_API_KEY` | backend + contract | Same key can be used for both; rotate as precaution |
+| `ALCHEMY_WEBHOOK_SECRET` | backend | For webhook callbacks |
+| `BASESCAN_API_KEY` | contract | For contract verification; no need to rotate |
+| `DATABASE_URL` | backend | PostgreSQL connection string |
+| `REDIS_URL` | backend | Redis connection string (default: `redis://localhost:6379`) |
+
+### Wallet Setup
+Contract is already deployed at `0x7bEf8C32157C0A40A51b9bebeb7B36f236316192` — no redeploy needed.
+
+Two new wallets are required:
+1. `RELAY_PRIVATE_KEY` — submits check-in transactions on-chain
+2. `ADMIN_SIGNER_PRIVATE_KEY` — signs QR code payloads
+
+Steps:
+```bash
+# Generate two new wallets
+cast wallet new   # → RELAY wallet
+cast wallet new   # → ADMIN wallet
+```
+
+- Fund both with Base Sepolia ETH (faucet) for gas
+- Grant roles on the existing contract by calling role-granting functions from the deployer wallet
+- TODO: look up exact `cast send` commands from contract source
+
+### Infrastructure
+- PostgreSQL must be running; run `npx prisma migrate dev` inside `backend/` on first setup
+- Redis must be running locally
