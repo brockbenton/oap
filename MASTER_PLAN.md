@@ -174,32 +174,17 @@ Anti-cheat properties:
 - [x] Backend: session management, QR generation/verification, transaction relay
 - [x] Frontend: Privy auth flow, QR scanner page, success/token confirmation screen
 - [x] Backend: basic PostgreSQL schema (sessions, check-ins, members)
-- [ ] Deploy: Vercel + Railway
+- [x] Deploy: Vercel + Railway
 
 **Done when**: Admin creates session → QR displayed → member scans → token minted → visible in wallet.
 
 ---
 
-### Phase 2 — Vault & Personal Stats
-**Goal**: Members can see their attendance history and stats.
-
-- [ ] `/vault` page: grid of earned attendance tokens with metadata (date, meeting name)
-  - Sort by date, semester filter
-  - Token card shows meeting name, date, semester badge
-- [ ] `/stats` page: personal attendance statistics
-  - All-time attendance %
-  - Meetings attended last 30/90/180 days
-  - Current streak
-  - Member status tier (see Phase 3)
-- [ ] Backend: aggregate queries from indexed events
-- [ ] IPFS metadata upload pipeline for token images (per-semester art or generic club art)
-
----
-
-### Phase 3 — Admin Dashboard
-**Goal**: Admins can manage sessions, view all members, and track club health.
+### Phase 2 — Admin Dashboard
+**Goal**: Admins can manage sessions, display QR codes, view all members, and track club health.
 
 - [ ] `/admin/sessions` — create session, view past sessions, see who attended each one
+- [ ] `/admin/sessions/:id/qr` — display live QR code for active session (auto-refreshes before expiry)
 - [ ] `/admin/members` — table of all members with:
   - Wallet address + linked social (from Privy)
   - Tokens earned
@@ -213,6 +198,22 @@ Anti-cheat properties:
 - [ ] Export: CSV export of attendance data per session or per member
 - [ ] Admin role management: grant/revoke ADMIN_ROLE on-chain from dashboard
 - [ ] Attendance API endpoint: `GET /api/v1/members` → JSON of all members + stats (for future website integration)
+
+---
+
+### Phase 3 — Vault & Personal Stats
+**Goal**: Members can see their attendance history and stats.
+
+- [ ] `/vault` page: grid of earned attendance tokens with metadata (date, meeting name)
+  - Sort by date, semester filter
+  - Token card shows meeting name, date, semester badge
+- [ ] `/stats` page: personal attendance statistics
+  - All-time attendance %
+  - Meetings attended last 30/90/180 days
+  - Current streak
+  - Member status tier
+- [ ] Backend: aggregate queries from indexed events
+- [ ] IPFS metadata upload pipeline for token images (per-semester art or generic club art)
 
 ---
 
