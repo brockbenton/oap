@@ -33,3 +33,13 @@ export const adminWalletClient = createWalletClient({
   transport: http(rpcUrl),
 });
 
+// Optional: wallet with DEFAULT_ADMIN_ROLE for on-chain role management.
+// Set DEFAULT_ADMIN_PRIVATE_KEY to enable grant/revoke from the dashboard.
+export const defaultAdminAccount = process.env.DEFAULT_ADMIN_PRIVATE_KEY
+  ? privateKeyToAccount(process.env.DEFAULT_ADMIN_PRIVATE_KEY as `0x${string}`)
+  : null;
+
+export const defaultAdminWalletClient = defaultAdminAccount
+  ? createWalletClient({ account: defaultAdminAccount, chain, transport: http(rpcUrl) })
+  : null;
+
