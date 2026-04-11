@@ -9,9 +9,10 @@ datasource db {
 
 model Member {
   id            String   @id @default(cuid())
-  walletAddress String   @unique @map("wallet_address")
-  privyUserId   String?  @unique @map("privy_user_id")
-  createdAt     DateTime @default(now()) @map("created_at")
+  walletAddress  String   @unique @map("wallet_address")
+  privyUserId    String?  @unique @map("privy_user_id")
+  foundingMember Boolean  @default(false) @map("founding_member")
+  createdAt      DateTime @default(now()) @map("created_at")
 
   checkIns    CheckIn[]
   tokenEvents TokenEvent[]

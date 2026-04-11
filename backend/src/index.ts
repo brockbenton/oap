@@ -3,6 +3,8 @@ import express from 'express';
 import cors from 'cors';
 import sessionsRouter from './routes/sessions';
 import checkInRouter from './routes/check-in';
+import adminRouter from './routes/admin';
+import membersRouter from './routes/members';
 import { startMintWorker } from './jobs/mint.job';
 import logger from './lib/logger';
 
@@ -32,6 +34,8 @@ app.use(express.json());
 
 app.use('/api/v1/sessions', sessionsRouter);
 app.use('/api/v1/check-in', checkInRouter);
+app.use('/api/v1/admin', adminRouter);
+app.use('/api/v1/members', membersRouter);
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });

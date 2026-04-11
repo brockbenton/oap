@@ -183,21 +183,21 @@ Anti-cheat properties:
 ### Phase 2 — Admin Dashboard
 **Goal**: Admins can manage sessions, display QR codes, view all members, and track club health.
 
-- [ ] `/admin/sessions` — create session, view past sessions, see who attended each one
-- [ ] `/admin/sessions/:id/qr` — display live QR code for active session (auto-refreshes before expiry)
-- [ ] `/admin/members` — table of all members with:
+- [x] `/admin/sessions` — create session, view past sessions, see who attended each one
+- [x] `/admin/sessions/:id/qr` — display live QR code for active session (auto-refreshes before expiry)
+- [x] `/admin/members` — table of all members with:
   - Wallet address + linked social (from Privy)
   - Tokens earned
   - Attendance % (all-time, current semester)
   - Status tier
   - Last seen
-- [ ] Member status tiers (configurable thresholds):
+- [x] Member status tiers (configurable thresholds):
   - `General Member` — < 75% attendance
   - `Official Member` — ≥ 75% attendance
   - `Founding Member` — present for X% of all-time meetings (admin-granted)
-- [ ] Export: CSV export of attendance data per session or per member
-- [ ] Admin role management: grant/revoke ADMIN_ROLE on-chain from dashboard
-- [ ] Attendance API endpoint: `GET /api/v1/members` → JSON of all members + stats (for future website integration)
+- [x] Export: CSV export of attendance data per session or per member
+- [x] Admin role management: grant/revoke ADMIN_ROLE on-chain from dashboard
+- [x] Attendance API endpoint: `GET /api/v1/members` → JSON of all members + stats (for future website integration)
 
 ---
 

@@ -4,7 +4,7 @@ import { AuthUser } from '../types';
 
 let _privy: PrivyClient | null = null;
 
-function getPrivy(): PrivyClient {
+export function getPrivy(): PrivyClient {
   if (!_privy) {
     _privy = new PrivyClient(
       process.env.PRIVY_APP_ID!,
