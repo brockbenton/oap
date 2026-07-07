@@ -4,7 +4,7 @@ import { authMiddleware } from '../middleware/auth';
 import { adminMiddleware } from '../middleware/admin';
 import prisma from '../lib/prisma';
 import logger from '../lib/logger';
-import { grantAdminRoleOnChain, revokeAdminRoleOnChain } from '../services/relay.service';
+import { grantAdminRoleOnChain, revokeAdminRoleOnChain, setBaseCidOnChain } from '../services/relay.service';
 import { buildMemberStats, buildAdminOverview } from '../services/stats.service';
 import { publishSemesterMetadata } from '../services/ipfs.service';
 
@@ -47,6 +47,7 @@ router.get('/sessions', async (_req: Request, res: Response): Promise<void> => {
       semester: s.semester,
       createdBy: s.createdBy,
       txHash: s.txHash,
+      closeTxHash: s.closeTxHash,
       onchainStatus: s.onchainStatus,
       closedAt: s.closedAt?.toISOString() ?? null,
       createdAt: s.createdAt.toISOString(),
@@ -357,8 +358,17 @@ router.delete('/roles/:walletAddress', async (req: Request, res: Response): Prom
 router.post('/ipfs/publish', async (_req: Request, res: Response): Promise<void> => {
   try {
     const result = await publishSemesterMetadata();
-    logger.info({ msg: 'IPFS metadata publish requested', staged: result.staged, baseCid: result.baseCid, dryRun: result.dryRun });
-    res.json({ data: result });
+
+    // Close the loop: set the freshly pinned directory CID as the contract base
+    // CID so uri(id) resolves (only when actually pinned and a DEFAULT_ADMIN key
+    // is configured for the on-chain write).
+    let setBaseCidTx: string | null = null;
+    if (!result.dryRun && result.baseCid && process.env.DEFAULT_ADMIN_PRIVATE_KEY) {
+      setBaseCidTx = await setBaseCidOnChain(result.baseCid);
+    }
+
+    logger.info({ msg: 'IPFS metadata publish requested', staged: result.staged, baseCid: result.baseCid, dryRun: result.dryRun, setBaseCidTx });
+    res.json({ data: { ...result, setBaseCidTx } });
   } catch (err) {
     logger.error({ msg: 'IPFS metadata publish failed', err: (err as Error).message });
     res.status(500).json({ error: { code: 'IPFS_ERROR', message: 'Failed to publish metadata' } });
@@ -371,7 +381,10 @@ export default router;
 
 function csvEscape(value: string | number | boolean | null | undefined): string {
   if (value === null || value === undefined) return '';
-  const str = String(value);
+  let str = String(value);
+  // Neutralize spreadsheet formula injection (CWE-1236): a leading =, +, -, @, tab
+  // or CR makes Excel/Sheets execute the cell. Prefix with a quote to force text.
+  if (/^[=+\-@\t\r]/.test(str)) str = `'${str}`;
   if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
     return `"${str.replace(/"/g, '""')}"`;
   }

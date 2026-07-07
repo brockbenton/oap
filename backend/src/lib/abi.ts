@@ -92,6 +92,13 @@ export const ATTENDANCE_ABI = [
   },
   {
     type: 'function',
+    name: 'setBaseCid',
+    inputs: [{ name: 'baseCid', type: 'string' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
     name: 'grantRole',
     inputs: [
       { name: 'role', type: 'bytes32' },

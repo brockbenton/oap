@@ -9,7 +9,6 @@ import logger from '../lib/logger';
  * points at its semester's art CID. JSONs are pinned under a directory whose CID
  * becomes the contract baseCid, making uri(id) → ipfs://{baseCid}/{id}.json resolve.
  */
-const IPFS_GATEWAY = (process.env.IPFS_GATEWAY ?? 'https://ipfs.io/ipfs/').replace(/\/?$/, '/');
 const PINATA_PIN_FILE_URL = 'https://api.pinata.cloud/pinning/pinFileToIPFS';
 const METADATA_DIR_NAME = 'attendance-metadata';
 
@@ -62,11 +61,6 @@ function semesterArtOverrides(): Record<string, string> {
 
 export function resolveSemesterArtCid(semester: string): string {
   return semesterArtOverrides()[semester] ?? DEFAULT_ART_CID;
-}
-
-/** Gateway URL for a semester's generic art — used by the vault UI. */
-export function tokenImageUrl(semester: string): string {
-  return `${IPFS_GATEWAY}${resolveSemesterArtCid(semester)}`;
 }
 
 /** ipfs:// URI the contract will serve for a token, if a base CID is configured. */

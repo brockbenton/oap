@@ -1,7 +1,8 @@
 import prisma from '../lib/prisma';
 import { getPrivy } from '../middleware/auth';
 import logger from '../lib/logger';
-import { tokenImageUrl, tokenMetadataUri, buildMeetingNumberMap } from './ipfs.service';
+import { tokenMetadataUri, buildMeetingNumberMap } from './ipfs.service';
+import { semesterArtUrl, tierBadgeUrl, badgeTierFor } from './art.service';
 
 export type StatusTier = 'General Member' | 'Official Member';
 
@@ -193,11 +194,18 @@ export async function buildMemberVault(address: string): Promise<MemberVault> {
     meetingNumber: meetingNumbers.get(c.session.sessionIdOnchain) ?? 0,
     mintStatus: c.mintStatus,
     txHash: c.txHash,
-    imageUrl: tokenImageUrl(c.session.semester),
+    imageUrl: semesterArtUrl(c.session.semester),
     metadataUri: tokenMetadataUri(c.session.sessionIdOnchain),
   }));
 
   return { walletAddress, found: true, tokenCount: tokens.length, tokens };
+}
+
+export interface SemesterStat {
+  semester: string;
+  attended: number;
+  total: number;
+  pct: number;
 }
 
 export interface PersonalStats {
@@ -217,6 +225,8 @@ export interface PersonalStats {
   currentStreak: number;
   longestStreak: number;
   lastSeen: string | null;
+  semesterBreakdown: SemesterStat[];
+  badgeUrl: string;
 }
 
 export async function buildPersonalStats(
@@ -236,6 +246,14 @@ export async function buildPersonalStats(
   const currentSemesterTotal = confirmedSessions.filter(
     (s) => s.semester === currentSemester,
   ).length;
+
+  // Session counts per semester, in recent-first order (confirmedSessions is desc).
+  const semesterOrder: string[] = [];
+  const totalsBySemester = new Map<string, number>();
+  for (const s of confirmedSessions) {
+    if (!totalsBySemester.has(s.semester)) semesterOrder.push(s.semester);
+    totalsBySemester.set(s.semester, (totalsBySemester.get(s.semester) ?? 0) + 1);
+  }
 
   const member = await prisma.member.findUnique({
     where: { walletAddress },
@@ -270,6 +288,13 @@ export async function buildPersonalStats(
       currentStreak: 0,
       longestStreak: 0,
       lastSeen: null,
+      semesterBreakdown: semesterOrder.map((semester) => ({
+        semester,
+        attended: 0,
+        total: totalsBySemester.get(semester) ?? 0,
+        pct: 0,
+      })),
+      badgeUrl: tierBadgeUrl(badgeTierFor(tierFor(0), false)),
     };
   }
 
@@ -291,6 +316,16 @@ export async function buildPersonalStats(
   const currentStreak = computeCurrentStreak(confirmedSessions, attendedIds);
   const longestStreak = computeLongestStreak(confirmedSessions, attendedIds);
 
+  const attendedBySemester = new Map<string, number>();
+  for (const c of earnedCheckIns) {
+    attendedBySemester.set(c.session.semester, (attendedBySemester.get(c.session.semester) ?? 0) + 1);
+  }
+  const semesterBreakdown = semesterOrder.map((semester) => {
+    const attended = attendedBySemester.get(semester) ?? 0;
+    const total = totalsBySemester.get(semester) ?? 0;
+    return { semester, attended, total, pct: toPct(attended, total) };
+  });
+
   return {
     ...base,
     found: true,
@@ -305,6 +340,8 @@ export async function buildPersonalStats(
     currentStreak,
     longestStreak,
     lastSeen: member.checkIns[0]?.checkedInAt.toISOString() ?? null,
+    semesterBreakdown,
+    badgeUrl: tierBadgeUrl(badgeTierFor(tierFor(allTimeAttendancePct), member.foundingMember)),
   };
 }
 

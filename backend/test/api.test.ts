@@ -74,6 +74,20 @@ describe('GET /api/v1/members/:address/{tokens,stats} (public)', () => {
   });
 });
 
+describe('public asset routes', () => {
+  it('serves a per-semester badge SVG', async () => {
+    const res = await request(app).get('/api/v1/art/Spring%202026');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('image/svg+xml');
+  });
+
+  it('serves a member-tier badge SVG', async () => {
+    const res = await request(app).get('/api/v1/badge/official');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('image/svg+xml');
+  });
+});
+
 describe('admin routes are gated by the on-chain role', () => {
   it('401 without a bearer token', async () => {
     const res = await request(app).get('/api/v1/admin/overview');

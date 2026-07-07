@@ -42,6 +42,17 @@ describe('buildPersonalStats', () => {
     expect(s.longestStreak).toBe(5);
   });
 
+  it('alice: per-semester rollup and a founding-tier badge URL', async () => {
+    const s = await buildPersonalStats(ALICE, NOW);
+    expect(s.semesterBreakdown).toHaveLength(2); // Spring 2026 + Fall 2025, recent first
+    expect(s.semesterBreakdown[0].semester).toBe('Spring 2026');
+    const spring = s.semesterBreakdown.find((b) => b.semester === 'Spring 2026')!;
+    expect(spring.attended).toBe(12);
+    expect(spring.total).toBe(12);
+    expect(spring.pct).toBe(100);
+    expect(s.badgeUrl).toContain('/api/v1/badge/founding');
+  });
+
   it('unknown wallet: found=false but club totals still present', async () => {
     const s = await buildPersonalStats(UNKNOWN, NOW);
     expect(s.found).toBe(false);

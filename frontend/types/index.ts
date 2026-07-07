@@ -20,6 +20,7 @@ export interface Session {
   semester: string;
   createdBy: string;
   txHash: string | null;
+  closeTxHash: string | null;
   onchainStatus: 'PENDING' | 'CONFIRMED' | 'FAILED';
   closedAt: string | null;
   createdAt: string;
@@ -78,6 +79,13 @@ export interface MemberVault {
   tokens: VaultToken[];
 }
 
+export interface SemesterStat {
+  semester: string;
+  attended: number;
+  total: number;
+  pct: number;
+}
+
 // Personal attendance stats (GET /api/v1/members/:address/stats)
 export interface PersonalStats {
   walletAddress: string;
@@ -96,6 +104,8 @@ export interface PersonalStats {
   currentStreak: number;
   longestStreak: number;
   lastSeen: string | null;
+  semesterBreakdown: SemesterStat[];
+  badgeUrl: string;
 }
 
 // Admin overview from GET /api/v1/admin/overview

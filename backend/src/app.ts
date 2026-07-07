@@ -7,6 +7,7 @@ import sessionsRouter from './routes/sessions';
 import checkInRouter from './routes/check-in';
 import adminRouter from './routes/admin';
 import membersRouter from './routes/members';
+import assetsRouter from './routes/art';
 import logger from './lib/logger';
 
 /** Builds the Express app (no listener / worker) so tests can import it directly. */
@@ -20,6 +21,7 @@ export function createApp() {
   app.use('/api/v1/check-in', checkInRouter);
   app.use('/api/v1/admin', adminRouter);
   app.use('/api/v1/members', membersRouter);
+  app.use('/api/v1', assetsRouter);
 
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok' });
