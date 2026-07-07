@@ -357,7 +357,7 @@ router.delete('/roles/:walletAddress', async (req: Request, res: Response): Prom
 router.post('/ipfs/publish', async (_req: Request, res: Response): Promise<void> => {
   try {
     const result = await publishSemesterMetadata();
-    logger.info({ msg: 'IPFS metadata publish requested', staged: result.staged, pinned: result.pinned, dryRun: result.dryRun });
+    logger.info({ msg: 'IPFS metadata publish requested', staged: result.staged, baseCid: result.baseCid, dryRun: result.dryRun });
     res.json({ data: result });
   } catch (err) {
     logger.error({ msg: 'IPFS metadata publish failed', err: (err as Error).message });

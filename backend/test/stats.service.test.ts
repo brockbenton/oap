@@ -10,10 +10,12 @@ const ALICE = '0x1111111111111111111111111111111111111111';
 const DAVE = '0x4444444444444444444444444444444444444444';
 const CAROL = '0x3333333333333333333333333333333333333333';
 const UNKNOWN = '0x0000000000000000000000000000000000000009';
+// Fixed "now" so rolling-window assertions don't depend on the wall clock.
+const NOW = Date.parse('2026-07-07T12:00:00Z');
 
 describe('buildPersonalStats', () => {
   it('alice: perfect attendance, founding, full streak', async () => {
-    const s = await buildPersonalStats(ALICE);
+    const s = await buildPersonalStats(ALICE, NOW);
     expect(s.found).toBe(true);
     expect(s.tokensEarned).toBe(16);
     expect(s.totalSessions).toBe(16);
@@ -26,7 +28,7 @@ describe('buildPersonalStats', () => {
   });
 
   it('dave: PENDING Demo Day mint is excluded from tokens and streak', async () => {
-    const s = await buildPersonalStats(DAVE);
+    const s = await buildPersonalStats(DAVE, NOW);
     expect(s.tokensEarned).toBe(1); // only the CONFIRMED 3011
     expect(s.currentStreak).toBe(0); // most recent session (3012) is still PENDING
     expect(s.meetingsLast30Days).toBe(1);
@@ -34,14 +36,14 @@ describe('buildPersonalStats', () => {
   });
 
   it('carol: general member, broken streak, longest run of 5', async () => {
-    const s = await buildPersonalStats(CAROL);
+    const s = await buildPersonalStats(CAROL, NOW);
     expect(s.statusTier).toBe('General Member');
     expect(s.currentStreak).toBe(0);
     expect(s.longestStreak).toBe(5);
   });
 
   it('unknown wallet: found=false but club totals still present', async () => {
-    const s = await buildPersonalStats(UNKNOWN);
+    const s = await buildPersonalStats(UNKNOWN, NOW);
     expect(s.found).toBe(false);
     expect(s.tokensEarned).toBe(0);
     expect(s.totalSessions).toBe(16);
@@ -95,5 +97,7 @@ describe('buildAdminOverview', () => {
     expect(o.wow).not.toBeNull();
     expect(o.wow!.headcountDelta).toBe(-1); // 3 vs previous 4
     expect(o.currentSemester).toBe('Spring 2026');
+    // attendees are always eligible, so rate can never exceed 100%
+    expect(o.series.every((p) => p.attendanceRate >= 0 && p.attendanceRate <= 100)).toBe(true);
   });
 });

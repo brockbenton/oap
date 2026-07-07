@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { listAdminSessions, getSessionAttendees, downloadSessionCSV } from '@/lib/api/admin';
 
 import { queryKeys } from '@/lib/api/queryKeys';
-import { ApiRequestError } from '@/lib/api/client';
+import { retryUnlessForbidden } from '@/lib/api/client';
 import { SessionWithCount, Attendee } from '@/types';
 import CreateSessionForm from '@/components/features/admin/CreateSessionForm';
 
@@ -41,10 +41,7 @@ export default function AdminSessionsPage() {
       return listAdminSessions(token);
     },
     enabled: authenticated,
-    retry: (_failureCount, err) => {
-      if (err instanceof ApiRequestError && err.status === 403) return false;
-      return false;
-    },
+    retry: retryUnlessForbidden,
   });
 
   const { data: attendees, isLoading: loadingAttendees } = useQuery({

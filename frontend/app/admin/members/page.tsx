@@ -6,7 +6,8 @@ import { usePrivy, getIdentityToken } from '@privy-io/react-auth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { listAdminMembers, toggleFoundingMember, downloadMembersCSV } from '@/lib/api/admin';
 import { queryKeys } from '@/lib/api/queryKeys';
-import { ApiRequestError } from '@/lib/api/client';
+import { retryUnlessForbidden } from '@/lib/api/client';
+import { ATTENDANCE_GOOD_PCT, ATTENDANCE_OK_PCT } from '@/lib/constants';
 import { MemberStats } from '@/types';
 
 export default function AdminMembersPage() {
@@ -21,7 +22,7 @@ export default function AdminMembersPage() {
       return listAdminMembers(token);
     },
     enabled: authenticated,
-    retry: (_n, err) => !(err instanceof ApiRequestError && err.status === 403),
+    retry: retryUnlessForbidden,
   });
 
   const { mutate: exportCSV, isPending: exporting } = useMutation({
@@ -174,7 +175,11 @@ function truncateAddress(addr: string): string {
 
 function AttendancePct({ pct }: { pct: number }) {
   const color =
-    pct >= 75 ? 'text-green-700' : pct >= 50 ? 'text-amber-600' : 'text-gray-600';
+    pct >= ATTENDANCE_GOOD_PCT
+      ? 'text-green-700'
+      : pct >= ATTENDANCE_OK_PCT
+        ? 'text-amber-600'
+        : 'text-gray-600';
   return <span className={`tabular-nums font-medium ${color}`}>{pct}%</span>;
 }
 

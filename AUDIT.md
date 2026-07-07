@@ -80,3 +80,29 @@ Severity is the **post-verification** severity (an adversarial pass re-graded se
 
 `AttendanceRegistry.sol` was **not modified** — no HIGH-severity contract bug was found (45/45 tests pass; access
 control, soulbound enforcement, reentrancy guard, and the `date==0` sentinel all verified).
+
+---
+
+## Post-review hardening (Codex + adversarial multi-agent review of the admin/Phase-3 work)
+
+A Codex agentic review plus a second adversarial workflow reviewed the admin dashboard, overview aggregation,
+page refactor, and tests. All confirmed findings were applied:
+
+- **HIGH — admin gate trusted only the DB.** `adminMiddleware` now authorizes off the on-chain `hasRole(ADMIN_ROLE)`
+  (contract = source of truth, fail-closed on RPC error); the `admin_roles` table is audit/listing only.
+  `backend/src/middleware/admin.ts`, `backend/src/services/onchain.service.ts`, `backend/src/lib/roles.ts`.
+- **HIGH — mint worker not truly idempotent.** Extracted `runMintJob`/`reconcileFailedMint`; both check on-chain
+  `balanceOf` so a DB-write failure after a successful mint reconciles to CONFIRMED instead of re-minting (revert) or
+  falsely marking FAILED. `backend/src/jobs/mint.job.ts`.
+- **HIGH — IPFS pins didn't match `uri(id)`.** The pipeline now pins the whole metadata **directory** and returns one
+  base CID so `ipfs://{baseCid}/{id}.json` resolves. `backend/src/services/ipfs.service.ts`.
+- **MEDIUM — overview attendance rate could exceed 100%.** Eligible denominator is now `max(headcount, joinedByDate)`.
+  `backend/src/services/stats.service.ts`.
+- **MEDIUM — admin gate could hang / leak the shell.** `adminMe` query now uses a capped retry, is keyed by Privy
+  user id, is non-cacheable (`staleTime/gcTime: 0`), and the cache is cleared on logout — so a non-admin can't inherit
+  a prior admin's cached verdict on a shared browser, and errors reach the Access-Denied UI. Uncapped retries on the
+  sessions/members queries were capped via a shared `retryUnlessForbidden`. `frontend/app/admin/layout.tsx`,
+  `frontend/lib/api/client.ts`.
+- **LOW** — wall-clock-dependent stats test now injects a fixed `now`; frontend attendance-color thresholds hoisted to
+  `frontend/lib/constants.ts`; queue made lazy so importing the app opens no Redis socket; added negative admin tests
+  (403 non-admin, 401 invalid token), mint-reconcile tests, and an IPFS publish-path test. Backend suite: **25 tests**.

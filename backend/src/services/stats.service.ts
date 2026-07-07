@@ -219,7 +219,10 @@ export interface PersonalStats {
   lastSeen: string | null;
 }
 
-export async function buildPersonalStats(address: string): Promise<PersonalStats> {
+export async function buildPersonalStats(
+  address: string,
+  now: number = Date.now(),
+): Promise<PersonalStats> {
   const walletAddress = address.toLowerCase();
 
   const confirmedSessions = await prisma.session.findMany({
@@ -279,7 +282,6 @@ export async function buildPersonalStats(address: string): Promise<PersonalStats
     (c) => c.session.semester === currentSemester,
   ).length;
 
-  const now = Date.now();
   const [meetingsLast30Days, meetingsLast90Days, meetingsLast180Days] = ROLLING_WINDOW_DAYS.map(
     (days) =>
       earnedCheckIns.filter((c) => c.session.date.getTime() >= now - days * MS_PER_DAY).length,
@@ -381,7 +383,10 @@ export async function buildAdminOverview(): Promise<AdminOverview> {
 
   const series: OverviewSessionPoint[] = sessions.map((s) => {
     const headcount = s.checkIns.length;
-    const eligibleMembers = memberJoinTimes.filter((t) => t <= s.date.getTime()).length;
+    const joinedByDate = memberJoinTimes.filter((t) => t <= s.date.getTime()).length;
+    // Attendees are definitionally eligible — a first-time attendee whose join
+    // timestamp lands after the scheduled date must not push the rate above 100%.
+    const eligibleMembers = Math.max(headcount, joinedByDate);
     return {
       sessionIdOnchain: s.sessionIdOnchain,
       name: s.name,

@@ -10,7 +10,8 @@ import logger from '../lib/logger';
  * becomes the contract baseCid, making uri(id) → ipfs://{baseCid}/{id}.json resolve.
  */
 const IPFS_GATEWAY = (process.env.IPFS_GATEWAY ?? 'https://ipfs.io/ipfs/').replace(/\/?$/, '/');
-const PINATA_PIN_JSON_URL = 'https://api.pinata.cloud/pinning/pinJSONToIPFS';
+const PINATA_PIN_FILE_URL = 'https://api.pinata.cloud/pinning/pinFileToIPFS';
+const METADATA_DIR_NAME = 'attendance-metadata';
 
 // Fallback art CID used when a semester has no explicit mapping configured.
 const DEFAULT_ART_CID =
@@ -124,21 +125,28 @@ export function buildSessionMetadata(session: SessionArtInput, meetingNumber: nu
 }
 
 /**
- * Pins a JSON object to IPFS via Pinata when PINATA_JWT is configured.
- * Without a key this is a no-op (dry-run) returning null — the caller still
- * stages the JSON to disk so the pipeline is verifiable offline.
+ * Pins the staged metadata directory to IPFS and returns the single directory
+ * CID. The contract resolves uri(id) → ipfs://{baseCid}/{id}.json, so metadata
+ * must live under ONE directory CID — pinning files individually would not
+ * resolve. Requires PINATA_JWT (callers guard with the dry-run check).
  */
-async function pinJsonToIpfs(name: string, content: TokenMetadata): Promise<string | null> {
+async function pinDirectoryToIpfs(dir: string): Promise<string> {
   const jwt = process.env.PINATA_JWT;
-  if (!jwt) return null;
+  const names = await fs.readdir(dir);
+  const form = new FormData();
+  for (const name of names) {
+    const content = await fs.readFile(path.join(dir, name));
+    form.append('file', new Blob([content], { type: 'application/json' }), `${METADATA_DIR_NAME}/${name}`);
+  }
+  form.append('pinataMetadata', JSON.stringify({ name: METADATA_DIR_NAME }));
 
-  const res = await fetch(PINATA_PIN_JSON_URL, {
+  const res = await fetch(PINATA_PIN_FILE_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` },
-    body: JSON.stringify({ pinataMetadata: { name }, pinataContent: content }),
+    headers: { Authorization: `Bearer ${jwt}` },
+    body: form,
   });
   if (!res.ok) {
-    throw new Error(`Pinata pin failed (${res.status}): ${await res.text()}`);
+    throw new Error(`Pinata directory pin failed (${res.status}): ${await res.text()}`);
   }
   const body = (await res.json()) as { IpfsHash?: string };
   if (!body.IpfsHash) throw new Error('Pinata response missing IpfsHash');
@@ -149,22 +157,21 @@ export interface PublishItem {
   sessionIdOnchain: string;
   semester: string;
   meetingNumber: number;
-  cid: string | null;
   stagedPath: string;
 }
 
 export interface PublishResult {
   staged: number;
-  pinned: number;
   dryRun: boolean;
+  baseCid: string | null;
   stagingDir: string;
   items: PublishItem[];
 }
 
 /**
- * Generates ERC-1155 metadata for every confirmed session, stages each JSON to
- * disk, and (when Pinata is configured) pins it to IPFS. Idempotent: re-running
- * regenerates the staging directory.
+ * Generates ERC-1155 metadata for every confirmed session into a fresh staging
+ * directory, then (when Pinata is configured) pins the whole directory and
+ * returns its base CID — the value to set on the contract via setBaseCid.
  */
 export async function publishSemesterMetadata(): Promise<PublishResult> {
   const sessions = await prisma.session.findMany({
@@ -176,40 +183,29 @@ export async function publishSemesterMetadata(): Promise<PublishResult> {
   const meetingNumbers = buildMeetingNumberMap(sessions);
   const dryRun = !process.env.PINATA_JWT;
 
+  // Rebuild the dir so its directory CID reflects exactly the current sessions.
+  await fs.rm(STAGING_DIR, { recursive: true, force: true });
   await fs.mkdir(STAGING_DIR, { recursive: true });
 
   const items: PublishItem[] = [];
-  let pinned = 0;
-
   for (const s of sessions) {
     const meetingNumber = meetingNumbers.get(s.sessionIdOnchain) ?? 0;
     const metadata = buildSessionMetadata(s, meetingNumber);
     const stagedPath = path.join(STAGING_DIR, `${s.sessionIdOnchain}.json`);
     await fs.writeFile(stagedPath, JSON.stringify(metadata, null, 2), 'utf8');
-
-    let cid: string | null = null;
-    if (!dryRun) {
-      cid = await pinJsonToIpfs(`${s.sessionIdOnchain}.json`, metadata);
-      if (cid) pinned += 1;
-    }
-
-    items.push({
-      sessionIdOnchain: s.sessionIdOnchain,
-      semester: s.semester,
-      meetingNumber,
-      cid,
-      stagedPath,
-    });
+    items.push({ sessionIdOnchain: s.sessionIdOnchain, semester: s.semester, meetingNumber, stagedPath });
   }
+
+  const baseCid = dryRun || items.length === 0 ? null : await pinDirectoryToIpfs(STAGING_DIR);
 
   logger.info({
     msg: dryRun
       ? 'IPFS metadata staged (dry-run — set PINATA_JWT to pin)'
       : 'IPFS metadata staged and pinned',
     staged: items.length,
-    pinned,
+    baseCid,
     stagingDir: STAGING_DIR,
   });
 
-  return { staged: items.length, pinned, dryRun, stagingDir: STAGING_DIR, items };
+  return { staged: items.length, dryRun, baseCid, stagingDir: STAGING_DIR, items };
 }

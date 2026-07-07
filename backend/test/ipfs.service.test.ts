@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { buildMeetingNumberMap, buildSessionMetadata } from '../src/services/ipfs.service';
+import {
+  buildMeetingNumberMap,
+  buildSessionMetadata,
+  publishSemesterMetadata,
+} from '../src/services/ipfs.service';
 
 describe('buildMeetingNumberMap', () => {
   it('numbers sessions 1-based within each semester by date ascending', () => {
@@ -36,5 +40,15 @@ describe('buildSessionMetadata', () => {
       2,
     );
     expect(a.image).toBe(b.image);
+  });
+});
+
+describe('publishSemesterMetadata (dry-run, no PINATA_JWT)', () => {
+  it('stages one metadata file per confirmed session and yields no baseCid', async () => {
+    const r = await publishSemesterMetadata();
+    expect(r.staged).toBe(16);
+    expect(r.items).toHaveLength(16);
+    expect(r.dryRun).toBe(true);
+    expect(r.baseCid).toBeNull();
   });
 });

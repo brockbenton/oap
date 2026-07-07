@@ -4,11 +4,11 @@ export const dynamic = 'force-dynamic';
 
 import { usePrivy, getIdentityToken } from '@privy-io/react-auth';
 import { usePathname } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { getAdminMe } from '@/lib/api/admin';
 import { queryKeys } from '@/lib/api/queryKeys';
-import { ApiRequestError } from '@/lib/api/client';
+import { retryUnlessForbidden, ApiRequestError } from '@/lib/api/client';
 
 const NAV = [
   { href: '/admin', label: 'Overview', exact: true },
@@ -22,17 +22,28 @@ const QR_ROUTE = /^\/admin\/sessions\/[^/]+\/qr$/;
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { ready, authenticated, user, logout } = usePrivy();
   const pathname = usePathname() ?? '';
+  const queryClient = useQueryClient();
 
+  // Authorization must be per-identity and never served stale: key by Privy user
+  // id and disable caching so a different (or signed-out) user can never inherit
+  // a previous admin's cached verdict on a shared/kiosk browser.
   const { data: me, isLoading, isError, error } = useQuery({
-    queryKey: queryKeys.adminMe(),
+    queryKey: queryKeys.adminMe(user?.id),
     queryFn: async () => {
       const token = await getIdentityToken();
       if (!token) throw new Error('Not authenticated');
       return getAdminMe(token);
     },
     enabled: ready && authenticated,
-    retry: (_n, err) => !(err instanceof ApiRequestError && err.status === 403),
+    retry: retryUnlessForbidden,
+    staleTime: 0,
+    gcTime: 0,
   });
+
+  const handleLogout = () => {
+    queryClient.clear();
+    logout();
+  };
 
   if (!ready || (authenticated && isLoading)) return <AdminSplash>{<Spinner />}</AdminSplash>;
   if (!authenticated) return <AdminSignIn />;
@@ -70,7 +81,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             ← Back to app
           </Link>
           <button
-            onClick={logout}
+            onClick={handleLogout}
             className="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-300 hover:bg-white/5"
           >
             Sign out
