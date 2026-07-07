@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import prisma from '../lib/prisma';
 import logger from '../lib/logger';
+import { APP_NAME } from '../lib/brand';
 
 /**
  * Metadata / IPFS pipeline. Per resolved Open Question #2, token art is one
@@ -19,7 +20,7 @@ const DEFAULT_ART_CID =
 // Staging directory for generated metadata before/without pinning (dry-run).
 const STAGING_DIR = path.join(process.cwd(), 'ipfs-staging');
 
-const METADATA_NAME_PREFIX = 'Blockchain Club';
+const METADATA_NAME_PREFIX = APP_NAME;
 const TRAIT_DATE = 'Date';
 const TRAIT_SEMESTER = 'Semester';
 const TRAIT_MEETING = 'Meeting #';

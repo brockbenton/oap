@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { getAdminMe } from '@/lib/api/admin';
 import { queryKeys } from '@/lib/api/queryKeys';
 import { retryUnlessForbidden, ApiRequestError } from '@/lib/api/client';
+import { APP_NAME } from '@/lib/constants';
 
 const NAV = [
   { href: '/admin', label: 'Overview', exact: true },
@@ -68,7 +69,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </span>
           <div className="leading-tight">
             <p className="text-white text-sm font-semibold">Admin Console</p>
-            <p className="text-[11px] text-slate-400">Blockchain Club</p>
+            <p className="text-[11px] text-slate-400">{APP_NAME}</p>
           </div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
