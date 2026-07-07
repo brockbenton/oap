@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { usePrivy, getIdentityToken } from '@privy-io/react-auth';
+import { usePrivy, getIdentityToken, useWallets } from '@privy-io/react-auth';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { getAdminMe } from '@/lib/api/admin';
@@ -13,8 +13,23 @@ import { retryUnlessForbidden } from '@/lib/api/client';
 // wallets that actually hold the on-chain ADMIN_ROLE (probed via /admin/me).
 export default function AccountMenu() {
   const { ready, authenticated, user, login, logout } = usePrivy();
+  const { wallets } = useWallets();
   const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  const address = wallets.find((w) => w.walletClientType === 'privy')?.address ?? user?.wallet?.address;
+
+  const copyAddress = async () => {
+    if (!address) return;
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -84,6 +99,18 @@ export default function AccountMenu() {
             <p className="text-xs text-gray-400">Signed in as</p>
             <p className="text-sm text-gray-800 truncate">{account}</p>
           </div>
+          {address && (
+            <button
+              onClick={copyAddress}
+              className="w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-gray-50 border-b border-gray-100"
+              title={address}
+            >
+              <span className="font-mono text-xs text-gray-600">{`${address.slice(0, 6)}…${address.slice(-4)}`}</span>
+              <span className={`text-xs font-medium ${copied ? 'text-green-600' : 'text-blue-600'}`}>
+                {copied ? 'Copied!' : 'Copy'}
+              </span>
+            </button>
+          )}
           {me?.isAdmin && (
             <Link
               href="/admin"
