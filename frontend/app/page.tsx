@@ -35,12 +35,28 @@ export default function Home() {
           )}
 
           {ready && authenticated && (
-            <Link
-              href="/check-in"
-              className="block w-full py-3 px-6 rounded-xl bg-blue-600 text-white font-semibold text-center hover:bg-blue-700 transition-colors"
-            >
-              Scan QR Code
-            </Link>
+            <div className="space-y-3">
+              <Link
+                href="/check-in"
+                className="block w-full py-3 px-6 rounded-xl bg-blue-600 text-white font-semibold text-center hover:bg-blue-700 transition-colors"
+              >
+                Scan QR Code
+              </Link>
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  href="/vault"
+                  className="block py-3 px-6 rounded-xl bg-white border border-gray-200 text-gray-800 font-semibold text-center hover:bg-gray-50 transition-colors"
+                >
+                  My Vault
+                </Link>
+                <Link
+                  href="/stats"
+                  className="block py-3 px-6 rounded-xl bg-white border border-gray-200 text-gray-800 font-semibold text-center hover:bg-gray-50 transition-colors"
+                >
+                  My Stats
+                </Link>
+              </div>
+            </div>
           )}
         </div>
       </main>

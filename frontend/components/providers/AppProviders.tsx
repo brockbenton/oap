@@ -42,7 +42,7 @@ export default function AppProviders({ children }: AppProvidersProps) {
               createOnLogin: 'users-without-wallets',
             },
           },
-          loginMethods: ['email', 'google', 'discord', 'wallet'],
+          loginMethods: ['email', 'google', 'passkey'],
         }}
       >
         {children}

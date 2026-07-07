@@ -1,4 +1,7 @@
 import 'dotenv/config';
+// Patches Express 4 to forward async handler rejections to the error middleware
+// (Express 4 does not do this natively — see AUDIT.md).
+import 'express-async-errors';
 import express from 'express';
 import cors from 'cors';
 import sessionsRouter from './routes/sessions';
