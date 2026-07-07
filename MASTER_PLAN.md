@@ -184,7 +184,7 @@ Anti-cheat properties:
 **Goal**: Admins can manage sessions, display QR codes, view all members, and track club health.
 
 **Overview**
-- [ ] `/admin` overview page:
+- [x] `/admin` overview page:
   - Attendance rate over time (chart)
   - Per-session headcount
   - Week-over-week attendance delta

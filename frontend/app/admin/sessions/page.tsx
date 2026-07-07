@@ -2,9 +2,8 @@
 
 export const dynamic = 'force-dynamic';
 
-import { Fragment, useState, useEffect } from 'react';
+import { Fragment, useState } from 'react';
 import { usePrivy, getIdentityToken } from '@privy-io/react-auth';
-import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
 import { listAdminSessions, getSessionAttendees, downloadSessionCSV } from '@/lib/api/admin';
@@ -15,8 +14,7 @@ import { SessionWithCount, Attendee } from '@/types';
 import CreateSessionForm from '@/components/features/admin/CreateSessionForm';
 
 export default function AdminSessionsPage() {
-  const { ready, authenticated } = usePrivy();
-  const router = useRouter();
+  const { authenticated } = usePrivy();
   const queryClient = useQueryClient();
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
   const [downloadingSessionId, setDownloadingSessionId] = useState<string | null>(null);
@@ -30,12 +28,6 @@ export default function AdminSessionsPage() {
     },
     onSettled: () => setDownloadingSessionId(null),
   });
-
-  useEffect(() => {
-    if (ready && !authenticated) {
-      router.replace('/');
-    }
-  }, [ready, authenticated, router]);
 
   const {
     data: sessions,
@@ -65,53 +57,13 @@ export default function AdminSessionsPage() {
     enabled: !!expandedSessionId,
   });
 
-  if (!ready || !authenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (error instanceof ApiRequestError && error.status === 403) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <p className="text-xl font-semibold text-gray-900">Access Denied</p>
-          <p className="text-gray-500 text-sm">You need admin privileges to view this page.</p>
-          <Link href="/" className="text-blue-600 text-sm hover:underline block">
-            Go home
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="flex items-center px-6 py-4 bg-white border-b border-gray-200">
-        <Link href="/" className="text-gray-500 hover:text-gray-800 mr-4">
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-            />
-          </svg>
-        </Link>
-        <h1 className="text-lg font-semibold text-gray-900">Admin — Sessions</h1>
-      </header>
+    <div className="max-w-5xl mx-auto w-full space-y-8">
+      <h1 className="text-2xl font-bold text-slate-900">Sessions</h1>
 
-      <main className="flex-1 px-6 py-8 max-w-5xl mx-auto w-full space-y-8">
-        <CreateSessionForm
-          onSuccess={() => queryClient.invalidateQueries({ queryKey: queryKeys.adminSessions() })}
-        />
+      <CreateSessionForm
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: queryKeys.adminSessions() })}
+      />
 
         <section>
           <h2 className="text-base font-semibold text-gray-900 mb-4">All Sessions</h2>
@@ -200,7 +152,6 @@ export default function AdminSessionsPage() {
             </div>
           )}
         </section>
-      </main>
     </div>
   );
 }

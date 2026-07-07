@@ -59,7 +59,7 @@ Severity is the **post-verification** severity (an adversarial pass re-graded se
 | L1 | CSV formula injection: `csvEscape` does not neutralize leading `= + - @` in exported cells sourced from `linkedAccount`. | `backend/src/routes/admin.ts:340` | Admin-only export; realistic payloads are constrained by email/Discord-username validation. Fix = prefix formula triggers with `'`. |
 | L2 | QR has no presence binding and the nonce is not consumed, so a forwarded QR is redeemable by a non-attendee within the TTL. | `backend/src/routes/check-in.ts:103` | Documented design tradeoff of a single shared projected QR; hardening = rotating per-scan codes / shorter TTL. |
 | L3 | `closeSession` overwrites the session's creation `txHash` with the close tx in the single `txHash` column. | `backend/src/routes/sessions.ts:124` | Informational only; the on-chain `SessionCreated` event remains the source of truth. Fix = add a `closeTxHash` column. |
-| L4 | Admin roles page lacks the `ready/authenticated` gating, 403 branch, and `force-dynamic` that its sibling admin pages have. | `frontend/app/admin/roles/page.tsx:30` | UX/consistency only — the backend fully enforces admin auth; the rendered shell is inert. |
+| L4 | Admin roles page lacks the `ready/authenticated` gating, 403 branch, and `force-dynamic` that its sibling admin pages have. | `frontend/app/admin/roles/page.tsx:30` | **Now fixed** — the new `app/admin/layout.tsx` gates every `/admin` route (auth + on-chain ADMIN_ROLE via `GET /admin/me`) with a shared sign-in / Access Denied UI, and the page declares `force-dynamic`. |
 
 ### Informational (investigated; not defects / out of Phase 3 scope)
 

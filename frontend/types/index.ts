@@ -98,6 +98,34 @@ export interface PersonalStats {
   lastSeen: string | null;
 }
 
+// Admin overview from GET /api/v1/admin/overview
+export interface OverviewSessionPoint {
+  sessionIdOnchain: string;
+  name: string;
+  date: string;
+  semester: string;
+  headcount: number;
+  eligibleMembers: number;
+  attendanceRate: number;
+}
+
+export interface AdminOverview {
+  totalMembers: number;
+  totalSessions: number;
+  currentSemester: string | null;
+  avgHeadcount: number;
+  series: OverviewSessionPoint[];
+  latest: { headcount: number; attendanceRate: number } | null;
+  previous: { headcount: number; attendanceRate: number } | null;
+  wow: { headcountDelta: number; attendanceRateDelta: number } | null;
+}
+
+// GET /api/v1/admin/me — admin-gate probe
+export interface AdminMe {
+  isAdmin: boolean;
+  walletAddress: string;
+}
+
 // Admin role from GET /api/v1/admin/roles
 export interface AdminRole {
   id: string;
