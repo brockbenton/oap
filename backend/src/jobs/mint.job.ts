@@ -1,11 +1,34 @@
 import { Worker, Job } from 'bullmq';
+import { parseEther } from 'viem';
 import { MINT_QUEUE, MintJobData } from '../lib/queue';
-import { mintOnChain } from '../services/relay.service';
+import { mintOnChain, getRelayBalanceWei, relayAddress } from '../services/relay.service';
 import { tokenBalanceOnChain } from '../services/onchain.service';
 import prisma from '../lib/prisma';
 import logger from '../lib/logger';
 
 const connection = { url: process.env.REDIS_URL ?? 'redis://localhost:6379' };
+
+// Below this the relay wallet likely can't pay gas, so mints will fail.
+const RELAY_MIN_BALANCE_ETH = process.env.RELAY_MIN_BALANCE_ETH ?? '0.005';
+
+export function isBalanceLow(balanceWei: bigint, minWei: bigint): boolean {
+  return balanceWei < minWei;
+}
+
+/** Best-effort startup check so an unfunded relay wallet is obvious in the logs. */
+async function logRelayBalance(): Promise<void> {
+  try {
+    const balanceWei = await getRelayBalanceWei();
+    const balanceEth = Number(balanceWei) / 1e18;
+    if (isBalanceLow(balanceWei, parseEther(RELAY_MIN_BALANCE_ETH))) {
+      logger.warn({ msg: 'Relay wallet balance is low — mints may fail', relayAddress, balanceEth, minEth: RELAY_MIN_BALANCE_ETH });
+    } else {
+      logger.info({ msg: 'Relay wallet balance', relayAddress, balanceEth });
+    }
+  } catch (err) {
+    logger.warn({ msg: 'Could not read relay wallet balance', err: (err as Error).message });
+  }
+}
 
 /**
  * Idempotent mint. If the check-in is already CONFIRMED, or the token already
@@ -76,5 +99,6 @@ export function startMintWorker(): Worker<MintJobData> {
   });
 
   logger.info({ msg: 'Mint worker started' });
+  void logRelayBalance();
   return worker;
 }
