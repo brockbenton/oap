@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { recoverMessageAddress, isAddress, getAddress } from 'viem';
 import { authMiddleware } from '../middleware/auth';
+import { checkInLimiter } from '../middleware/rateLimit';
 import { validate } from '../middleware/validate';
 import { verifyQR } from '../services/qr.service';
 import { mintQueue } from '../lib/queue';
@@ -23,6 +24,7 @@ const checkInSchema = z.object({
 router.post(
   '/',
   authMiddleware,
+  checkInLimiter,
   validate(checkInSchema),
   async (req: Request, res: Response): Promise<void> => {
     const { qrPayload, memberSignature, signedAt } = req.body as z.infer<typeof checkInSchema>;
