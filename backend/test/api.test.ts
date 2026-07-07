@@ -88,6 +88,18 @@ describe('public asset routes', () => {
   });
 });
 
+describe('POST /api/v1/check-in', () => {
+  it('runs the per-user rate limiter (RateLimit headers present) after auth', async () => {
+    const res = await request(app)
+      .post('/api/v1/check-in')
+      .set('Authorization', 'Bearer test')
+      .send({});
+    // Body is invalid so the handler 400s, but the limiter ran first and set headers.
+    expect(res.status).toBe(400);
+    expect(res.headers['ratelimit-limit']).toBeDefined();
+  });
+});
+
 describe('admin routes are gated by the on-chain role', () => {
   it('401 without a bearer token', async () => {
     const res = await request(app).get('/api/v1/admin/overview');
