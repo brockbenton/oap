@@ -18,7 +18,7 @@ The POAP protocol requires manual approval per event from the POAP team, ties ad
 |---|---|---|
 | Token standard | ERC-1155 soulbound (non-transferable) | Each token type = one meeting. Batch mint support. Can't be sold/traded. |
 | Chain | **Base** (Coinbase L2) | Cheap gas, EVM-compatible, strong onboarding story for new crypto users |
-| Wallet UX | **Privy** (embedded wallets) | Email/Google/Discord login creates wallet under the hood — zero MetaMask required to start |
+| Wallet UX | **Privy** (embedded wallets) | Email, Google, or passkey login creates wallet under the hood — zero MetaMask required to start |
 | Gas model | Backend sponsors gas (gasless for members) | Admin backend wallet pays gas. Members never touch ETH. |
 | Anti-cheat | Time-windowed, admin-signed QR codes | Session payload signed by admin key, expires in N minutes, shown at physical meeting |
 | Backend | Lightweight Node.js + PostgreSQL | Indexes on-chain events for fast stat queries. Sponsors gasless transactions. |
@@ -31,7 +31,7 @@ The POAP protocol requires manual approval per event from the POAP team, ties ad
 ### Frontend
 - **Next.js 14** (App Router) + **TypeScript**
 - **Tailwind CSS** + **shadcn/ui** components
-- **Privy** — wallet abstraction, social login, embedded wallets
+- **Privy** — wallet abstraction, embedded wallets; supported login methods: **email**, **Google**, and **passkey**
 - **viem** + **wagmi** — type-safe contract interaction
 - **TanStack Query** — async state, caching
 
@@ -183,6 +183,13 @@ Anti-cheat properties:
 ### Phase 2 — Admin Dashboard
 **Goal**: Admins can manage sessions, display QR codes, view all members, and track club health.
 
+**Overview**
+- [ ] `/admin` overview page:
+  - Attendance rate over time (chart)
+  - Per-session headcount
+  - Week-over-week attendance delta
+
+**Sessions & Members**
 - [x] `/admin/sessions` — create session, view past sessions, see who attended each one
 - [x] `/admin/sessions/:id/qr` — display live QR code for active session (auto-refreshes before expiry)
 - [x] `/admin/members` — table of all members with:
@@ -213,7 +220,7 @@ Anti-cheat properties:
   - Current streak
   - Member status tier
 - [ ] Backend: aggregate queries from indexed events
-- [ ] IPFS metadata upload pipeline for token images (per-semester art or generic club art)
+- [ ] IPFS metadata upload pipeline for token images (generic per-semester club art)
 
 ---
 
@@ -225,6 +232,7 @@ Anti-cheat properties:
   - Step 2: Learn about wallets → optional: link MetaMask (earns onboarding badge)
   - Step 3: Attend first meeting → earn first AT
   - Each step earns a non-attendance badge (onboarding SBTs)
+  - _(Stretch / post-MVP — do not pull into earlier phases without explicit approval.)_
 - [ ] Member status badges:
   - Badge assets for General Member / Official Member
 - [ ] Semester rollup: auto-calculate semester attendance %, display on profile
@@ -259,7 +267,7 @@ admin_roles    (id, wallet_address, granted_by, granted_at, revoked_at)
 ## Open Questions / Decisions Pending
 
 1. **QR expiry window** — 10 minutes default. Adjust based on how meetings run.
-2. **Token art** — Generic club logo per semester, or unique art per meeting? (Unique is cooler but more work)
+2. **Token art** — ✅ **Resolved:** Generic club logo per semester for MVP (Phase 3). Unique per-meeting art is a post-launch stretch goal, revisit for semester 2.
 3. **Attendance % denominator** — All sessions ever, or only sessions during their membership period?
 4. **What constitutes a "semester"** — Calendar-based or admin-defined?
 5. **Public vs private stats** — Can anyone look up any member's attendance, or only admins + the member themselves?
