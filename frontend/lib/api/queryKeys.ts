@@ -6,4 +6,6 @@ export const queryKeys = {
   sessionQR: (sessionId: string) => ['session', sessionId, 'qr'] as const,
   adminMembers: () => ['admin', 'members'] as const,
   adminRoles: () => ['admin', 'roles'] as const,
+  memberVault: (address: string) => ['member', address, 'vault'] as const,
+  memberStats: (address: string) => ['member', address, 'stats'] as const,
 } as const;

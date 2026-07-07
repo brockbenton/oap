@@ -6,6 +6,7 @@ import prisma from '../lib/prisma';
 import logger from '../lib/logger';
 import { grantAdminRoleOnChain, revokeAdminRoleOnChain } from '../services/relay.service';
 import { buildMemberStats } from '../services/stats.service';
+import { publishSemesterMetadata } from '../services/ipfs.service';
 
 const router = Router();
 
@@ -331,6 +332,21 @@ router.delete('/roles/:walletAddress', async (req: Request, res: Response): Prom
   logger.info({ msg: 'ADMIN_ROLE revoked', wallet: normalized, txHash, revokedBy: req.user!.walletAddress });
 
   res.json({ data: { txHash } });
+});
+
+// ── POST /api/v1/admin/ipfs/publish ──────────────────────────────────────
+// Generates + stages (and pins, when PINATA_JWT is set) per-semester token
+// metadata for every confirmed session. Dry-run without a pinning key.
+
+router.post('/ipfs/publish', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const result = await publishSemesterMetadata();
+    logger.info({ msg: 'IPFS metadata publish requested', staged: result.staged, pinned: result.pinned, dryRun: result.dryRun });
+    res.json({ data: result });
+  } catch (err) {
+    logger.error({ msg: 'IPFS metadata publish failed', err: (err as Error).message });
+    res.status(500).json({ error: { code: 'IPFS_ERROR', message: 'Failed to publish metadata' } });
+  }
 });
 
 export default router;

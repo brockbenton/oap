@@ -211,16 +211,16 @@ Anti-cheat properties:
 ### Phase 3 — Vault & Personal Stats
 **Goal**: Members can see their attendance history and stats.
 
-- [ ] `/vault` page: grid of earned attendance tokens with metadata (date, meeting name)
+- [x] `/vault` page: grid of earned attendance tokens with metadata (date, meeting name)
   - Sort by date, semester filter
   - Token card shows meeting name, date, semester badge
-- [ ] `/stats` page: personal attendance statistics
+- [x] `/stats` page: personal attendance statistics
   - All-time attendance %
   - Meetings attended last 30/90/180 days
   - Current streak
   - Member status tier
-- [ ] Backend: aggregate queries from indexed events
-- [ ] IPFS metadata upload pipeline for token images (generic per-semester club art)
+- [x] Backend: aggregate queries from indexed events
+- [x] IPFS metadata upload pipeline for token images (generic per-semester club art)
 
 ---
 
@@ -268,7 +268,7 @@ admin_roles    (id, wallet_address, granted_by, granted_at, revoked_at)
 
 1. **QR expiry window** — 10 minutes default. Adjust based on how meetings run.
 2. **Token art** — ✅ **Resolved:** Generic club logo per semester for MVP (Phase 3). Unique per-meeting art is a post-launch stretch goal, revisit for semester 2.
-3. **Attendance % denominator** — All sessions ever, or only sessions during their membership period?
+3. **Attendance % denominator** — ✅ **Resolved:** All confirmed sessions to date (club-wide), so every member is measured against the same meeting count and the vault / stats / admin views never disagree. Chosen over membership-period to keep a single shared definition; revisit if it unfairly penalizes mid-semester joiners.
 4. **What constitutes a "semester"** — Calendar-based or admin-defined?
 5. **Public vs private stats** — Can anyone look up any member's attendance, or only admins + the member themselves?
 6. **Mainnet timing** — Start on Base Sepolia, move to mainnet when? After semester 1?

@@ -57,6 +57,47 @@ export interface MembersListResponse {
   currentSemester: string | null;
 }
 
+// Attendance token in a member's vault (GET /api/v1/members/:address/tokens)
+export interface VaultToken {
+  tokenId: string;
+  sessionIdOnchain: string;
+  name: string;
+  date: string;
+  semester: string;
+  meetingNumber: number;
+  mintStatus: 'PENDING' | 'CONFIRMED' | 'FAILED';
+  txHash: string | null;
+  imageUrl: string;
+  metadataUri: string | null;
+}
+
+export interface MemberVault {
+  walletAddress: string;
+  found: boolean;
+  tokenCount: number;
+  tokens: VaultToken[];
+}
+
+// Personal attendance stats (GET /api/v1/members/:address/stats)
+export interface PersonalStats {
+  walletAddress: string;
+  found: boolean;
+  foundingMember: boolean;
+  tokensEarned: number;
+  totalSessions: number;
+  allTimeAttendancePct: number;
+  currentSemester: string | null;
+  currentSemesterTotal: number;
+  currentSemesterAttendancePct: number;
+  statusTier: 'General Member' | 'Official Member';
+  meetingsLast30Days: number;
+  meetingsLast90Days: number;
+  meetingsLast180Days: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastSeen: string | null;
+}
+
 // Admin role from GET /api/v1/admin/roles
 export interface AdminRole {
   id: string;
