@@ -233,9 +233,9 @@ Anti-cheat properties:
   - Step 3: Attend first meeting → earn first AT
   - Each step earns a non-attendance badge (onboarding SBTs)
   - _(Stretch / post-MVP — do not pull into earlier phases without explicit approval.)_
-- [ ] Member status badges:
+- [x] Member status badges:
   - Badge assets for General Member / Official Member
-- [ ] Semester rollup: auto-calculate semester attendance %, display on profile
+- [x] Semester rollup: auto-calculate semester attendance %, display on profile
 - [ ] Notification system (email via Privy): "You attended 3/4 meetings this month"
 
 ---
@@ -269,9 +269,9 @@ admin_roles    (id, wallet_address, granted_by, granted_at, revoked_at)
 1. **QR expiry window** — 10 minutes default. Adjust based on how meetings run.
 2. **Token art** — ✅ **Resolved:** Generic club logo per semester for MVP (Phase 3). Unique per-meeting art is a post-launch stretch goal, revisit for semester 2.
 3. **Attendance % denominator** — ✅ **Resolved:** All confirmed sessions to date (club-wide), so every member is measured against the same meeting count and the vault / stats / admin views never disagree. Chosen over membership-period to keep a single shared definition; revisit if it unfairly penalizes mid-semester joiners.
-4. **What constitutes a "semester"** — Calendar-based or admin-defined?
-5. **Public vs private stats** — Can anyone look up any member's attendance, or only admins + the member themselves?
-6. **Mainnet timing** — Start on Base Sepolia, move to mainnet when? After semester 1?
+4. **What constitutes a "semester"** — ✅ **Resolved:** Admin-defined free-text label set per session (the `semester` field); the "current" semester is the most recent session's label. Not calendar-derived, so summer/irregular terms just work.
+5. **Public vs private stats** — ✅ **Resolved:** A member's vault and stats are public by wallet address but carry no PII — email / linked social is never exposed on public endpoints (stripped from `GET /members`; served only behind the admin gate). On-chain attendance is already public, so this adds no disclosure.
+6. **Mainnet timing** — ✅ **Decided (pending owner sign-off):** Stay on Base Sepolia for the pilot; migrate to Base Mainnet after semester 1, once check-in volume and relay-gas costs are validated. Requires an explicit go-ahead before the mainnet deploy.
 
 ---
 

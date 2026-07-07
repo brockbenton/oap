@@ -62,6 +62,24 @@ export async function mintOnChain(
   return hash;
 }
 
+export async function setBaseCidOnChain(baseCid: string): Promise<`0x${string}`> {
+  if (!defaultAdminWalletClient || !defaultAdminAccount) {
+    throw new Error('DEFAULT_ADMIN_PRIVATE_KEY not configured');
+  }
+  const hash = await defaultAdminWalletClient.writeContract({
+    address: contractAddress,
+    abi: ATTENDANCE_ABI,
+    functionName: 'setBaseCid',
+    args: [baseCid],
+    account: defaultAdminAccount,
+    chain,
+  });
+  logger.info({ msg: 'setBaseCid tx submitted', hash, baseCid });
+  await publicClient.waitForTransactionReceipt({ hash, timeout: 120_000 });
+  logger.info({ msg: 'setBaseCid confirmed', hash, baseCid });
+  return hash;
+}
+
 export async function grantAdminRoleOnChain(wallet: `0x${string}`): Promise<`0x${string}`> {
   if (!defaultAdminWalletClient || !defaultAdminAccount) {
     throw new Error('DEFAULT_ADMIN_PRIVATE_KEY not configured');

@@ -13,4 +13,5 @@ export const TEST_ENV: Record<string, string> = {
   PRIVY_APP_SECRET: 'test-app-secret',
   CHAIN_ID: '84532',
   OFFICIAL_MEMBER_THRESHOLD: '75',
+  PUBLIC_API_URL: 'http://localhost:3001',
 };

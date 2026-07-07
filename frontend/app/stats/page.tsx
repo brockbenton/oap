@@ -79,9 +79,13 @@ function StatsBody({ stats }: { stats: PersonalStats }) {
               {stats.tokensEarned} of {stats.totalSessions} meetings
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            {stats.foundingMember && <Badge tone="amber">Founding Member</Badge>}
-            <Badge tone={stats.statusTier === 'Official Member' ? 'blue' : 'gray'}>{stats.statusTier}</Badge>
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={stats.badgeUrl} alt={stats.statusTier} className="w-14 h-14 rounded-xl shrink-0" />
+            <div className="flex flex-col items-start gap-1.5">
+              {stats.foundingMember && <Badge tone="amber">Founding Member</Badge>}
+              <Badge tone={stats.statusTier === 'Official Member' ? 'blue' : 'gray'}>{stats.statusTier}</Badge>
+            </div>
           </div>
         </div>
         <ProgressBar pct={stats.allTimeAttendancePct} />
@@ -102,6 +106,25 @@ function StatsBody({ stats }: { stats: PersonalStats }) {
           <StatTile label="Last 180 days" value={stats.meetingsLast180Days} suffix={meetingSuffix(stats.meetingsLast180Days)} compact />
         </div>
       </section>
+
+      {stats.semesterBreakdown.length > 0 && (
+        <section>
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">By semester</h2>
+          <div className="space-y-2.5">
+            {stats.semesterBreakdown.map((s) => (
+              <div key={s.semester} className="flex items-center gap-3 text-sm">
+                <div className="w-32 shrink-0 truncate text-slate-600">{s.semester}</div>
+                <div className="flex-1 h-5 rounded bg-gray-100 overflow-hidden">
+                  <div className="h-full rounded bg-blue-500/80" style={{ width: `${s.pct}%` }} />
+                </div>
+                <div className="w-24 shrink-0 text-right tabular-nums text-slate-500 text-xs">
+                  {s.attended}/{s.total} · {s.pct}%
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {stats.lastSeen && (
         <p className="text-xs text-gray-400">Last checked in {formatDate(stats.lastSeen)}</p>

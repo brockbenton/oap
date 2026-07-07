@@ -121,7 +121,7 @@ router.post(
 
     const updated = await prisma.session.update({
       where: { sessionIdOnchain: sessionId },
-      data: { closedAt: new Date(), txHash },
+      data: { closedAt: new Date(), closeTxHash: txHash },
     });
 
     res.json({ data: serializeSession(updated) });
@@ -168,6 +168,7 @@ function serializeSession(s: {
   semester: string;
   createdBy: string;
   txHash: string | null;
+  closeTxHash: string | null;
   onchainStatus: string;
   closedAt: Date | null;
   createdAt: Date;
@@ -180,6 +181,7 @@ function serializeSession(s: {
     semester: s.semester,
     createdBy: s.createdBy,
     txHash: s.txHash,
+    closeTxHash: s.closeTxHash,
     onchainStatus: s.onchainStatus,
     closedAt: s.closedAt?.toISOString() ?? null,
     createdAt: s.createdAt.toISOString(),

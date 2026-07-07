@@ -28,6 +28,7 @@ model Session {
   semester         String
   createdBy        String    @map("created_by")
   txHash           String?   @map("tx_hash")
+  closeTxHash      String?   @map("close_tx_hash")
   onchainStatus    TxStatus  @default(PENDING) @map("onchain_status")
   closedAt         DateTime? @map("closed_at")
   createdAt        DateTime  @default(now()) @map("created_at")
