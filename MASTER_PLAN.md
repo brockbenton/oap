@@ -197,7 +197,7 @@ Anti-cheat properties:
   - `Founding Member` — present for X% of all-time meetings (admin-granted)
 - [x] Export: CSV export of attendance data per session or per member
 - [x] Admin role management: grant/revoke ADMIN_ROLE on-chain from dashboard
-- [x] Attendance API endpoint: `GET /api/v1/members` → JSON of all members + stats (for future website integration)
+- [x] Attendance API endpoint: `GET /api/v1/members` → JSON of all members + stats
 
 ---
 
@@ -217,16 +217,15 @@ Anti-cheat properties:
 
 ---
 
-### Phase 4 — Onboarding & Website Integration
-**Goal**: Reduce learning curve, integrate with club website.
+### Phase 4 — Onboarding & Member Status
+**Goal**: Reduce the learning curve for new crypto users and surface member status.
 
 - [ ] Education onboarding track:
   - Step 1: Sign up with email (Privy embedded wallet — zero friction)
   - Step 2: Learn about wallets → optional: link MetaMask (earns onboarding badge)
   - Step 3: Attend first meeting → earn first AT
   - Each step earns a non-attendance badge (onboarding SBTs)
-- [ ] Status symbols on club website:
-  - API endpoint for website to query member status
+- [ ] Member status badges:
   - Badge assets for General Member / Official Member
 - [ ] Semester rollup: auto-calculate semester attendance %, display on profile
 - [ ] Notification system (email via Privy): "You attended 3/4 meetings this month"
