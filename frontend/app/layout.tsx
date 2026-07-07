@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import AppProviders from '@/components/providers/AppProviders';
+import { APP_NAME } from '@/lib/constants';
 import './globals.css';
 
 const geistSans = localFont({
@@ -10,8 +11,8 @@ const geistSans = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'Blockchain Club Attendance',
-  description: 'Onchain attendance tracking for blockchain club meetings',
+  title: APP_NAME,
+  description: 'Soulbound onchain attendance — QR check-in, gasless tokens, and member stats.',
 };
 
 export default function RootLayout({

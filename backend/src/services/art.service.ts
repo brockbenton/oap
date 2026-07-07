@@ -1,9 +1,10 @@
+import { APP_SHORT_NAME } from '../lib/brand';
+
 /**
  * Deterministic, self-contained SVG art for attendance tokens and status badges,
  * generated (not fetched) so app imagery always resolves without external assets
  * or a pinned CID. The on-chain metadata image is handled by the IPFS pipeline.
  */
-const CLUB_NAME = 'Blockchain Club';
 const PUBLIC_API_URL = (process.env.PUBLIC_API_URL ?? '').replace(/\/$/, '');
 
 const XML_ESCAPES: Record<string, string> = {
@@ -30,12 +31,12 @@ export function renderSemesterBadgeSvg(semester: string): string {
   const c1 = `hsl(${hue} 75% 55%)`;
   const c2 = `hsl(${(hue + 40) % 360} 70% 42%)`;
   const label = escapeXml(semester);
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="${CLUB_NAME} attendance token — ${label}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="${APP_SHORT_NAME} attendance token — ${label}">
   <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs>
   <rect width="512" height="512" rx="48" fill="url(#g)"/>
   <circle cx="256" cy="212" r="118" fill="rgba(255,255,255,0.14)" stroke="rgba(255,255,255,0.65)" stroke-width="6"/>
   <text x="256" y="248" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="104" font-weight="700" fill="#fff">AT</text>
-  <text x="256" y="404" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#fff">${CLUB_NAME}</text>
+  <text x="256" y="404" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#fff">${APP_SHORT_NAME}</text>
   <text x="256" y="448" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="28" fill="rgba(255,255,255,0.92)">${label}</text>
 </svg>`;
 }
@@ -64,13 +65,13 @@ export function badgeTierFor(statusTier: string, foundingMember: boolean): Badge
 
 export function renderTierBadgeSvg(tier: string): string {
   const style = TIER_STYLES[(tier as BadgeTier)] ?? TIER_STYLES.general;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="${escapeXml(style.label)} — ${CLUB_NAME}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="${escapeXml(style.label)} — ${APP_SHORT_NAME}">
   <defs><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${style.c1}"/><stop offset="1" stop-color="${style.c2}"/></linearGradient></defs>
   <rect width="512" height="512" rx="48" fill="#0f172a"/>
   <path d="M256 56 l150 54 v120 c0 118 -74 190 -150 226 c-76 -36 -150 -108 -150 -226 v-120 z" fill="url(#b)" stroke="rgba(255,255,255,0.7)" stroke-width="6"/>
   <text x="256" y="250" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="120" font-weight="800" fill="#fff">★</text>
   <text x="256" y="330" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#fff">${escapeXml(style.label)}</text>
-  <text x="256" y="372" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="rgba(255,255,255,0.9)">${CLUB_NAME}</text>
+  <text x="256" y="372" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="rgba(255,255,255,0.9)">${APP_SHORT_NAME}</text>
 </svg>`;
 }
 
