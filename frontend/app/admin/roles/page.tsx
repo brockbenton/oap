@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { usePrivy, getIdentityToken } from '@privy-io/react-auth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -98,8 +100,8 @@ export default function AdminRolesPage() {
 
   if (notConfigured) {
     return (
-      <div className="p-8 max-w-2xl">
-        <h1 className="text-2xl font-bold mb-4">Admin Roles</h1>
+      <div className="max-w-2xl w-full">
+        <h1 className="text-2xl font-bold text-slate-900 mb-4">Admin Roles</h1>
         <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-800 text-sm">
           <strong>Role management is not configured.</strong> Set{' '}
           <code className="font-mono bg-amber-100 px-1 rounded">DEFAULT_ADMIN_PRIVATE_KEY</code>{' '}
@@ -110,8 +112,8 @@ export default function AdminRolesPage() {
   }
 
   return (
-    <div className="p-8 max-w-3xl space-y-8">
-      <h1 className="text-2xl font-bold">Admin Roles</h1>
+    <div className="max-w-3xl w-full space-y-8">
+      <h1 className="text-2xl font-bold text-slate-900">Admin Roles</h1>
 
       {/* Grant form */}
       <form onSubmit={handleGrant} className="space-y-3">

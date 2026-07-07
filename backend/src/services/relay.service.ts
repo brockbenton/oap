@@ -1,6 +1,7 @@
 import { publicClient, adminWalletClient, relayWalletClient, adminAccount, relayAccount, defaultAdminWalletClient, defaultAdminAccount, chain } from '../lib/contract';
-import { keccak256, toBytes, getAddress } from 'viem';
+import { getAddress } from 'viem';
 import { ATTENDANCE_ABI } from '../lib/abi';
+import { ADMIN_ROLE } from '../lib/roles';
 import logger from '../lib/logger';
 
 const contractAddress = process.env.CONTRACT_ADDRESS as `0x${string}`;
@@ -60,8 +61,6 @@ export async function mintOnChain(
   logger.info({ msg: 'mint confirmed', hash, to, sessionIdOnchain });
   return hash;
 }
-
-const ADMIN_ROLE = keccak256(toBytes('ADMIN_ROLE'));
 
 export async function grantAdminRoleOnChain(wallet: `0x${string}`): Promise<`0x${string}`> {
   if (!defaultAdminWalletClient || !defaultAdminAccount) {

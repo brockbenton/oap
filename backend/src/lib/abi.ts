@@ -58,6 +58,16 @@ export const ATTENDANCE_ABI = [
     stateMutability: 'view',
   },
   {
+    type: 'function',
+    name: 'hasRole',
+    inputs: [
+      { name: 'role', type: 'bytes32' },
+      { name: 'account', type: 'address' },
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
     type: 'event',
     name: 'SessionCreated',
     inputs: [

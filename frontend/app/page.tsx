@@ -13,7 +13,14 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
         <h1 className="text-lg font-semibold text-gray-900">Blockchain Club</h1>
-        <ConnectButton />
+        <div className="flex items-center gap-4">
+          {ready && authenticated && (
+            <Link href="/admin" className="text-sm text-gray-400 hover:text-gray-700">
+              Admin
+            </Link>
+          )}
+          <ConnectButton />
+        </div>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 text-center">

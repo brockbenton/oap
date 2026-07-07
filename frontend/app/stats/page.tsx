@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { getPersonalStats } from '@/lib/api/members';
 import { queryKeys } from '@/lib/api/queryKeys';
+import { ATTENDANCE_GOOD_PCT, ATTENDANCE_OK_PCT } from '@/lib/constants';
 import { PersonalStats } from '@/types';
 
 export default function StatsPage() {
@@ -133,7 +134,8 @@ function StatTile({
 
 function ProgressBar({ pct }: { pct: number }) {
   const clamped = Math.max(0, Math.min(100, pct));
-  const color = pct >= 75 ? 'bg-green-500' : pct >= 50 ? 'bg-amber-500' : 'bg-blue-500';
+  const color =
+    pct >= ATTENDANCE_GOOD_PCT ? 'bg-green-500' : pct >= ATTENDANCE_OK_PCT ? 'bg-amber-500' : 'bg-blue-500';
   return (
     <div className="mt-6 h-2 w-full rounded-full bg-gray-100 overflow-hidden">
       <div className={`h-full rounded-full ${color}`} style={{ width: `${clamped}%` }} />

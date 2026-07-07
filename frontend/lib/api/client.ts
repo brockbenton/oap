@@ -13,6 +13,13 @@ export class ApiRequestError extends Error {
   }
 }
 
+// TanStack Query retry with a function has NO built-in cap, so it must bound
+// itself: retry transient failures a couple of times, but never a 403 (admin
+// denial) — that must surface immediately so the error UI can render.
+export function retryUnlessForbidden(failureCount: number, error: unknown): boolean {
+  return !(error instanceof ApiRequestError && error.status === 403) && failureCount < 2;
+}
+
 export async function apiRequest<T>(
   path: string,
   options: RequestInit & { token?: string } = {},

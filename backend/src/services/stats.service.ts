@@ -219,7 +219,10 @@ export interface PersonalStats {
   lastSeen: string | null;
 }
 
-export async function buildPersonalStats(address: string): Promise<PersonalStats> {
+export async function buildPersonalStats(
+  address: string,
+  now: number = Date.now(),
+): Promise<PersonalStats> {
   const walletAddress = address.toLowerCase();
 
   const confirmedSessions = await prisma.session.findMany({
@@ -279,7 +282,6 @@ export async function buildPersonalStats(address: string): Promise<PersonalStats
     (c) => c.session.semester === currentSemester,
   ).length;
 
-  const now = Date.now();
   const [meetingsLast30Days, meetingsLast90Days, meetingsLast180Days] = ROLLING_WINDOW_DAYS.map(
     (days) =>
       earnedCheckIns.filter((c) => c.session.date.getTime() >= now - days * MS_PER_DAY).length,
@@ -334,4 +336,99 @@ function computeLongestStreak(
     }
   }
   return longest;
+}
+
+// ── Phase 2: admin overview (attendance over time, headcount, WoW delta) ─────
+
+export interface OverviewSessionPoint {
+  sessionIdOnchain: string;
+  name: string;
+  date: string;
+  semester: string;
+  headcount: number;
+  eligibleMembers: number;
+  attendanceRate: number;
+}
+
+export interface AdminOverview {
+  totalMembers: number;
+  totalSessions: number;
+  currentSemester: string | null;
+  avgHeadcount: number;
+  series: OverviewSessionPoint[];
+  latest: { headcount: number; attendanceRate: number } | null;
+  previous: { headcount: number; attendanceRate: number } | null;
+  wow: { headcountDelta: number; attendanceRateDelta: number } | null;
+}
+
+export async function buildAdminOverview(): Promise<AdminOverview> {
+  const [sessions, members] = await Promise.all([
+    prisma.session.findMany({
+      where: { onchainStatus: CONFIRMED_STATUS },
+      select: {
+        sessionIdOnchain: true,
+        name: true,
+        date: true,
+        semester: true,
+        checkIns: { where: { mintStatus: CONFIRMED_STATUS }, select: { id: true } },
+      },
+      orderBy: { date: 'asc' },
+    }),
+    prisma.member.findMany({ select: { createdAt: true } }),
+  ]);
+
+  // A member is "eligible" for a session only if they had joined by its date, so
+  // early sessions aren't diluted by members who joined later.
+  const memberJoinTimes = members.map((m) => m.createdAt.getTime());
+
+  const series: OverviewSessionPoint[] = sessions.map((s) => {
+    const headcount = s.checkIns.length;
+    const joinedByDate = memberJoinTimes.filter((t) => t <= s.date.getTime()).length;
+    // Attendees are definitionally eligible — a first-time attendee whose join
+    // timestamp lands after the scheduled date must not push the rate above 100%.
+    const eligibleMembers = Math.max(headcount, joinedByDate);
+    return {
+      sessionIdOnchain: s.sessionIdOnchain,
+      name: s.name,
+      date: s.date.toISOString(),
+      semester: s.semester,
+      headcount,
+      eligibleMembers,
+      attendanceRate: toPct(headcount, eligibleMembers),
+    };
+  });
+
+  const totalSessions = series.length;
+  const currentSemester = totalSessions > 0 ? series[totalSessions - 1].semester : null;
+  const avgHeadcount =
+    totalSessions > 0
+      ? Math.round(series.reduce((sum, p) => sum + p.headcount, 0) / totalSessions)
+      : 0;
+
+  const latestPoint = series[totalSessions - 1] ?? null;
+  const previousPoint = series[totalSessions - 2] ?? null;
+  const latest = latestPoint
+    ? { headcount: latestPoint.headcount, attendanceRate: latestPoint.attendanceRate }
+    : null;
+  const previous = previousPoint
+    ? { headcount: previousPoint.headcount, attendanceRate: previousPoint.attendanceRate }
+    : null;
+  const wow =
+    latest && previous
+      ? {
+          headcountDelta: latest.headcount - previous.headcount,
+          attendanceRateDelta: latest.attendanceRate - previous.attendanceRate,
+        }
+      : null;
+
+  return {
+    totalMembers: members.length,
+    totalSessions,
+    currentSemester,
+    avgHeadcount,
+    series,
+    latest,
+    previous,
+    wow,
+  };
 }

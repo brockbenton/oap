@@ -2,26 +2,17 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useEffect } from 'react';
 import { usePrivy, getIdentityToken } from '@privy-io/react-auth';
-import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import Link from 'next/link';
 import { listAdminMembers, toggleFoundingMember, downloadMembersCSV } from '@/lib/api/admin';
 import { queryKeys } from '@/lib/api/queryKeys';
-import { ApiRequestError } from '@/lib/api/client';
+import { retryUnlessForbidden } from '@/lib/api/client';
+import { ATTENDANCE_GOOD_PCT, ATTENDANCE_OK_PCT } from '@/lib/constants';
 import { MemberStats } from '@/types';
 
 export default function AdminMembersPage() {
-  const { ready, authenticated } = usePrivy();
-  const router = useRouter();
+  const { authenticated } = usePrivy();
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (ready && !authenticated) {
-      router.replace('/');
-    }
-  }, [ready, authenticated, router]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: queryKeys.adminMembers(),
@@ -31,7 +22,7 @@ export default function AdminMembersPage() {
       return listAdminMembers(token);
     },
     enabled: authenticated,
-    retry: (_n, err) => !(err instanceof ApiRequestError && err.status === 403),
+    retry: retryUnlessForbidden,
   });
 
   const { mutate: exportCSV, isPending: exporting } = useMutation({
@@ -51,50 +42,13 @@ export default function AdminMembersPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.adminMembers() }),
   });
 
-  if (!ready || !authenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (error instanceof ApiRequestError && error.status === 403) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <p className="text-xl font-semibold text-gray-900">Access Denied</p>
-          <p className="text-gray-500 text-sm">You need admin privileges to view this page.</p>
-          <Link href="/" className="text-blue-600 text-sm hover:underline block">
-            Go home
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="flex items-center px-6 py-4 bg-white border-b border-gray-200">
-        <Link href="/admin/sessions" className="text-gray-500 hover:text-gray-800 mr-4">
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-            />
-          </svg>
-        </Link>
-        <div className="flex-1">
-          <h1 className="text-lg font-semibold text-gray-900">Admin — Members</h1>
+    <div className="max-w-7xl mx-auto w-full space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Members</h1>
           {data?.currentSemester && (
-            <p className="text-xs text-gray-500">
+            <p className="text-sm text-slate-500">
               Current semester: {data.currentSemester} &middot; {data.totalSessions} session
               {data.totalSessions !== 1 ? 's' : ''} total
             </p>
@@ -109,9 +63,9 @@ export default function AdminMembersPage() {
             {exporting ? 'Exporting…' : 'Export CSV'}
           </button>
         ) : null}
-      </header>
+      </div>
 
-      <main className="flex-1 px-6 py-8 max-w-7xl mx-auto w-full">
+      <div>
         {isLoading ? (
           <div className="flex justify-center py-16">
             <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
@@ -154,7 +108,7 @@ export default function AdminMembersPage() {
             </table>
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }
@@ -221,7 +175,11 @@ function truncateAddress(addr: string): string {
 
 function AttendancePct({ pct }: { pct: number }) {
   const color =
-    pct >= 75 ? 'text-green-700' : pct >= 50 ? 'text-amber-600' : 'text-gray-600';
+    pct >= ATTENDANCE_GOOD_PCT
+      ? 'text-green-700'
+      : pct >= ATTENDANCE_OK_PCT
+        ? 'text-amber-600'
+        : 'text-gray-600';
   return <span className={`tabular-nums font-medium ${color}`}>{pct}%</span>;
 }
 

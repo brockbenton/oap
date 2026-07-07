@@ -59,7 +59,7 @@ Severity is the **post-verification** severity (an adversarial pass re-graded se
 | L1 | CSV formula injection: `csvEscape` does not neutralize leading `= + - @` in exported cells sourced from `linkedAccount`. | `backend/src/routes/admin.ts:340` | Admin-only export; realistic payloads are constrained by email/Discord-username validation. Fix = prefix formula triggers with `'`. |
 | L2 | QR has no presence binding and the nonce is not consumed, so a forwarded QR is redeemable by a non-attendee within the TTL. | `backend/src/routes/check-in.ts:103` | Documented design tradeoff of a single shared projected QR; hardening = rotating per-scan codes / shorter TTL. |
 | L3 | `closeSession` overwrites the session's creation `txHash` with the close tx in the single `txHash` column. | `backend/src/routes/sessions.ts:124` | Informational only; the on-chain `SessionCreated` event remains the source of truth. Fix = add a `closeTxHash` column. |
-| L4 | Admin roles page lacks the `ready/authenticated` gating, 403 branch, and `force-dynamic` that its sibling admin pages have. | `frontend/app/admin/roles/page.tsx:30` | UX/consistency only — the backend fully enforces admin auth; the rendered shell is inert. |
+| L4 | Admin roles page lacks the `ready/authenticated` gating, 403 branch, and `force-dynamic` that its sibling admin pages have. | `frontend/app/admin/roles/page.tsx:30` | **Now fixed** — the new `app/admin/layout.tsx` gates every `/admin` route (auth + on-chain ADMIN_ROLE via `GET /admin/me`) with a shared sign-in / Access Denied UI, and the page declares `force-dynamic`. |
 
 ### Informational (investigated; not defects / out of Phase 3 scope)
 
@@ -80,3 +80,29 @@ Severity is the **post-verification** severity (an adversarial pass re-graded se
 
 `AttendanceRegistry.sol` was **not modified** — no HIGH-severity contract bug was found (45/45 tests pass; access
 control, soulbound enforcement, reentrancy guard, and the `date==0` sentinel all verified).
+
+---
+
+## Post-review hardening (Codex + adversarial multi-agent review of the admin/Phase-3 work)
+
+A Codex agentic review plus a second adversarial workflow reviewed the admin dashboard, overview aggregation,
+page refactor, and tests. All confirmed findings were applied:
+
+- **HIGH — admin gate trusted only the DB.** `adminMiddleware` now authorizes off the on-chain `hasRole(ADMIN_ROLE)`
+  (contract = source of truth, fail-closed on RPC error); the `admin_roles` table is audit/listing only.
+  `backend/src/middleware/admin.ts`, `backend/src/services/onchain.service.ts`, `backend/src/lib/roles.ts`.
+- **HIGH — mint worker not truly idempotent.** Extracted `runMintJob`/`reconcileFailedMint`; both check on-chain
+  `balanceOf` so a DB-write failure after a successful mint reconciles to CONFIRMED instead of re-minting (revert) or
+  falsely marking FAILED. `backend/src/jobs/mint.job.ts`.
+- **HIGH — IPFS pins didn't match `uri(id)`.** The pipeline now pins the whole metadata **directory** and returns one
+  base CID so `ipfs://{baseCid}/{id}.json` resolves. `backend/src/services/ipfs.service.ts`.
+- **MEDIUM — overview attendance rate could exceed 100%.** Eligible denominator is now `max(headcount, joinedByDate)`.
+  `backend/src/services/stats.service.ts`.
+- **MEDIUM — admin gate could hang / leak the shell.** `adminMe` query now uses a capped retry, is keyed by Privy
+  user id, is non-cacheable (`staleTime/gcTime: 0`), and the cache is cleared on logout — so a non-admin can't inherit
+  a prior admin's cached verdict on a shared browser, and errors reach the Access-Denied UI. Uncapped retries on the
+  sessions/members queries were capped via a shared `retryUnlessForbidden`. `frontend/app/admin/layout.tsx`,
+  `frontend/lib/api/client.ts`.
+- **LOW** — wall-clock-dependent stats test now injects a fixed `now`; frontend attendance-color thresholds hoisted to
+  `frontend/lib/constants.ts`; queue made lazy so importing the app opens no Redis socket; added negative admin tests
+  (403 non-admin, 401 invalid token), mint-reconcile tests, and an IPFS publish-path test. Backend suite: **25 tests**.

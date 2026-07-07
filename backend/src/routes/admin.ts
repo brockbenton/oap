@@ -5,7 +5,7 @@ import { adminMiddleware } from '../middleware/admin';
 import prisma from '../lib/prisma';
 import logger from '../lib/logger';
 import { grantAdminRoleOnChain, revokeAdminRoleOnChain } from '../services/relay.service';
-import { buildMemberStats } from '../services/stats.service';
+import { buildMemberStats, buildAdminOverview } from '../services/stats.service';
 import { publishSemesterMetadata } from '../services/ipfs.service';
 
 const router = Router();
@@ -13,6 +13,22 @@ const router = Router();
 // All admin routes require auth + admin role
 router.use(authMiddleware);
 router.use(adminMiddleware);
+
+// ── GET /api/v1/admin/me ──────────────────────────────────────────────────
+// Lightweight admin-gate probe for the frontend: 200 => admin, 403 => not.
+
+router.get('/me', (req: Request, res: Response): void => {
+  res.json({ data: { isAdmin: true, walletAddress: req.user!.walletAddress } });
+});
+
+// ── GET /api/v1/admin/overview ────────────────────────────────────────────
+// Dashboard overview: attendance-over-time series, per-session headcount, and
+// session-over-session (week-over-week) delta.
+
+router.get('/overview', async (_req: Request, res: Response): Promise<void> => {
+  const overview = await buildAdminOverview();
+  res.json({ data: overview });
+});
 
 // ── GET /api/v1/admin/sessions ────────────────────────────────────────────
 
@@ -341,7 +357,7 @@ router.delete('/roles/:walletAddress', async (req: Request, res: Response): Prom
 router.post('/ipfs/publish', async (_req: Request, res: Response): Promise<void> => {
   try {
     const result = await publishSemesterMetadata();
-    logger.info({ msg: 'IPFS metadata publish requested', staged: result.staged, pinned: result.pinned, dryRun: result.dryRun });
+    logger.info({ msg: 'IPFS metadata publish requested', staged: result.staged, baseCid: result.baseCid, dryRun: result.dryRun });
     res.json({ data: result });
   } catch (err) {
     logger.error({ msg: 'IPFS metadata publish failed', err: (err as Error).message });

@@ -1,5 +1,21 @@
-import { SessionWithCount, Attendee, Session, MembersListResponse, AdminRole } from '@/types';
+import {
+  SessionWithCount,
+  Attendee,
+  Session,
+  MembersListResponse,
+  AdminRole,
+  AdminOverview,
+  AdminMe,
+} from '@/types';
 import { apiRequest, API_BASE, ApiRequestError } from './client';
+
+export async function getAdminMe(token: string): Promise<AdminMe> {
+  return apiRequest<AdminMe>('/admin/me', { token });
+}
+
+export async function getAdminOverview(token: string): Promise<AdminOverview> {
+  return apiRequest<AdminOverview>('/admin/overview', { token });
+}
 
 // Download a CSV from an admin export endpoint and trigger a browser save-file dialog.
 // Must be called in a browser context (not SSR).
