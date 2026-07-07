@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { getMemberVault } from '@/lib/api/members';
 import { queryKeys } from '@/lib/api/queryKeys';
+import LoadError from '@/components/shared/LoadError';
 import { VaultToken } from '@/types';
 
 const ALL_SEMESTERS = 'All semesters';
@@ -27,7 +28,7 @@ export default function VaultPage() {
     wallets.find((w) => w.walletClientType === 'privy')?.address ?? user?.wallet?.address
   )?.toLowerCase();
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: queryKeys.memberVault(address ?? ''),
     queryFn: () => getMemberVault(address!),
     enabled: authenticated && !!address,
@@ -76,14 +77,18 @@ export default function VaultPage() {
         {isLoading ? (
           <GridSkeleton />
         ) : error ? (
-          <CenteredNote tone="error">Couldn&apos;t load your vault. Please try again.</CenteredNote>
-        ) : visible.length === 0 ? (
-          <EmptyVault hasAny={(data?.tokenCount ?? 0) > 0} />
+          <LoadError what="vault" onRetry={() => refetch()} />
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-            {visible.map((token) => (
-              <TokenCard key={token.tokenId} token={token} />
-            ))}
+          <div className="fade-in">
+            {visible.length === 0 ? (
+              <EmptyVault hasAny={(data?.tokenCount ?? 0) > 0} />
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+                {visible.map((token) => (
+                  <TokenCard key={token.tokenId} token={token} />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </main>

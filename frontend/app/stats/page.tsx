@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { getPersonalStats } from '@/lib/api/members';
 import { queryKeys } from '@/lib/api/queryKeys';
+import LoadError from '@/components/shared/LoadError';
 import { ATTENDANCE_GOOD_PCT, ATTENDANCE_OK_PCT } from '@/lib/constants';
 import { PersonalStats } from '@/types';
 
@@ -25,7 +26,7 @@ export default function StatsPage() {
     wallets.find((w) => w.walletClientType === 'privy')?.address ?? user?.wallet?.address
   )?.toLowerCase();
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: queryKeys.memberStats(address ?? ''),
     queryFn: () => getPersonalStats(address!),
     enabled: authenticated && !!address,
@@ -51,11 +52,15 @@ export default function StatsPage() {
         {isLoading ? (
           <StatsSkeleton />
         ) : error ? (
-          <p className="text-center py-20 text-sm text-red-600">Couldn&apos;t load your stats. Please try again.</p>
-        ) : !data || data.tokensEarned === 0 ? (
-          <EmptyStats totalSessions={data?.totalSessions ?? 0} />
+          <LoadError what="stats" onRetry={() => refetch()} />
         ) : (
-          <StatsBody stats={data} />
+          <div className="fade-in">
+            {!data || data.tokensEarned === 0 ? (
+              <EmptyStats totalSessions={data?.totalSessions ?? 0} />
+            ) : (
+              <StatsBody stats={data} />
+            )}
+          </div>
         )}
       </main>
     </div>
