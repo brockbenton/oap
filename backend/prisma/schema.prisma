@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Member {
-  id            String   @id @default(cuid())
+  id             String   @id @default(cuid())
   walletAddress  String   @unique @map("wallet_address")
   privyUserId    String?  @unique @map("privy_user_id")
   foundingMember Boolean  @default(false) @map("founding_member")
@@ -61,6 +61,8 @@ model CheckIn {
   @@map("check_ins")
 }
 
+/// Reserved for a future on-chain event indexer; not currently populated.
+/// check_ins is the source of truth for attendance (see MASTER_PLAN → Architecture).
 model TokenEvent {
   id          String   @id @default(cuid())
   memberId    String   @map("member_id")

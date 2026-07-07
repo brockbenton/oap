@@ -21,7 +21,7 @@ The POAP protocol requires manual approval per event from the POAP team, ties ad
 | Wallet UX | **Privy** (embedded wallets) | Email, Google, or passkey login creates wallet under the hood — zero MetaMask required to start |
 | Gas model | Backend sponsors gas (gasless for members) | Admin backend wallet pays gas. Members never touch ETH. |
 | Anti-cheat | Time-windowed, admin-signed QR codes | Session payload signed by admin key, expires in N minutes, shown at physical meeting |
-| Backend | Lightweight Node.js + PostgreSQL | Indexes on-chain events for fast stat queries. Sponsors gasless transactions. |
+| Backend | Lightweight Node.js + PostgreSQL | Records check-ins for fast stat queries. Sponsors gasless transactions. |
 | Admin roles | On-chain `AccessControl` (OpenZeppelin) | Multiple admins, role-based, no single point of failure |
 
 ---
@@ -30,7 +30,7 @@ The POAP protocol requires manual approval per event from the POAP team, ties ad
 
 ### Frontend
 - **Next.js 14** (App Router) + **TypeScript**
-- **Tailwind CSS** + **shadcn/ui** components
+- **Tailwind CSS** (plain — no component library)
 - **Privy** — wallet abstraction, embedded wallets; supported login methods: **email**, **Google**, and **passkey**
 - **viem** + **wagmi** — type-safe contract interaction
 - **TanStack Query** — async state, caching
@@ -44,7 +44,7 @@ The POAP protocol requires manual approval per event from the POAP team, ties ad
 ### Backend
 - **Node.js** + **Express** + **TypeScript**
 - **PostgreSQL** + **Prisma ORM**
-- **Alchemy SDK** — RPC + event indexing
+- **Alchemy** — Base RPC endpoint (via viem)
 - **Bull** (Redis queue) — async on-chain write jobs
 - Admin-signed QR payload generation + verification
 - Gasless transaction relay (backend wallet sponsors mints)
@@ -52,7 +52,7 @@ The POAP protocol requires manual approval per event from the POAP team, ties ad
 ### Infrastructure
 - **Vercel** — frontend hosting
 - **Railway** or **Render** — backend + PostgreSQL
-- **Alchemy** — Base RPC + webhooks for event indexing
+- **Alchemy** — Base RPC
 
 ---
 
@@ -81,11 +81,8 @@ Node.js Backend API
     ├── GET  /admin/members     All members with status
     └── GET  /admin/sessions    Session history + attendance lists
     │
-    ├── Blockchain Event Indexer (Alchemy webhooks)
-    │   └── Syncs TokenMinted events → PostgreSQL
-    │
     └── Transaction Relay
-        └── Backend wallet signs + sends mint txs to Base
+        └── Records confirmed check-ins (source of truth) + signs & sends mint txs to Base
     │
     ▼
 AttendanceRegistry.sol (Base)
@@ -93,7 +90,7 @@ AttendanceRegistry.sol (Base)
     ├── createSession(sessionId, metadata)   Admin only
     ├── mint(to, sessionId)                  Relay only
     ├── balanceOf(address, sessionId)        Public read
-    └── soulbound: _beforeTokenTransfer reverts on transfer
+    └── soulbound: _update reverts on transfer
 ```
 
 ---
@@ -117,7 +114,7 @@ Key functions:
   closeSession(uint256 id)
   mint(address to, uint256 sessionId)           // RELAY_ROLE only
   uri(uint256 id) → IPFS JSON metadata
-  _beforeTokenTransfer → revert if from != address(0)  // soulbound
+  _update → revert if from != address(0)  // soulbound
 ```
 
 Token metadata (IPFS):
