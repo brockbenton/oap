@@ -62,6 +62,13 @@ export async function mintOnChain(
   return hash;
 }
 
+export const relayAddress = relayAccount.address;
+
+/** Native (gas) balance of the relay wallet, in wei. */
+export async function getRelayBalanceWei(): Promise<bigint> {
+  return publicClient.getBalance({ address: relayAccount.address });
+}
+
 export async function setBaseCidOnChain(baseCid: string): Promise<`0x${string}`> {
   if (!defaultAdminWalletClient || !defaultAdminAccount) {
     throw new Error('DEFAULT_ADMIN_PRIVATE_KEY not configured');

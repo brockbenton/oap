@@ -4,13 +4,17 @@ vi.mock('../src/lib/queue', () => ({ MINT_QUEUE: 'mint', mintQueue: {} }));
 vi.mock('../src/lib/prisma', () => ({
   default: { checkIn: { findUnique: vi.fn(), update: vi.fn(), updateMany: vi.fn() } },
 }));
-vi.mock('../src/services/relay.service', () => ({ mintOnChain: vi.fn() }));
+vi.mock('../src/services/relay.service', () => ({
+  mintOnChain: vi.fn(),
+  getRelayBalanceWei: vi.fn(),
+  relayAddress: '0x0000000000000000000000000000000000000042',
+}));
 vi.mock('../src/services/onchain.service', () => ({ tokenBalanceOnChain: vi.fn() }));
 
 import prisma from '../src/lib/prisma';
 import { mintOnChain } from '../src/services/relay.service';
 import { tokenBalanceOnChain } from '../src/services/onchain.service';
-import { runMintJob, reconcileFailedMint } from '../src/jobs/mint.job';
+import { runMintJob, reconcileFailedMint, isBalanceLow } from '../src/jobs/mint.job';
 
 const DATA = {
   checkInId: 'ci1',
@@ -51,6 +55,14 @@ describe('runMintJob (idempotent mint)', () => {
     expect(prisma.checkIn.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { txHash: '0xabc', mintStatus: 'CONFIRMED' } }),
     );
+  });
+});
+
+describe('isBalanceLow', () => {
+  it('is true strictly below the threshold', () => {
+    expect(isBalanceLow(1n, 2n)).toBe(true);
+    expect(isBalanceLow(2n, 2n)).toBe(false);
+    expect(isBalanceLow(3n, 2n)).toBe(false);
   });
 });
 
