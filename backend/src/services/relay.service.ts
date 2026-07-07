@@ -1,4 +1,5 @@
-import { publicClient, adminWalletClient, relayWalletClient, adminAccount, relayAccount, chain } from '../lib/contract';
+import { publicClient, adminWalletClient, relayWalletClient, adminAccount, relayAccount, defaultAdminWalletClient, defaultAdminAccount, chain } from '../lib/contract';
+import { keccak256, toBytes, getAddress } from 'viem';
 import { ATTENDANCE_ABI } from '../lib/abi';
 import logger from '../lib/logger';
 
@@ -57,5 +58,45 @@ export async function mintOnChain(
   logger.info({ msg: 'mint tx submitted', hash, to, sessionIdOnchain });
   await publicClient.waitForTransactionReceipt({ hash, timeout: 120_000 });
   logger.info({ msg: 'mint confirmed', hash, to, sessionIdOnchain });
+  return hash;
+}
+
+const ADMIN_ROLE = keccak256(toBytes('ADMIN_ROLE'));
+
+export async function grantAdminRoleOnChain(wallet: `0x${string}`): Promise<`0x${string}`> {
+  if (!defaultAdminWalletClient || !defaultAdminAccount) {
+    throw new Error('DEFAULT_ADMIN_PRIVATE_KEY not configured');
+  }
+  const checksummed = getAddress(wallet);
+  const hash = await defaultAdminWalletClient.writeContract({
+    address: contractAddress,
+    abi: ATTENDANCE_ABI,
+    functionName: 'grantRole',
+    args: [ADMIN_ROLE, checksummed],
+    account: defaultAdminAccount,
+    chain,
+  });
+  logger.info({ msg: 'grantRole(ADMIN_ROLE) tx submitted', hash, wallet });
+  await publicClient.waitForTransactionReceipt({ hash, timeout: 120_000 });
+  logger.info({ msg: 'grantRole(ADMIN_ROLE) confirmed', hash, wallet });
+  return hash;
+}
+
+export async function revokeAdminRoleOnChain(wallet: `0x${string}`): Promise<`0x${string}`> {
+  if (!defaultAdminWalletClient || !defaultAdminAccount) {
+    throw new Error('DEFAULT_ADMIN_PRIVATE_KEY not configured');
+  }
+  const checksummed = getAddress(wallet);
+  const hash = await defaultAdminWalletClient.writeContract({
+    address: contractAddress,
+    abi: ATTENDANCE_ABI,
+    functionName: 'revokeRole',
+    args: [ADMIN_ROLE, checksummed],
+    account: defaultAdminAccount,
+    chain,
+  });
+  logger.info({ msg: 'revokeRole(ADMIN_ROLE) tx submitted', hash, wallet });
+  await publicClient.waitForTransactionReceipt({ hash, timeout: 120_000 });
+  logger.info({ msg: 'revokeRole(ADMIN_ROLE) confirmed', hash, wallet });
   return hash;
 }
