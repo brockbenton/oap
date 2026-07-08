@@ -7,6 +7,10 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import CheckInFlow from '@/components/features/check-in/CheckInFlow';
+import { ArrowLeft } from '@/components/ui/icons';
+
+const PAGE_TITLE = 'Check in';
+const BACK_HREF = '/';
 
 export default function CheckInPage() {
   const { ready, authenticated } = usePrivy();
@@ -25,24 +29,26 @@ export default function CheckInPage() {
 
   if (!ready || !authenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-paper">
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-line border-t-ink" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="flex items-center px-6 py-4 bg-white border-b border-gray-200">
-        <Link href="/" className="text-gray-500 hover:text-gray-800 mr-4">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-          </svg>
+    <div className="flex min-h-screen flex-col bg-paper">
+      <header className="flex items-center gap-3 border-b border-line px-6 py-4">
+        <Link
+          href={BACK_HREF}
+          aria-label="Back"
+          className="grid h-9 w-9 place-items-center rounded-full text-content-secondary transition hover:bg-[rgba(1,3,4,0.06)] hover:text-ink"
+        >
+          <ArrowLeft size={20} />
         </Link>
-        <h1 className="text-lg font-semibold text-gray-900">Check In</h1>
+        <h1 className="text-lg font-semibold tracking-[-0.2px] text-ink">{PAGE_TITLE}</h1>
       </header>
 
-      <main className="flex-1 flex items-center justify-center px-6 py-8">
+      <main className="flex flex-1 items-center justify-center px-6 py-8">
         <div className="w-full max-w-sm">
           <CheckInFlow key={flowKey} onRestart={handleRestart} />
         </div>
