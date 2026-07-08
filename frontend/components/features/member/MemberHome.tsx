@@ -94,7 +94,7 @@ const SAMPLE_TOKENS: SampleToken[] = [
 
 const fmt = (n: number): string => n.toLocaleString('en-US');
 
-export default function HomePage() {
+export default function MemberHome() {
   return HAS_TOKENS ? <PopulatedHome /> : <EmptyHome />;
 }
 
