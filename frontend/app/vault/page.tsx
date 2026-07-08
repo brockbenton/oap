@@ -10,15 +10,63 @@ import Link from 'next/link';
 import { getMemberVault } from '@/lib/api/members';
 import { queryKeys } from '@/lib/api/queryKeys';
 import LoadError from '@/components/shared/LoadError';
+import MemberTopNav from '@/components/shared/MemberTopNav';
+import PageContainer from '@/components/shared/PageContainer';
+import TokenCard from '@/components/shared/TokenCard';
+import TokenDetailModal, { type TokenDetailData } from '@/components/shared/TokenDetailModal';
+import { IconButton } from '@/components/ui';
+import { GRADIENT_NAMES } from '@/lib/tokenArt';
+import type { GradientName } from '@/lib/tokenArt';
+import { cn } from '@/lib/cn';
 import { VaultToken } from '@/types';
 
 const ALL_SEMESTERS = 'All semesters';
+const ALL_LABEL = 'All';
+const TOKENS_LABEL = 'tokens';
+const RARE_LABEL = 'rare';
+const CLUB_LABEL = 'club';
+const MORE_TOKENS_LABEL = 'more tokens';
+const MINT_PENDING_LABEL = 'Minting…';
+const MINT_FAILED_LABEL = 'Failed';
+
+/** How many tokens the grid previews before collapsing the rest behind a "+N more" tile. */
+const MAX_VISIBLE_TOKENS = 9;
+
+const CLUB_COUNT = 1;
+/** Real vault data carries no rarity signal yet, so the rare tally is always zero. */
+const RARE_TOKEN_COUNT = 0;
+
+const TONE_NEUTRAL = 'neutral' as const;
+const TONE_INFO = 'info' as const;
+
+const CLUB_NAME = 'Blockchain Club';
+const CHAIN_NAME = 'Base';
+const TOKEN_STANDARD = 'ERC-721 · soulbound';
+const SAMPLE_XP = 180;
+const SAMPLE_EDITION_OF = 240;
+const SAMPLE_TX_HASH = '0x9f2c7ab41d6e8305c1a4b7e0f93d2685a4c1de07f8b3629045ac1d7e6b0f2a3c';
+const SEASON_TRAIT_LABEL = 'Season';
+const STATIC_TRAITS: TokenDetailData['traits'] = [
+  { label: 'Rarity', value: 'Common', tone: TONE_NEUTRAL },
+  { label: 'Check-in', value: 'On-time', tone: TONE_INFO },
+];
+
+const CHIP_BASE = 'rounded-full px-3.5 py-2 text-xs transition';
+const CHIP_ACTIVE = 'bg-ink font-semibold text-white';
+const CHIP_INACTIVE = 'border border-line font-medium text-content-secondary hover:text-ink';
+const MINT_BADGE_BASE =
+  'pointer-events-none absolute right-2.5 top-2.5 z-10 rounded-full px-2 py-0.5 text-[10px] font-semibold';
+const MORE_TILE_CLASSES =
+  'flex h-full min-h-[172px] flex-col items-center justify-center gap-2 rounded-tile border border-dashed border-line-strong bg-card-filled text-content-secondary transition hover:border-content-secondary';
 
 export default function VaultPage() {
   const { ready, authenticated, user } = usePrivy();
   const { wallets } = useWallets();
   const router = useRouter();
   const [semester, setSemester] = useState<string>(ALL_SEMESTERS);
+  const [sortDesc, setSortDesc] = useState(true);
+  const [showAll, setShowAll] = useState(false);
+  const [selected, setSelected] = useState<VaultToken | null>(null);
 
   useEffect(() => {
     if (ready && !authenticated) router.replace('/');
@@ -44,124 +92,187 @@ export default function VaultPage() {
     return semester === ALL_SEMESTERS ? tokens : tokens.filter((t) => t.semester === semester);
   }, [data, semester]);
 
+  const sorted = useMemo(() => {
+    const arr = [...visible];
+    arr.sort((a, b) => {
+      const cmp = new Date(b.date).getTime() - new Date(a.date).getTime();
+      return sortDesc ? cmp : -cmp;
+    });
+    return arr;
+  }, [visible, sortDesc]);
+
+  const shown = showAll ? sorted : sorted.slice(0, MAX_VISIBLE_TOKENS);
+  const overflow = sorted.length - shown.length;
+
+  const actualSemesters = semesters.filter((s) => s !== ALL_SEMESTERS);
+  const hasMultipleSemesters = actualSemesters.length > 1;
+  const tokenCount = data?.tokenCount ?? 0;
+
+  const chips = [
+    { key: ALL_SEMESTERS, label: `${ALL_LABEL} ${tokenCount}` },
+    ...(hasMultipleSemesters ? actualSemesters.map((s) => ({ key: s, label: s })) : []),
+  ];
+
+  const headerStats = data
+    ? [
+        { value: data.tokenCount, label: TOKENS_LABEL },
+        { value: RARE_TOKEN_COUNT, label: RARE_LABEL },
+        { value: CLUB_COUNT, label: CLUB_LABEL },
+      ]
+    : [];
+
   if (!ready || !authenticated) return <FullPageSpinner />;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <header className="flex items-center px-6 py-4 bg-white border-b border-gray-200">
-        <Link href="/" className="text-gray-400 hover:text-gray-700 mr-4" aria-label="Back">
-          <BackArrow />
-        </Link>
-        <div className="flex-1">
-          <h1 className="text-lg font-semibold text-gray-900">My Vault</h1>
-          <p className="text-xs text-gray-500">
-            {data ? `${data.tokenCount} attendance token${data.tokenCount === 1 ? '' : 's'}` : 'Your attendance tokens'}
-          </p>
-        </div>
-        {semesters.length > 2 && (
-          <select
-            value={semester}
-            onChange={(e) => setSemester(e.target.value)}
-            className="text-sm rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {semesters.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        )}
-      </header>
+    <div className="flex min-h-screen flex-col bg-[#fbfbfc]">
+      <MemberTopNav active="vault" />
 
-      <main className="flex-1 px-6 py-8 max-w-6xl mx-auto w-full">
-        {isLoading ? (
-          <GridSkeleton />
-        ) : error ? (
-          <LoadError what="vault" onRetry={() => refetch()} />
-        ) : (
-          <div className="fade-in">
-            {visible.length === 0 ? (
-              <EmptyVault hasAny={(data?.tokenCount ?? 0) > 0} />
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-                {visible.map((token) => (
-                  <TokenCard key={token.tokenId} token={token} />
+      <main className="flex-1 py-8">
+        <PageContainer>
+          <div className="mb-[22px] flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="text-[30px] font-semibold leading-9 tracking-[-1px]">My Vault</h1>
+              {data && (
+                <div className="mt-2 flex flex-wrap gap-5">
+                  {headerStats.map((stat) => (
+                    <span key={stat.label} className="text-[13px] font-medium text-content-secondary">
+                      <b className="font-mono text-ink tabular-nums">{stat.value}</b> {stat.label}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {data && (
+              <div className="flex flex-wrap items-center gap-2">
+                {chips.map((chip) => (
+                  <button
+                    key={chip.key}
+                    type="button"
+                    onClick={() => setSemester(chip.key)}
+                    className={cn(CHIP_BASE, semester === chip.key ? CHIP_ACTIVE : CHIP_INACTIVE)}
+                  >
+                    {chip.label}
+                  </button>
                 ))}
+                <IconButton
+                  label={sortDesc ? 'Sort oldest first' : 'Sort newest first'}
+                  onClick={() => setSortDesc((v) => !v)}
+                  className="h-9 w-9 border border-line text-content-secondary"
+                >
+                  <SortIcon />
+                </IconButton>
               </div>
             )}
           </div>
-        )}
+
+          {isLoading ? (
+            <GridSkeleton />
+          ) : error ? (
+            <LoadError what="vault" onRetry={() => refetch()} />
+          ) : sorted.length === 0 ? (
+            <EmptyVault hasAny={tokenCount > 0} />
+          ) : (
+            <div className="fade-in grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+              {shown.map((token) => (
+                <div key={token.tokenId} className="relative">
+                  <TokenCard
+                    editionNumber={token.meetingNumber}
+                    topic={token.name}
+                    date={formatCardDate(token.date)}
+                    gradient={gradientNameFor(token.name)}
+                    rarity={null}
+                    onClick={() => setSelected(token)}
+                  />
+                  {token.mintStatus !== 'CONFIRMED' && <MintStatusBadge status={token.mintStatus} />}
+                </div>
+              ))}
+              {overflow > 0 && (
+                <button type="button" onClick={() => setShowAll(true)} className={MORE_TILE_CLASSES}>
+                  <span className="font-mono text-[22px] font-bold text-content-disabled">+{overflow}</span>
+                  <span className="text-xs font-medium">{MORE_TOKENS_LABEL}</span>
+                </button>
+              )}
+            </div>
+          )}
+        </PageContainer>
       </main>
+
+      <TokenDetailModal
+        open={selected !== null}
+        onClose={() => setSelected(null)}
+        token={selected ? toDetail(selected) : null}
+      />
     </div>
   );
 }
 
+// ── mapping ──────────────────────────────────────────────────────────────────
+
+function toDetail(token: VaultToken): TokenDetailData {
+  return {
+    editionNumber: token.meetingNumber,
+    editionOf: SAMPLE_EDITION_OF,
+    topic: token.name,
+    club: CLUB_NAME,
+    week: token.meetingNumber,
+    mintedAt: formatMintedAt(token.date),
+    chain: CHAIN_NAME,
+    standard: TOKEN_STANDARD,
+    xp: SAMPLE_XP,
+    gradient: gradientNameFor(token.name),
+    rarity: null,
+    traits: [...STATIC_TRAITS, { label: SEASON_TRAIT_LABEL, value: token.semester, tone: TONE_NEUTRAL }],
+    txHash: token.txHash ?? SAMPLE_TX_HASH,
+  };
+}
+
+/** Mirrors gradientForTopic() to yield the typed GradientName the card + modal props require, not the CSS string. */
+function gradientNameFor(topic: string): GradientName {
+  let sum = 0;
+  for (let i = 0; i < topic.length; i += 1) sum += topic.charCodeAt(i);
+  return GRADIENT_NAMES[sum % GRADIENT_NAMES.length];
+}
+
 // ── components ───────────────────────────────────────────────────────────────
 
-function TokenCard({ token }: { token: VaultToken }) {
-  const [imgFailed, setImgFailed] = useState(false);
-
+function MintStatusBadge({ status }: { status: 'PENDING' | 'FAILED' }) {
+  const isPending = status === 'PENDING';
   return (
-    <div className="group rounded-2xl bg-white border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-      <div className="relative aspect-square bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-        {!imgFailed ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={token.imageUrl}
-            alt={token.name}
-            className="w-full h-full object-cover"
-            onError={() => setImgFailed(true)}
-          />
-        ) : (
-          <span className="text-white/90 text-3xl font-bold tabular-nums">#{token.meetingNumber}</span>
-        )}
-        {token.mintStatus !== 'CONFIRMED' && (
-          <span
-            className={`absolute top-2 right-2 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-              token.mintStatus === 'PENDING'
-                ? 'bg-amber-100 text-amber-700'
-                : 'bg-red-100 text-red-700'
-            }`}
-          >
-            {token.mintStatus === 'PENDING' ? 'Minting…' : 'Failed'}
-          </span>
-        )}
-      </div>
-      <div className="p-3 space-y-1">
-        <p className="text-sm font-semibold text-gray-900 truncate" title={token.name}>
-          {token.name}
-        </p>
-        <p className="text-xs text-gray-500">{formatDate(token.date)}</p>
-        <div className="flex items-center justify-between pt-1">
-          <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
-            {token.semester}
-          </span>
-          <span className="text-[11px] text-gray-400 tabular-nums">Meeting #{token.meetingNumber}</span>
-        </div>
-      </div>
-    </div>
+    <span
+      className={cn(
+        MINT_BADGE_BASE,
+        isPending ? 'bg-status-warn-bg text-status-warn' : 'bg-status-neg-bg text-status-neg',
+      )}
+    >
+      {isPending ? MINT_PENDING_LABEL : MINT_FAILED_LABEL}
+    </span>
   );
 }
 
 function EmptyVault({ hasAny }: { hasAny: boolean }) {
   if (hasAny) {
-    return <CenteredNote>No tokens for this semester.</CenteredNote>;
+    return <p className="py-20 text-center text-sm text-content-secondary">No tokens for this filter.</p>;
   }
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-4">
-        <svg className="w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h12A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6z" />
+    <div className="fade-in flex flex-col items-center justify-center py-20 text-center">
+      <div className="mb-4 grid h-16 w-16 place-items-center rounded-tile bg-card-filled">
+        <svg className="h-8 w-8 text-cyan" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3.75 6A2.25 2.25 0 016 3.75h12A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6z"
+          />
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 12l2.25 2.25 4.5-4.5" />
         </svg>
       </div>
-      <p className="text-gray-900 font-semibold">No attendance tokens yet</p>
-      <p className="text-gray-500 text-sm mt-1 max-w-xs">
+      <p className="font-semibold text-ink">No attendance tokens yet</p>
+      <p className="mt-1 max-w-xs text-sm text-content-secondary">
         Check in at a meeting to earn your first attendance token.
       </p>
       <Link
         href="/check-in"
-        className="mt-5 inline-block rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+        className="mt-5 inline-block rounded-md bg-cyan px-5 py-2.5 text-sm font-semibold text-ink transition hover:opacity-90"
       >
         Scan QR Code
       </Link>
@@ -171,13 +282,13 @@ function EmptyVault({ hasAny }: { hasAny: boolean }) {
 
 function GridSkeleton() {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="rounded-2xl bg-white border border-gray-200 overflow-hidden">
-          <div className="aspect-square bg-gray-100 animate-pulse" />
-          <div className="p-3 space-y-2">
-            <div className="h-3 bg-gray-100 rounded animate-pulse" />
-            <div className="h-3 w-1/2 bg-gray-100 rounded animate-pulse" />
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      {Array.from({ length: 10 }).map((_, i) => (
+        <div key={i} className="overflow-hidden rounded-tile border border-line bg-white">
+          <div className="aspect-square animate-pulse bg-card-filled" />
+          <div className="space-y-2 px-3.5 py-3">
+            <div className="h-3 animate-pulse rounded bg-card-filled" />
+            <div className="h-3 w-1/2 animate-pulse rounded bg-card-filled" />
           </div>
         </div>
       ))}
@@ -185,31 +296,38 @@ function GridSkeleton() {
   );
 }
 
-function CenteredNote({ children, tone }: { children: React.ReactNode; tone?: 'error' }) {
-  return (
-    <p className={`text-center py-20 text-sm ${tone === 'error' ? 'text-red-600' : 'text-gray-500'}`}>
-      {children}
-    </p>
-  );
-}
-
 function FullPageSpinner() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+    <div className="grid min-h-screen place-items-center bg-[#fbfbfc]">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-cyan border-t-transparent" />
     </div>
   );
 }
 
-function BackArrow() {
+function SortIcon() {
   return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+    <svg
+      width={16}
+      height={16}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 6h18M7 12h10M10 18h4" />
     </svg>
   );
 }
 
-function formatDate(iso: string): string {
+function formatCardDate(iso: string): string {
+  return new Date(iso)
+    .toLocaleDateString('en-US', { month: 'short', day: '2-digit', timeZone: 'UTC' })
+    .toUpperCase();
+}
+
+function formatMintedAt(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
