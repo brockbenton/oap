@@ -40,3 +40,11 @@ export function avatarGradient(seed: string): string {
   const [from, to] = AVATAR_PAIRS[charSum(seed) % AVATAR_PAIRS.length];
   return `linear-gradient(${GRADIENT_ANGLE}, ${from}, ${to})`;
 }
+
+export const AVATAR_COLOR_COUNT = AVATAR_PAIRS.length;
+
+export function avatarGradientByIndex(index: number): string {
+  const wrapped = ((index % AVATAR_COLOR_COUNT) + AVATAR_COLOR_COUNT) % AVATAR_COLOR_COUNT;
+  const [from, to] = AVATAR_PAIRS[wrapped];
+  return `linear-gradient(${GRADIENT_ANGLE}, ${from}, ${to})`;
+}

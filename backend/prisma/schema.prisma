@@ -12,6 +12,10 @@ model Member {
   walletAddress  String   @unique @map("wallet_address")
   privyUserId    String?  @unique @map("privy_user_id")
   foundingMember Boolean  @default(false) @map("founding_member")
+  username       String?  @unique
+  avatarColor    Int?     @map("avatar_color")
+  bio            String?
+  notifyEmail    Boolean  @default(false) @map("notify_email")
   createdAt      DateTime @default(now()) @map("created_at")
 
   checkIns    CheckIn[]

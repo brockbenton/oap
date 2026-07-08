@@ -246,3 +246,13 @@ export interface LiveMeeting {
   elapsedSeconds: number;
   roster: RosterEntry[];
 }
+
+// Editable member profile (GET/PATCH /members/me). avatarColor indexes the
+// avatar palette (lib/tokenArt.ts); null means fall back to the seed-derived color.
+export interface MemberProfile {
+  walletAddress: string;
+  username: string | null;
+  avatarColor: number | null;
+  bio: string | null;
+  notifyEmail: boolean;
+}
