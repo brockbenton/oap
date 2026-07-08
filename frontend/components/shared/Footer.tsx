@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import Brand from '@/components/shared/Brand';
 import PageContainer from '@/components/shared/PageContainer';
+import { BASESCAN_URL, GITHUB_URL } from '@/lib/constants';
 
 interface FooterLink {
   label: string;
   href: string;
+  external?: boolean;
 }
 
 interface FooterColumn {
@@ -17,6 +19,11 @@ const TAGLINE = 'Proof you showed up. Onchain.';
 const NETWORK_NOTE = 'Running on Base Sepolia · testnet';
 const COPYRIGHT = '© 2026 OAP';
 
+// Deep-link to the deployed registry on Basescan when the address is configured;
+// fall back to the explorer home so the link is never dead.
+const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
+const BASESCAN_HREF = contractAddress ? `${BASESCAN_URL}/address/${contractAddress}` : BASESCAN_URL;
+
 const FOOTER_COLUMNS: FooterColumn[] = [
   {
     heading: 'Product',
@@ -24,15 +31,14 @@ const FOOTER_COLUMNS: FooterColumn[] = [
       { label: 'Clubs', href: '/clubs' },
       { label: 'Explore', href: '/explore' },
       { label: 'Protocol', href: '/#protocol' },
-      { label: 'Docs', href: '/docs' },
     ],
   },
   {
     heading: 'Resources',
     links: [
       { label: 'Documentation', href: '/docs' },
-      { label: 'GitHub', href: '#' },
-      { label: 'Basescan', href: '#' },
+      { label: 'GitHub', href: GITHUB_URL, external: true },
+      { label: 'Basescan', href: BASESCAN_HREF, external: true },
     ],
   },
 ];
@@ -58,13 +64,26 @@ export default function Footer() {
               <div key={column.heading}>
                 <div className={HEADING_CLASSES}>{column.heading}</div>
                 <ul className="space-y-2.5">
-                  {column.links.map((link) => (
-                    <li key={link.label}>
-                      <Link href={link.href} className={LINK_CLASSES}>
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
+                  {column.links.map((link) =>
+                    link.external ? (
+                      <li key={link.label}>
+                        <a
+                          href={link.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={LINK_CLASSES}
+                        >
+                          {link.label}
+                        </a>
+                      </li>
+                    ) : (
+                      <li key={link.label}>
+                        <Link href={link.href} className={LINK_CLASSES}>
+                          {link.label}
+                        </Link>
+                      </li>
+                    ),
+                  )}
                 </ul>
               </div>
             ))}

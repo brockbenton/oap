@@ -60,9 +60,7 @@ export default function ClubsPage() {
 
   return (
     <div className="min-h-screen bg-[#fbfbfc]">
-      <div className="border-b border-line bg-white">
-        <MarketingNav />
-      </div>
+      <MarketingNav />
       <PageContainer className="py-9">
         {isLoading ? (
           <LoadingGrid />

@@ -6,6 +6,7 @@ import { Button, CopyChip, Eyebrow } from '@/components/ui';
 import { ArrowRight } from '@/components/ui/icons';
 import { TOKEN_GRADIENTS } from '@/lib/tokenArt';
 import { cn } from '@/lib/cn';
+import { BASESCAN_URL } from '@/lib/constants';
 
 const HERO_GRADIENT = 'radial-gradient(120% 120% at 0% 0%, #f2f7fe 0%, #ffffff 55%)';
 const CARD_SHEEN = 'radial-gradient(circle at 30% 25%,rgba(255,255,255,.35),transparent 55%)';
@@ -13,8 +14,10 @@ const PROTOCOL_ANCHOR = 'protocol';
 const MKT_EYEBROW = 'tracking-[0.12em] text-status-neutral';
 const BLUE_ACCENT = 'text-blue-500';
 const GREEN_ACCENT = 'text-green-600';
-const CONTRACT_ADDRESS = '0xA11c8b3D9f2E7a4C1b6D0e5F8a2C4b7D1e9F3F92';
-const CONTRACT_DISPLAY = '0xA11c…3F92';
+const DEPLOYED_CONTRACT = '0x7bEf8C32157C0A40A51b9bebeb7B36f236316192';
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ?? DEPLOYED_CONTRACT;
+const CONTRACT_DISPLAY = `${CONTRACT_ADDRESS.slice(0, 6)}…${CONTRACT_ADDRESS.slice(-4)}`;
+const CONTRACT_BASESCAN_HREF = `${BASESCAN_URL}/address/${CONTRACT_ADDRESS}`;
 
 interface HeroStat {
   value: string;
@@ -169,11 +172,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="border-b border-line">
-        <div className="mx-auto w-full max-w-[1180px]">
-          <MarketingNav />
-        </div>
-      </div>
+      <MarketingNav />
 
       <section style={{ background: HERO_GRADIENT }}>
         <PageContainer className="grid gap-10 pb-14 pt-12 md:grid-cols-[1.05fr_0.95fr] md:pt-16">
@@ -343,7 +342,14 @@ export default function Landing() {
                 <span>
                   Edition {TOKEN_SAMPLE.edition} / {TOKEN_SAMPLE.editionOf}
                 </span>
-                <span className="text-blue-500">Base ↗</span>
+                <a
+                  href={CONTRACT_BASESCAN_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 transition hover:text-blue-600"
+                >
+                  Base ↗
+                </a>
               </div>
             </div>
           </div>

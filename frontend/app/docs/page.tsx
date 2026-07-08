@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import MarketingNav from '@/components/shared/MarketingNav';
 import Footer from '@/components/shared/Footer';
 import { SearchIcon } from '@/components/ui/icons';
@@ -79,6 +79,16 @@ const BODY_TEXT_CLASSES = 'max-w-[60ch] text-[15px] leading-[24px] text-content-
 
 export default function DocsPage() {
   const [copied, setCopied] = useState(false);
+  const [query, setQuery] = useState('');
+
+  const filteredToc = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return TOC_SECTIONS;
+    return TOC_SECTIONS.map((section) => ({
+      ...section,
+      items: section.items.filter((item) => item.label.toLowerCase().includes(q)),
+    })).filter((section) => section.items.length > 0);
+  }, [query]);
 
   const handleCopy = useCallback(() => {
     navigator.clipboard
@@ -92,38 +102,48 @@ export default function DocsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="border-b border-line">
-        <div className="mx-auto max-w-[1180px]">
-          <MarketingNav />
-        </div>
-      </header>
+      <MarketingNav />
 
       <main className="mx-auto grid max-w-[1180px] grid-cols-1 lg:min-h-[560px] lg:grid-cols-[240px_1fr_200px]">
         <aside className="hidden px-5 py-7 lg:block lg:border-r lg:border-line">
           <div className="mb-[22px] flex h-[38px] items-center gap-2 rounded-md border border-line px-3">
-            <SearchIcon size={14} className="text-content-secondary" />
-            <span className="text-[13px] text-content-disabled">Search docs</span>
+            <SearchIcon size={14} className="shrink-0 text-content-secondary" />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search docs"
+              aria-label="Search docs"
+              className="w-full bg-transparent text-[13px] outline-none placeholder:text-content-disabled"
+            />
           </div>
 
-          {TOC_SECTIONS.map((section, i) => (
-            <div key={section.title} className={cn('flex flex-col gap-0.5', i < TOC_SECTIONS.length - 1 && 'mb-[22px]')}>
-              <div className={cn(SECTION_LABEL_CLASSES, 'mb-2.5')}>{section.title}</div>
-              {section.items.map((item) => (
-                <span
-                  key={item.label}
-                  aria-current={item.active ? 'page' : undefined}
-                  className={cn(
-                    'px-2.5 py-[7px] text-[13px]',
-                    item.active
-                      ? 'rounded-[8px] bg-card-filled font-semibold text-ink'
-                      : 'font-medium text-content-secondary',
-                  )}
-                >
-                  {item.label}
-                </span>
-              ))}
-            </div>
-          ))}
+          {filteredToc.length === 0 ? (
+            <div className="px-2.5 text-[13px] text-content-secondary">No results.</div>
+          ) : (
+            filteredToc.map((section, i) => (
+              <div
+                key={section.title}
+                className={cn('flex flex-col gap-0.5', i < filteredToc.length - 1 && 'mb-[22px]')}
+              >
+                <div className={cn(SECTION_LABEL_CLASSES, 'mb-2.5')}>{section.title}</div>
+                {section.items.map((item) => (
+                  <span
+                    key={item.label}
+                    aria-current={item.active ? 'page' : undefined}
+                    className={cn(
+                      'px-2.5 py-[7px] text-[13px]',
+                      item.active
+                        ? 'rounded-[8px] bg-card-filled font-semibold text-ink'
+                        : 'font-medium text-content-secondary',
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                ))}
+              </div>
+            ))
+          )}
         </aside>
 
         <article className="px-6 py-8 lg:px-11 lg:py-10">

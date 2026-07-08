@@ -12,11 +12,13 @@ interface MarketingNavItem {
 }
 
 const HOME_ROUTE = '/';
+const EXPLORE_ROUTE = '/explore';
+const LAUNCH_LABEL = 'Launch app';
+const OPEN_LABEL = 'Open app';
 
 const NAV_ITEMS: MarketingNavItem[] = [
   { label: 'Protocol', href: '/#protocol' },
   { label: 'Clubs', href: '/clubs' },
-  { label: 'Explore', href: '/explore' },
   { label: 'Docs', href: '/docs' },
 ];
 
@@ -26,30 +28,32 @@ export default function MarketingNav() {
   const router = useRouter();
   const { ready, authenticated, login } = usePrivy();
 
-  // "Launch app" takes signed-in members to the root switch (their Home);
-  // everyone else is sent through Privy login first.
+  // Signed-in members jump straight to the app (the root switch renders their Home);
+  // logged-out visitors go through Privy login first. "Explore" is public — no auth.
   const launchApp = () => {
     if (authenticated) router.push(HOME_ROUTE);
     else login();
   };
 
   return (
-    <header className="flex h-16 items-center px-7">
-      <Brand href={HOME_ROUTE} />
-      <nav className="ml-11 flex items-center gap-1.5">
-        {NAV_ITEMS.map((item) => (
-          <Link key={item.href} href={item.href} className={NAV_ITEM_CLASSES}>
-            {item.label}
+    <header className="border-b border-line bg-white">
+      <div className="mx-auto flex h-16 max-w-[1180px] items-center px-6">
+        <Brand href={HOME_ROUTE} />
+        <nav className="ml-11 flex items-center gap-1.5">
+          {NAV_ITEMS.map((item) => (
+            <Link key={item.href} href={item.href} className={NAV_ITEM_CLASSES}>
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="ml-auto flex items-center gap-2.5">
+          <Link href={EXPLORE_ROUTE}>
+            <Button variant="ghost">Explore</Button>
           </Link>
-        ))}
-      </nav>
-      <div className="ml-auto flex items-center gap-2.5">
-        <Button variant="ghost" onClick={login} disabled={!ready}>
-          Sign in
-        </Button>
-        <Button variant="primary" onClick={launchApp} disabled={!ready}>
-          Launch app
-        </Button>
+          <Button variant="primary" onClick={launchApp} disabled={!ready}>
+            {authenticated ? OPEN_LABEL : LAUNCH_LABEL}
+          </Button>
+        </div>
       </div>
     </header>
   );
