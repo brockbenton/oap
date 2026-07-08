@@ -47,7 +47,7 @@ const SCAN_ICON_SIZE = 24;
 
 export default function MobileTabBar({ active }: MobileTabBarProps) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[72px] grid-cols-5 items-center border-t border-line bg-white px-2 sm:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[72px] grid-cols-5 items-center border-t border-line bg-white px-2 md:hidden">
       {TAB_ITEMS.map(({ key, label, href, Icon, center }) => {
         if (center) {
           return (

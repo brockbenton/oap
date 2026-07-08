@@ -11,6 +11,7 @@ import { getMemberVault } from '@/lib/api/members';
 import { queryKeys } from '@/lib/api/queryKeys';
 import LoadError from '@/components/shared/LoadError';
 import MemberTopNav from '@/components/shared/MemberTopNav';
+import MobileTabBar from '@/components/shared/MobileTabBar';
 import PageContainer from '@/components/shared/PageContainer';
 import TokenCard from '@/components/shared/TokenCard';
 import TokenDetailModal, { type TokenDetailData } from '@/components/shared/TokenDetailModal';
@@ -31,6 +32,21 @@ const MINT_FAILED_LABEL = 'Failed';
 
 /** How many tokens the grid previews before collapsing the rest behind a "+N more" tile. */
 const MAX_VISIBLE_TOKENS = 9;
+
+/** "Recent" previews the newest tokens; 6 matches the mobile frame's visible grid. */
+const RECENT_TOKEN_LIMIT = 6;
+
+const MOBILE_FILTER_ALL = 'all' as const;
+const MOBILE_FILTER_RARE = 'rare' as const;
+const MOBILE_FILTER_RECENT = 'recent' as const;
+
+const MOBILE_FILTERS = [
+  { key: MOBILE_FILTER_ALL, label: 'All' },
+  { key: MOBILE_FILTER_RARE, label: 'Rare' },
+  { key: MOBILE_FILTER_RECENT, label: 'Recent' },
+] as const;
+
+type MobileFilter = (typeof MOBILE_FILTERS)[number]['key'];
 
 const CLUB_COUNT = 1;
 /** Real vault data carries no rarity signal yet, so the rare tally is always zero. */
@@ -67,6 +83,7 @@ export default function VaultPage() {
   const [sortDesc, setSortDesc] = useState(true);
   const [showAll, setShowAll] = useState(false);
   const [selected, setSelected] = useState<VaultToken | null>(null);
+  const [mobileFilter, setMobileFilter] = useState<MobileFilter>(MOBILE_FILTER_ALL);
 
   useEffect(() => {
     if (ready && !authenticated) router.replace('/');
@@ -104,6 +121,20 @@ export default function VaultPage() {
   const shown = showAll ? sorted : sorted.slice(0, MAX_VISIBLE_TOKENS);
   const overflow = sorted.length - shown.length;
 
+  const allByRecent = useMemo(
+    () =>
+      [...(data?.tokens ?? [])].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      ),
+    [data],
+  );
+
+  const mobileTokens = useMemo(() => {
+    if (mobileFilter === MOBILE_FILTER_RARE) return []; // no rarity signal in vault data yet
+    if (mobileFilter === MOBILE_FILTER_RECENT) return allByRecent.slice(0, RECENT_TOKEN_LIMIT);
+    return allByRecent;
+  }, [allByRecent, mobileFilter]);
+
   const actualSemesters = semesters.filter((s) => s !== ALL_SEMESTERS);
   const hasMultipleSemesters = actualSemesters.length > 1;
   const tokenCount = data?.tokenCount ?? 0;
@@ -127,7 +158,7 @@ export default function VaultPage() {
     <div className="flex min-h-screen flex-col bg-[#fbfbfc]">
       <MemberTopNav active="vault" />
 
-      <main className="flex-1 py-8">
+      <main className="hidden flex-1 py-8 md:block">
         <PageContainer>
           <div className="mb-[22px] flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -198,11 +229,61 @@ export default function VaultPage() {
         </PageContainer>
       </main>
 
+      <main className="flex-1 px-5 pb-24 pt-1 md:hidden">
+        <h1 className="text-[22px] font-semibold leading-7 tracking-[-0.5px]">My Vault</h1>
+        {data && (
+          <p className="mt-1.5 font-mono text-xs font-medium tabular-nums text-content-secondary">
+            {tokenCount} {TOKENS_LABEL} · {RARE_TOKEN_COUNT} {RARE_LABEL}
+          </p>
+        )}
+
+        {data && (
+          <div className="mb-4 mt-3 flex gap-2">
+            {MOBILE_FILTERS.map((filter) => (
+              <button
+                key={filter.key}
+                type="button"
+                onClick={() => setMobileFilter(filter.key)}
+                className={cn(CHIP_BASE, mobileFilter === filter.key ? CHIP_ACTIVE : CHIP_INACTIVE)}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {isLoading ? (
+          <GridSkeleton />
+        ) : error ? (
+          <LoadError what="vault" onRetry={() => refetch()} />
+        ) : mobileTokens.length === 0 ? (
+          <EmptyVault hasAny={tokenCount > 0} />
+        ) : (
+          <div className="fade-in grid grid-cols-2 gap-3">
+            {mobileTokens.map((token) => (
+              <div key={token.tokenId} className="relative">
+                <TokenCard
+                  editionNumber={token.meetingNumber}
+                  topic={token.name}
+                  date={formatCardDate(token.date)}
+                  gradient={gradientNameFor(token.name)}
+                  rarity={null}
+                  onClick={() => setSelected(token)}
+                />
+                {token.mintStatus !== 'CONFIRMED' && <MintStatusBadge status={token.mintStatus} />}
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+
       <TokenDetailModal
         open={selected !== null}
         onClose={() => setSelected(null)}
         token={selected ? toDetail(selected) : null}
       />
+
+      <MobileTabBar active="vault" />
     </div>
   );
 }

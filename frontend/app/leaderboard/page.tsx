@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import MemberTopNav from '@/components/shared/MemberTopNav';
+import MobileTabBar from '@/components/shared/MobileTabBar';
 import PageContainer from '@/components/shared/PageContainer';
 import Avatar from '@/components/ui/Avatar';
 import MonoNum from '@/components/ui/MonoNum';
@@ -33,6 +34,17 @@ const SEG_INACTIVE = 'font-medium text-content-secondary hover:text-ink';
 const TABLE_COLS =
   'grid min-w-[560px] grid-cols-[56px_1fr_120px_120px_100px] items-center gap-3';
 const HEADER_CELL = 'font-mono text-[11px] uppercase tracking-[0.06em] text-content-secondary';
+
+const MOBILE_PODIUM_AVATAR_SIZE = 44;
+const MOBILE_WINNER_AVATAR_SIZE = 56;
+const MOBILE_ROW_AVATAR_SIZE = 28;
+const MOBILE_WINNER_GLOW = 'shadow-[0_6px_18px_rgba(245,158,0,0.4)]';
+
+const MOBILE_SEG_BASE = 'flex-1 rounded-[7px] py-[7px] text-center text-[12px] transition';
+const MOBILE_SEG_ACTIVE = 'bg-white font-semibold text-ink shadow-[0_1px_2px_rgba(0,0,0,0.06)]';
+const MOBILE_SEG_INACTIVE = 'font-medium text-content-secondary';
+
+const MOBILE_ROW_COLS = 'grid grid-cols-[24px_1fr_auto] items-center gap-2.5 px-3.5';
 
 function ordinal(n: number): string {
   const mod100 = n % 100;
@@ -143,6 +155,70 @@ function Skeleton() {
   );
 }
 
+function MobilePodiumTile({ entry, winner }: { entry: LeaderboardEntry; winner: boolean }) {
+  if (winner) {
+    return (
+      <div className="text-center">
+        <div className="mb-1 text-[16px] font-bold leading-none">🏆</div>
+        <Avatar
+          seed={entry.avatarSeed}
+          size={MOBILE_WINNER_AVATAR_SIZE}
+          className={cn('mx-auto mb-1.5', MOBILE_WINNER_GLOW)}
+        />
+        <div className="truncate text-[13px] font-semibold leading-none">{entry.handle}</div>
+        <MonoNum className="mt-1 block text-[14px] font-bold leading-none">{fmt(entry.xp)}</MonoNum>
+      </div>
+    );
+  }
+  return (
+    <div className="text-center">
+      <Avatar
+        seed={entry.avatarSeed}
+        size={MOBILE_PODIUM_AVATAR_SIZE}
+        className="mx-auto mb-1.5"
+      />
+      <div className="truncate text-[12px] font-semibold leading-none">{entry.handle}</div>
+      <MonoNum className="mt-1 block text-[13px] font-bold leading-none">{fmt(entry.xp)}</MonoNum>
+      <div className="mt-[3px] font-mono text-[10px] font-bold text-content-secondary">
+        {ordinal(entry.rank)}
+      </div>
+    </div>
+  );
+}
+
+function MobileRow({ entry, first }: { entry: LeaderboardEntry; first: boolean }) {
+  const txt = entry.isYou ? 'text-blue-700' : '';
+  return (
+    <div
+      className={cn(
+        MOBILE_ROW_COLS,
+        !first && 'border-t border-line',
+        entry.isYou ? 'bg-status-info-bg py-3' : 'py-[11px]',
+      )}
+    >
+      <MonoNum className={cn('text-[13px] font-bold', txt)}>{entry.rank}</MonoNum>
+      <div className="flex min-w-0 items-center gap-[9px]">
+        <Avatar seed={entry.avatarSeed} size={MOBILE_ROW_AVATAR_SIZE} />
+        <span className={cn('truncate text-[13px] font-semibold', txt)}>{entry.handle}</span>
+      </div>
+      <MonoNum className={cn('text-[12px] font-bold', txt)}>{fmt(entry.xp)}</MonoNum>
+    </div>
+  );
+}
+
+function MobileSkeleton() {
+  return (
+    <div className="mt-3.5 animate-pulse">
+      <div className="mb-3.5 grid grid-cols-3 items-end gap-2">
+        <div className="h-28 rounded-[14px] bg-card-filled" />
+        <div className="h-32 rounded-[14px] bg-card-filled" />
+        <div className="h-28 rounded-[14px] bg-card-filled" />
+      </div>
+      <div className="h-56 rounded-[14px] border border-line bg-card-filled" />
+    </div>
+  );
+}
+
 export default function LeaderboardPage() {
   const [timeframe, setTimeframe] = useState<LeaderboardTimeframe>('semester');
   const { data, isLoading } = useLeaderboard(timeframe);
@@ -161,7 +237,7 @@ export default function LeaderboardPage() {
     <div className="min-h-screen bg-white">
       <MemberTopNav active="leaderboard" streakWeeks={HERO_STREAK_WEEKS} />
 
-      <PageContainer className="py-8">
+      <PageContainer className="hidden py-8 md:block">
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="mb-2 text-[30px] font-semibold leading-9 tracking-[-1px]">Leaderboard</h1>
@@ -219,6 +295,48 @@ export default function LeaderboardPage() {
           </div>
         )}
       </PageContainer>
+
+      <div className="px-5 pb-24 pt-5 md:hidden">
+        <h1 className="text-[22px] font-semibold leading-[28px] tracking-[-0.5px]">Leaderboard</h1>
+        <div className="mt-3 flex gap-[5px] rounded-md bg-card-filled p-1">
+          {TIMEFRAMES.map((tf) => (
+            <button
+              key={tf.value}
+              type="button"
+              onClick={() => setTimeframe(tf.value)}
+              aria-pressed={timeframe === tf.value}
+              className={cn(
+                MOBILE_SEG_BASE,
+                timeframe === tf.value ? MOBILE_SEG_ACTIVE : MOBILE_SEG_INACTIVE,
+              )}
+            >
+              {tf.label}
+            </button>
+          ))}
+        </div>
+
+        {isLoading ? (
+          <MobileSkeleton />
+        ) : (
+          <div className="mt-3.5 animate-fade-in">
+            {podium.length === PODIUM_COUNT && (
+              <div className="mb-3.5 grid grid-cols-3 items-end gap-2">
+                <MobilePodiumTile entry={podium[1]} winner={false} />
+                <MobilePodiumTile entry={podium[0]} winner />
+                <MobilePodiumTile entry={podium[2]} winner={false} />
+              </div>
+            )}
+
+            <div className="overflow-hidden rounded-[14px] border border-line bg-white">
+              {rows.map((entry, i) => (
+                <MobileRow key={entry.rank} entry={entry} first={i === 0} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <MobileTabBar active="ranks" />
     </div>
   );
 }

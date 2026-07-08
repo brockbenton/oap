@@ -122,14 +122,14 @@ Build and get a clean `npm run typecheck` before starting screens.
 ---
 
 ## Milestone 3 — Member app (mobile) + check-in flow
-- [ ] **3.1 Mobile shell.** Verify `MobileTabBar` (0.10) fixed-bottom with raised black center Scan (cyan QR). Wire into member routes at `sm` breakpoint.
-- [ ] **3.2 Mobile Home (5a, L413).** Greeting, black live check-in card (cyan CTA), 3 stat tiles, 2 recent TokenCards. (Responsive variant of 2.1.)
-- [ ] **3.3 Mobile Vault (5b, L458).** Header count, filter chips, 2-col TokenCard grid. (Responsive variant of 2.2.)
-- [ ] **3.4 Mobile Leaderboard (5c, L494).** Segmented control, compact top-3, ranked list w/ "you" highlight. (Variant of 2.3.)
-- [ ] **3.5 Mobile Rewards (5d, L529).** Compact black level banner + claimable/locked reward rows. (Variant of 2.4.)
-- [ ] **3.6 Mobile Account (5e, L561).** Centered profile (avatar, handle, LVL), 3 stat tiles, wallet chip, settings list w/ Sign out.
-- [ ] **3.7 Check-in scan + mint success (1d, L1678/L1707).** Scan: meeting header, QR, "Secured by Privy · gas-free", Open scanner. Success: green "Minted onchain" chip, freshly-minted TokenCard (sheen), "🔥 Streak extended → 8 weeks", "+180 XP", Add to vault / Share. Restyle existing `CheckInFlow.tsx`/`QrScanner.tsx`; keep **real** submit.
-- [ ] **3.8 Check-in error states (7c, L121).** Three states: "You're already in" (blue check), "Check-in has closed" (yellow clock), "Code not recognized" (red ✕) — icon, title, explanation, recovery action. Map to real check-in error codes.
+- [x] **3.1 Mobile shell.** Verify `MobileTabBar` (0.10) fixed-bottom with raised black center Scan (cyan QR). Wire into member routes at `sm` breakpoint.
+- [x] **3.2 Mobile Home (5a, L413).** Greeting, black live check-in card (cyan CTA), 3 stat tiles, 2 recent TokenCards. (Responsive variant of 2.1.)
+- [x] **3.3 Mobile Vault (5b, L458).** Header count, filter chips, 2-col TokenCard grid. (Responsive variant of 2.2.)
+- [x] **3.4 Mobile Leaderboard (5c, L494).** Segmented control, compact top-3, ranked list w/ "you" highlight. (Variant of 2.3.)
+- [x] **3.5 Mobile Rewards (5d, L529).** Compact black level banner + claimable/locked reward rows. (Variant of 2.4.)
+- [x] **3.6 Mobile Account (5e, L561).** Centered profile (avatar, handle, LVL), 3 stat tiles, wallet chip, settings list w/ Sign out.
+- [x] **3.7 Check-in scan + mint success (1d, L1678/L1707).** Scan: meeting header, QR, "Secured by Privy · gas-free", Open scanner. Success: green "Minted onchain" chip, freshly-minted TokenCard (sheen), "🔥 Streak extended → 8 weeks", "+180 XP", Add to vault / Share. Restyle existing `CheckInFlow.tsx`/`QrScanner.tsx`; keep **real** submit.
+- [x] **3.8 Check-in error states (7c, L121).** Three states: "You're already in" (blue check), "Check-in has closed" (yellow clock), "Code not recognized" (red ✕) — icon, title, explanation, recovery action. Map to real check-in error codes.
 
 ---
 

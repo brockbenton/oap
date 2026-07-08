@@ -43,7 +43,7 @@ export default function MemberTopNav({ active, streakWeeks }: MemberTopNavProps)
   return (
     <header className="flex h-16 items-center px-7 bg-white border-b border-line">
       <Brand href={ROUTES.home} />
-      <nav className="ml-8 flex items-center gap-1">
+      <nav className="ml-8 hidden md:flex items-center gap-1">
         {NAV_ITEMS.map((item) => (
           <Link
             key={item.key}
