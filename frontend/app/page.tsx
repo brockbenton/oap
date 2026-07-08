@@ -4,6 +4,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import Landing from '@/components/features/marketing/Landing';
 import MemberHome from '@/components/features/member/MemberHome';
 import Onboarding from '@/components/features/member/Onboarding';
+import SessionRecoveryGate from '@/components/shared/SessionRecoveryGate';
 import { useProfile } from '@/hooks/useProfile';
 
 // The root route is auth-gated on the client: logged-out visitors see the
@@ -15,7 +16,9 @@ export default function RootPage() {
   // stays idle (isLoading === false) for logged-out visitors.
   const { data: profile, isLoading: profileLoading } = useProfile();
 
-  if (!ready) return <FullPageSpinner />;
+  // A wedged Privy session can loop on /users/me and never reach `ready`;
+  // SessionRecoveryGate breaks that out of an infinite spinner.
+  if (!ready) return <SessionRecoveryGate />;
 
   if (authenticated) {
     // Wait for the profile before choosing a member screen so we never flash
