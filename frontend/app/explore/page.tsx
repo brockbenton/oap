@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import MarketingNav from '@/components/shared/MarketingNav';
 import PageContainer from '@/components/shared/PageContainer';
+import Footer from '@/components/shared/Footer';
 import { StatTile } from '@/components/ui';
 import { ExternalLinkIcon, QrIcon, SearchIcon } from '@/components/ui/icons';
 import { TOKEN_GRADIENTS } from '@/lib/tokenArt';
@@ -103,6 +104,7 @@ export default function ExplorePage() {
           )}
         </PageContainer>
       </main>
+      <Footer />
     </div>
   );
 }
