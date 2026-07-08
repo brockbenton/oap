@@ -13,7 +13,6 @@ import { useLevel } from '@/lib/mock/gamification';
 import { useRewards } from '@/lib/mock/rewards';
 import type { Level, Reward } from '@/types';
 
-const STREAK_WEEKS = 7;
 const NUMBER_LOCALE = 'en-US';
 const REWARD_ICON_SIZE = 20;
 const CLAIMED_CHECK_SIZE = 16;
@@ -122,7 +121,7 @@ export default function RewardsPage() {
 
   return (
     <div className="min-h-screen bg-[#fbfbfc]">
-      <MemberTopNav active="rewards" streakWeeks={STREAK_WEEKS} />
+      <MemberTopNav active="rewards" />
       <div className="hidden md:block">
         <PageContainer className="py-8">
           {level && rewardsData ? (

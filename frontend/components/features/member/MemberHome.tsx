@@ -120,7 +120,7 @@ function PopulatedHome() {
 
   return (
     <div className="min-h-screen bg-white">
-      <MemberTopNav active="home" streakWeeks={STREAK_WEEKS} />
+      <MemberTopNav active="home" />
       <div className="hidden md:block">
         <PageContainer className="py-8">
           <GreetingHeader title={GREETING} note={NEXT_MEETING} />

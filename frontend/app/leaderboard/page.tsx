@@ -12,8 +12,6 @@ import { useLeaderboard, type LeaderboardTimeframe } from '@/lib/mock/gamificati
 import type { LeaderboardEntry } from '@/types';
 
 const CLUB_SUBTITLE = 'Blockchain Club · ranked by XP and attendance streak.';
-const HERO_STREAK_WEEKS = 7;
-
 const PODIUM_COUNT = 3;
 const WINNER_AVATAR_SIZE = 72;
 const PODIUM_AVATAR_SIZE = 60;
@@ -235,7 +233,7 @@ export default function LeaderboardPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <MemberTopNav active="leaderboard" streakWeeks={HERO_STREAK_WEEKS} />
+      <MemberTopNav active="leaderboard" />
 
       <PageContainer className="hidden py-8 md:block">
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">

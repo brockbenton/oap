@@ -31,13 +31,12 @@ const SIGNING_SUB = 'Approve the request in the Privy popup.';
 const SUBMITTING_TITLE = 'Minting your token…';
 const SUBMITTING_SUB = 'Queuing your attendance token onchain.';
 
-// Sample flair — CheckInResponse carries no XP/streak/edition data
+// Sample flair — CheckInResponse carries no XP/edition data
 const MINTED_CHIP_LABEL = 'Minted onchain';
 const SAMPLE_TOKEN_SHORT = 'MEV';
 const SAMPLE_EDITION_LABEL = '#092';
 const SAMPLE_DATE_META = 'APR 11, 2026 · Week 8';
 const SAMPLE_EDITION_META = 'Edition 92 / 240';
-const STREAK_LABEL = '🔥 Streak extended → 8 weeks';
 const XP_LABEL = '+180 XP · 720 XP to Level 7';
 const ADD_TO_VAULT_LABEL = 'Add to vault';
 const SHARE_LABEL = 'Share to feed';
@@ -327,10 +326,7 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
             </div>
           </div>
 
-          <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-yellow-500/20 px-4 py-2 text-sm font-bold text-yellow-300">
-            {STREAK_LABEL}
-          </div>
-          <div className="mt-3.5 text-[13px] leading-[19px] text-[rgba(218,229,247,0.6)]">{XP_LABEL}</div>
+          <div className="mt-6 text-[13px] leading-[19px] text-[rgba(218,229,247,0.6)]">{XP_LABEL}</div>
         </div>
 
         <div className="mt-8 flex flex-col gap-2.5">
