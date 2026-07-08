@@ -103,11 +103,11 @@ Build and get a clean `npm run typecheck` before starting screens.
 ---
 
 ## Milestone 1 — Public / marketing (desktop, ~1180px)
-- [ ] **1.1 Landing (1a, L1426).** MarketingNav; hero display headline "Proof you showed up. Onchain." + subcopy + primary/secondary CTA + 3 stat figures; right = cluster of 3 rotated TokenCards; "How it works" 3 numbered steps.
-- [ ] **1.2 Protocol (2a, L1030).** Hero; 4-col mint pipeline (01 open → 02 scan → 03 relayer sponsors gas → 04 minted); token-anatomy section (sample card + Chain/Standard/Metadata/Gas facts + contract-address CopyChip).
-- [ ] **1.3 Clubs (2b, L1112) + empty (3a, L905).** Header + "Start a club", search field, filter chips (All/Universities/DAOs/Meetups), 3-col club-card grid (monogram, name, org, members/meetings/tokens stats, Join/Open) + dashed "start your own" tile. Empty: centered gradient glyph, CTA pair, 3 trust points.
-- [ ] **1.4 Explore (2c, L1235) + empty (3b, L954).** Search bar, 4 stat tiles, two-col body: live mint feed (44px token thumb, who minted what, club · time-ago, tx link) + sidebar (top collectors, trending chips). Empty: zeroed tiles + 2 faded ghost rows.
-- [ ] **1.5 Docs (2d, L1322).** 3-col: left TOC sidebar, center "Quickstart" article (h2/h3, inline code pill, dark code block w/ Copy, info callout), right "On this page" rail.
+- [x] **1.1 Landing (1a, L1426).** MarketingNav; hero display headline "Proof you showed up. Onchain." + subcopy + primary/secondary CTA + 3 stat figures; right = cluster of 3 rotated TokenCards; "How it works" 3 numbered steps.
+- [x] **1.2 Protocol (2a, L1030).** Hero; 4-col mint pipeline (01 open → 02 scan → 03 relayer sponsors gas → 04 minted); token-anatomy section (sample card + Chain/Standard/Metadata/Gas facts + contract-address CopyChip).
+- [x] **1.3 Clubs (2b, L1112) + empty (3a, L905).** Header + "Start a club", search field, filter chips (All/Universities/DAOs/Meetups), 3-col club-card grid (monogram, name, org, members/meetings/tokens stats, Join/Open) + dashed "start your own" tile. Empty: centered gradient glyph, CTA pair, 3 trust points.
+- [x] **1.4 Explore (2c, L1235) + empty (3b, L954).** Search bar, 4 stat tiles, two-col body: live mint feed (44px token thumb, who minted what, club · time-ago, tx link) + sidebar (top collectors, trending chips). Empty: zeroed tiles + 2 faded ghost rows.
+- [x] **1.5 Docs (2d, L1322).** 3-col: left TOC sidebar, center "Quickstart" article (h2/h3, inline code pill, dark code block w/ Copy, info callout), right "On this page" rail.
 
 ---
 
