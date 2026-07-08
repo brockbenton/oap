@@ -9,7 +9,6 @@ type MemberNavKey = 'home' | 'vault' | 'leaderboard' | 'rewards';
 
 export interface MemberTopNavProps {
   active?: MemberNavKey;
-  streakWeeks?: number;
 }
 
 interface MemberNavItem {
@@ -35,32 +34,26 @@ const NAV_ITEMS: MemberNavItem[] = [
 const NAV_ITEM_BASE = 'rounded-md px-3.5 py-2 text-sm transition';
 const NAV_ITEM_ACTIVE = 'bg-[rgba(1,3,4,0.06)] font-semibold text-ink';
 const NAV_ITEM_INACTIVE = 'text-content-secondary hover:text-ink';
-const STREAK_PILL =
-  'inline-flex items-center gap-1.5 rounded-full bg-status-warn-bg px-3 py-1 font-mono text-xs font-semibold text-status-warn tabular-nums';
-const STREAK_EMOJI = '🔥';
 
-export default function MemberTopNav({ active, streakWeeks }: MemberTopNavProps) {
+export default function MemberTopNav({ active }: MemberTopNavProps) {
   return (
-    <header className="flex h-16 items-center px-7 bg-white border-b border-line">
-      <Brand href={ROUTES.home} />
-      <nav className="ml-8 hidden md:flex items-center gap-1">
-        {NAV_ITEMS.map((item) => (
-          <Link
-            key={item.key}
-            href={item.href}
-            className={cn(NAV_ITEM_BASE, active === item.key ? NAV_ITEM_ACTIVE : NAV_ITEM_INACTIVE)}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
-      <div className="ml-auto flex items-center gap-3.5">
-        {streakWeeks !== undefined && (
-          <span className={STREAK_PILL}>
-            {STREAK_EMOJI} {streakWeeks} wk
-          </span>
-        )}
-        <AccountMenu />
+    <header className="border-b border-line bg-white">
+      <div className="mx-auto flex h-16 max-w-[1180px] items-center px-6">
+        <Brand href={ROUTES.home} />
+        <nav className="ml-8 hidden items-center gap-1 md:flex">
+          {NAV_ITEMS.map((item) => (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={cn(NAV_ITEM_BASE, active === item.key ? NAV_ITEM_ACTIVE : NAV_ITEM_INACTIVE)}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="ml-auto flex items-center">
+          <AccountMenu />
+        </div>
       </div>
     </header>
   );

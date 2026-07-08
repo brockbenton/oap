@@ -38,22 +38,24 @@ const AVATAR_SIZE = 34;
 
 export default function OrganizerTopNav({ active }: OrganizerTopNavProps) {
   return (
-    <header className="flex h-16 items-center px-7 bg-white border-b border-line">
-      <Brand href={ROOT_ROUTE} />
-      <span className={ORGANIZER_BADGE}>ORGANIZER</span>
-      <nav className="ml-8 flex items-center gap-1">
-        {NAV_ITEMS.map((item) => (
-          <Link
-            key={item.key}
-            href={item.href}
-            className={cn(NAV_ITEM_BASE, active === item.key ? NAV_ITEM_ACTIVE : NAV_ITEM_INACTIVE)}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
-      <div className="ml-auto flex items-center">
-        <Avatar seed={AVATAR_SEED} label={AVATAR_LABEL} size={AVATAR_SIZE} />
+    <header className="border-b border-line bg-white">
+      <div className="mx-auto flex h-16 max-w-[1180px] items-center px-6">
+        <Brand href={ROOT_ROUTE} />
+        <span className={ORGANIZER_BADGE}>ORGANIZER</span>
+        <nav className="ml-8 flex items-center gap-1">
+          {NAV_ITEMS.map((item) => (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={cn(NAV_ITEM_BASE, active === item.key ? NAV_ITEM_ACTIVE : NAV_ITEM_INACTIVE)}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="ml-auto flex items-center">
+          <Avatar seed={AVATAR_SEED} label={AVATAR_LABEL} size={AVATAR_SIZE} />
+        </div>
       </div>
     </header>
   );
