@@ -143,11 +143,11 @@ Reuse existing admin API wiring (`lib/api/admin.ts`); club-level metadata is moc
 ---
 
 ## Milestone 5 — Integration, polish, verify
-- [ ] **5.1 Routing + nav wiring.** Add all routes; logged-out `/` = Landing, logged-in `/` = Home; active-pill states correct across MemberTopNav/OrganizerTopNav/MarketingNav; mobile tab bar routes.
-- [ ] **5.2 Real-data wiring pass.** Confirm vault/stats/check-in/admin read real endpoints through the typed hooks; mock hooks isolated and clearly swappable.
-- [ ] **5.3 Interactions.** Token card → detail modal everywhere; rewards claim; sheen on fresh/featured; button press scale; 200ms hover transitions; segmented controls + filter chips functional.
-- [ ] **5.4 Responsive audit.** Every route degrades cleanly desktop→mobile (5→2 vault cols, 3→1 stat rows, tab bar appears < sm). No horizontal body scroll.
-- [ ] **5.5 Verify.** `npm run typecheck` + `npm run build` clean; `npm run dev` smoke test each route; screenshot key screens vs handoff frames for fidelity.
+- [x] **5.1 Routing + nav wiring.** Add all routes; logged-out `/` = Landing, logged-in `/` = Home; active-pill states correct across MemberTopNav/OrganizerTopNav/MarketingNav; mobile tab bar routes.
+- [x] **5.2 Real-data wiring pass.** Confirm vault/stats/check-in/admin read real endpoints through the typed hooks; mock hooks isolated and clearly swappable.
+- [x] **5.3 Interactions.** Token card → detail modal everywhere; rewards claim; sheen on fresh/featured; button press scale; 200ms hover transitions; segmented controls + filter chips functional.
+- [x] **5.4 Responsive audit.** Every route degrades cleanly desktop→mobile (5→2 vault cols, 3→1 stat rows, tab bar appears < sm). No horizontal body scroll.
+- [x] **5.5 Verify.** `npm run typecheck` + `npm run build` clean; `npm run dev` smoke test each route; screenshot key screens vs handoff frames for fidelity.
 
 ---
 
