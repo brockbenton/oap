@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { usePrivy } from '@privy-io/react-auth';
 import Brand from '@/components/shared/Brand';
 import { Button } from '@/components/ui';
 
@@ -23,6 +24,14 @@ const NAV_ITEM_CLASSES = 'px-3.5 py-2 text-sm text-content-secondary transition 
 
 export default function MarketingNav() {
   const router = useRouter();
+  const { ready, authenticated, login } = usePrivy();
+
+  // "Launch app" takes signed-in members to the root switch (their Home);
+  // everyone else is sent through Privy login first.
+  const launchApp = () => {
+    if (authenticated) router.push(HOME_ROUTE);
+    else login();
+  };
 
   return (
     <header className="flex h-16 items-center px-7">
@@ -35,8 +44,10 @@ export default function MarketingNav() {
         ))}
       </nav>
       <div className="ml-auto flex items-center gap-2.5">
-        <Button variant="ghost">Sign in</Button>
-        <Button variant="primary" onClick={() => router.push(HOME_ROUTE)}>
+        <Button variant="ghost" onClick={login} disabled={!ready}>
+          Sign in
+        </Button>
+        <Button variant="primary" onClick={launchApp} disabled={!ready}>
           Launch app
         </Button>
       </div>
