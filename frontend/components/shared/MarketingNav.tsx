@@ -14,7 +14,7 @@ interface MarketingNavItem {
 const HOME_ROUTE = '/';
 
 const NAV_ITEMS: MarketingNavItem[] = [
-  { label: 'Protocol', href: '/protocol' },
+  { label: 'Protocol', href: '/#protocol' },
   { label: 'Clubs', href: '/clubs' },
   { label: 'Explore', href: '/explore' },
   { label: 'Docs', href: '/docs' },
