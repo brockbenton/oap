@@ -12,8 +12,6 @@ const HERO_GRADIENT = 'radial-gradient(120% 120% at 0% 0%, #f2f7fe 0%, #ffffff 5
 const CARD_SHEEN = 'radial-gradient(circle at 30% 25%,rgba(255,255,255,.35),transparent 55%)';
 const PROTOCOL_ANCHOR = 'protocol';
 const MKT_EYEBROW = 'tracking-[0.12em] text-status-neutral';
-const BLUE_ACCENT = 'text-blue-500';
-const GREEN_ACCENT = 'text-green-600';
 const DEPLOYED_CONTRACT = '0x7bEf8C32157C0A40A51b9bebeb7B36f236316192';
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ?? DEPLOYED_CONTRACT;
 const CONTRACT_DISPLAY = `${CONTRACT_ADDRESS.slice(0, 6)}…${CONTRACT_ADDRESS.slice(-4)}`;
@@ -49,7 +47,7 @@ const CLUSTER_TOKENS: ClusterToken[] = [
     topic: 'ZK',
     edition: '#087',
     title: 'ZK Proofs 101',
-    meta: 'MAR 14 · 240 minted',
+    meta: 'SEP 16 · 1 minted',
     gradient: 'linear-gradient(135deg,#6833ff,#a485ff)',
     transform: 'rotate(-6deg)',
     positionClass: 'top-6 left-10 w-[230px]',
@@ -74,6 +72,7 @@ const CLUSTER_TOKENS: ClusterToken[] = [
   {
     edition: '#204',
     title: 'DeFi Lending',
+    meta: 'OCT 08',
     gradient: 'linear-gradient(135deg,#0e8535,#c8f028)',
     transform: 'rotate(-3deg)',
     positionClass: 'bottom-2 left-16 w-[210px]',
@@ -112,37 +111,32 @@ const HOW_STEPS: HowStep[] = [
   },
 ];
 
-interface PipelineStep {
-  number: string;
+interface ValueProp {
   title: string;
-  desc: string;
-  accent: string;
+  body: string;
+  dotClass: string;
 }
 
-const PIPELINE_STEPS: PipelineStep[] = [
+const WHY_OAP: ValueProp[] = [
   {
-    number: '01',
-    title: 'Organizer opens meeting',
-    desc: 'A signed, time-boxed QR is generated for the session.',
-    accent: BLUE_ACCENT,
+    title: 'Tamper-proof by default',
+    body: 'Every check-in is a soulbound token on Base — non-transferable, timestamped, and impossible to backfill or fake after the fact.',
+    dotClass: 'bg-blue-500',
   },
   {
-    number: '02',
-    title: 'Member scans & signs in',
-    desc: 'Privy provisions an embedded wallet from email or Google.',
-    accent: BLUE_ACCENT,
+    title: 'Zero friction to join',
+    body: 'Members sign in with email or Google. We provision an embedded wallet and sponsor the gas — no seed phrase, no ETH, no extension.',
+    dotClass: 'bg-cyan',
   },
   {
-    number: '03',
-    title: 'Relayer sponsors gas',
-    desc: 'A paymaster covers the transaction — the member pays nothing.',
-    accent: BLUE_ACCENT,
+    title: 'Motivation built in',
+    body: 'Streaks, levels, and club leaderboards turn showing up into something members actually want to keep doing.',
+    dotClass: 'bg-purple-500',
   },
   {
-    number: '04',
-    title: 'Token minted onchain',
-    desc: 'Soulbound to the wallet in ~2s, with meeting metadata.',
-    accent: GREEN_ACCENT,
+    title: 'A record they own',
+    body: 'Attendance lives onchain, not in a spreadsheet — portable, publicly verifiable, and theirs to keep long after they leave.',
+    dotClass: 'bg-green-600',
   },
 ];
 
@@ -168,8 +162,6 @@ const TOKEN_SAMPLE = {
 };
 
 export default function Landing() {
-  const lastStepIndex = PIPELINE_STEPS.length - 1;
-
   return (
     <div className="min-h-screen bg-white">
       <MarketingNav />
@@ -293,24 +285,17 @@ export default function Landing() {
       </section>
 
       <section id={PROTOCOL_ANCHOR} className="scroll-mt-20 border-t border-line">
-        <PageContainer className="py-12">
-          <Eyebrow className={cn('mb-6', MKT_EYEBROW)}>The mint pipeline</Eyebrow>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            {PIPELINE_STEPS.map((step, index) => (
-              <div
-                key={step.number}
-                className={cn(
-                  'py-[22px]',
-                  index !== 0 && 'lg:pl-6',
-                  index !== lastStepIndex && 'lg:pr-6',
-                  index > 0 && 'border-t border-line lg:border-l lg:border-t-0',
-                )}
-              >
-                <div className={cn('mb-3 font-mono text-[13px] font-bold', step.accent)}>
-                  {step.number}
-                </div>
-                <div className="mb-1.5 text-[15px] font-semibold leading-[1.3]">{step.title}</div>
-                <div className="text-[13px] leading-5 text-content-secondary">{step.desc}</div>
+        <PageContainer className="py-14">
+          <Eyebrow className={cn('mb-2', MKT_EYEBROW)}>Why OAP</Eyebrow>
+          <h3 className="mb-8 max-w-[22ch] text-[30px] font-semibold leading-[38px] tracking-[-1px]">
+            Attendance that can&apos;t be faked, forgotten, or lost.
+          </h3>
+          <div className="grid gap-5 sm:grid-cols-2">
+            {WHY_OAP.map((prop) => (
+              <div key={prop.title} className="rounded-lg border border-line p-6">
+                <span className={cn('mb-4 block h-2.5 w-2.5 rounded-full', prop.dotClass)} />
+                <div className="mb-2 text-[17px] font-semibold leading-[1.3]">{prop.title}</div>
+                <div className="text-[14px] leading-[22px] text-content-secondary">{prop.body}</div>
               </div>
             ))}
           </div>
