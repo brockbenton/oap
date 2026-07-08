@@ -135,10 +135,10 @@ Build and get a clean `npm run typecheck` before starting screens.
 
 ## Milestone 4 — Organizer console (desktop)
 Reuse existing admin API wiring (`lib/api/admin.ts`); club-level metadata is mock.
-- [ ] **4.1 Create club (6a, L184).** Centered 600px form: "Step 1 of 2 · Basics", logo dropzone, Club name (focused input), Handle (`oap.xyz/c/` prefix), Description textarea, Category select, Chain (Base, locked), Cancel/Continue. Mock submit.
-- [ ] **4.2 Club dashboard (6b, L237).** Club header (logo, name, handle) + Invite members / Start a meeting; 4 stat cards (Members/Meetings/Avg attendance/Tokens, deltas) — wire to **real** `getAdminOverview`; Recent meetings table (real sessions) + Next meeting card w/ Open meeting.
-- [ ] **4.3 Run meeting projector (6c, L294).** Top bar "Meeting live · timer" + Pause / End (red); left big 280px QR (real `getSessionQR`) + topic; right black counter card ("42 checked in of 312") + live "Just checked in" roster (poll stub / mock). Restyle existing `/admin/sessions/[id]/qr`.
-- [ ] **4.4 Members & attendance (6d, L342).** Search + Export CSV (real `downloadMembersCSV`); table Member (avatar+join date) / Tokens / Streak / **6-week attendance matrix** (green ✓ / gray empty) / Rate %. Wire to real `listAdminMembers` + derive matrix from sessions/check-ins.
+- [x] **4.1 Create club (6a, L184).** Centered 600px form: "Step 1 of 2 · Basics", logo dropzone, Club name (focused input), Handle (`oap.xyz/c/` prefix), Description textarea, Category select, Chain (Base, locked), Cancel/Continue. Mock submit.
+- [x] **4.2 Club dashboard (6b, L237).** Club header (logo, name, handle) + Invite members / Start a meeting; 4 stat cards (Members/Meetings/Avg attendance/Tokens, deltas) — wire to **real** `getAdminOverview`; Recent meetings table (real sessions) + Next meeting card w/ Open meeting.
+- [x] **4.3 Run meeting projector (6c, L294).** Top bar "Meeting live · timer" + Pause / End (red); left big 280px QR (real `getSessionQR`) + topic; right black counter card ("42 checked in of 312") + live "Just checked in" roster (poll stub / mock). Restyle existing `/admin/sessions/[id]/qr`.
+- [x] **4.4 Members & attendance (6d, L342).** Search + Export CSV (real `downloadMembersCSV`); table Member (avatar+join date) / Tokens / Streak / **6-week attendance matrix** (green ✓ / gray empty) / Rate %. Wire to real `listAdminMembers` + derive matrix from sessions/check-ins.
 
 ---
 
