@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import MarketingNav from '@/components/shared/MarketingNav';
+import Footer from '@/components/shared/Footer';
 import { SearchIcon } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
 
@@ -226,6 +227,7 @@ export default function DocsPage() {
           </div>
         </aside>
       </main>
+      <Footer />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { CheckIcon, PlusIcon, SearchIcon } from '@/components/ui/icons';
 import MarketingNav from '@/components/shared/MarketingNav';
 import PageContainer from '@/components/shared/PageContainer';
 import LoadError from '@/components/shared/LoadError';
+import Footer from '@/components/shared/Footer';
 import { useClubs } from '@/lib/mock/clubs';
 import { avatarGradient, TOKEN_GRADIENTS } from '@/lib/tokenArt';
 import { cn } from '@/lib/cn';
@@ -133,6 +134,7 @@ export default function ClubsPage() {
           </div>
         )}
       </PageContainer>
+      <Footer />
     </div>
   );
 }
