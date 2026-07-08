@@ -93,6 +93,15 @@ export default function SettingsPage() {
   const usernameTaken =
     updateProfile.error instanceof ApiRequestError && updateProfile.error.code === 'USERNAME_TAKEN';
 
+  // Surface any non-"taken" failure (the "taken" case shows under the field).
+  // A thrown non-API error is almost always the backend being unreachable.
+  const saveErrorMessage =
+    !updateProfile.isError || usernameTaken
+      ? null
+      : updateProfile.error instanceof ApiRequestError
+        ? updateProfile.error.message
+        : "Couldn't save — check your connection and try again.";
+
   const onSave = () => {
     if (!dirty || usernameInvalid) return;
     updateProfile.mutate(patch);
@@ -201,6 +210,9 @@ export default function SettingsPage() {
                     <span className="inline-flex items-center gap-1 text-sm text-status-pos">
                       <CheckIcon size={16} /> Saved
                     </span>
+                  )}
+                  {saveErrorMessage && (
+                    <span className="text-sm text-status-neg">{saveErrorMessage}</span>
                   )}
                 </div>
               </div>
