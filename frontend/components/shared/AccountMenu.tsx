@@ -1,5 +1,6 @@
 'use client';
 
+import type { ComponentType } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { usePrivy, getIdentityToken, useWallets } from '@privy-io/react-auth';
 import { useQuery } from '@tanstack/react-query';
@@ -7,6 +8,56 @@ import Link from 'next/link';
 import { getAdminMe } from '@/lib/api/admin';
 import { queryKeys } from '@/lib/api/queryKeys';
 import { retryUnlessForbidden } from '@/lib/api/client';
+import { Avatar, Badge, Button, CopyChip } from '@/components/ui';
+import type { IconProps } from '@/components/ui/icons';
+import {
+  ChevronDown,
+  ExternalLinkIcon,
+  GearIcon,
+  GridIcon,
+  SignOutIcon,
+  UserIcon,
+  WalletIcon,
+} from '@/components/ui/icons';
+import { cn } from '@/lib/cn';
+
+// Level + club are display-only samples until the profile API lands; hoisted so
+// the header reads from named constants rather than inline literals.
+const SAMPLE_LEVEL = 6;
+const SAMPLE_CLUB = 'Blockchain Club';
+
+const ADDRESS_PREFIX_LEN = 6;
+const ADDRESS_SUFFIX_LEN = 4;
+const TRIGGER_AVATAR_SIZE = 32;
+const HEADER_AVATAR_SIZE = 44;
+const TRIGGER_CHEVRON_SIZE = 14;
+const MENU_ICON_SIZE = 17;
+
+type MenuIcon = ComponentType<IconProps>;
+
+interface MenuItem {
+  label: string;
+  href: string;
+  Icon: MenuIcon;
+  adminOnly?: boolean;
+}
+
+const MENU_ITEMS: MenuItem[] = [
+  { label: 'Profile', href: '/profile', Icon: UserIcon },
+  { label: 'Wallet & keys', href: '/wallet', Icon: WalletIcon },
+  { label: 'Settings', href: '/settings', Icon: GearIcon },
+  { label: 'Help & docs', href: '/docs', Icon: ExternalLinkIcon },
+  { label: 'Admin dashboard', href: '/admin', Icon: GridIcon, adminOnly: true },
+];
+
+const MENU_ITEM_BASE =
+  'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors';
+const MENU_ITEM_DEFAULT = 'text-ink hover:bg-card-filled';
+const MENU_ITEM_DESTRUCTIVE = 'text-status-neg hover:bg-status-neg-bg';
+
+function shortenAddress(address: string): string {
+  return `${address.slice(0, ADDRESS_PREFIX_LEN)}…${address.slice(-ADDRESS_SUFFIX_LEN)}`;
+}
 
 // Compact account control: a single avatar button that opens a dropdown, so the
 // top bar never crowds on mobile. The "Admin dashboard" item only appears for
@@ -15,21 +66,9 @@ export default function AccountMenu() {
   const { ready, authenticated, user, login, logout } = usePrivy();
   const { wallets } = useWallets();
   const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   const address = wallets.find((w) => w.walletClientType === 'privy')?.address ?? user?.wallet?.address;
-
-  const copyAddress = async () => {
-    if (!address) return;
-    try {
-      await navigator.clipboard.writeText(address);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      /* clipboard unavailable */
-    }
-  };
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -54,25 +93,23 @@ export default function AccountMenu() {
 
   if (!ready) {
     return (
-      <button disabled className="px-4 py-2 rounded-lg bg-blue-500 text-white opacity-50 text-sm font-medium">
+      <Button variant="primary" size="sm" disabled>
         Loading…
-      </button>
+      </Button>
     );
   }
 
   if (!authenticated) {
     return (
-      <button
-        onClick={login}
-        className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium transition-colors"
-      >
+      <Button variant="primary" size="sm" onClick={login}>
         Sign in
-      </button>
+      </Button>
     );
   }
 
   const account = user?.email?.address ?? user?.google?.email ?? 'Account';
-  const initial = account.charAt(0).toUpperCase();
+  const avatarSeed = address ?? account;
+  const items = MENU_ITEMS.filter((item) => !item.adminOnly || me?.isAdmin);
 
   return (
     <div className="relative" ref={ref}>
@@ -80,57 +117,59 @@ export default function AccountMenu() {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-2 rounded-full border border-gray-200 py-1 pl-1 pr-2 hover:bg-gray-50 transition-colors"
+        className="flex items-center gap-1.5 rounded-full bg-card-filled py-[3px] pl-[3px] pr-1.5 transition hover:brightness-95"
       >
-        <span className="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-semibold flex items-center justify-center">
-          {initial}
-        </span>
-        <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-        </svg>
+        <Avatar seed={avatarSeed} label={account} size={TRIGGER_AVATAR_SIZE} />
+        <ChevronDown size={TRIGGER_CHEVRON_SIZE} className="text-content-secondary" />
       </button>
 
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden z-20"
+          className="absolute right-0 z-20 mt-2 w-[280px] overflow-hidden rounded-card border border-line bg-white shadow-elev-md"
         >
-          <div className="px-4 py-2 border-b border-gray-100">
-            <p className="text-xs text-gray-400">Signed in as</p>
-            <p className="text-sm text-gray-800 truncate">{account}</p>
+          <div className="border-b border-line p-4">
+            <div className="mb-3 flex items-center gap-3">
+              <Avatar seed={avatarSeed} label={account} size={HEADER_AVATAR_SIZE} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="truncate text-[15px] font-semibold text-ink">{account}</span>
+                  <Badge tone="rew">LVL {SAMPLE_LEVEL}</Badge>
+                </div>
+                <div className="mt-[5px] font-mono text-xs font-medium text-content-secondary">
+                  {SAMPLE_CLUB}
+                </div>
+              </div>
+            </div>
+            {address && <CopyChip value={address} display={shortenAddress(address)} />}
           </div>
-          {address && (
+
+          <div className="p-2">
+            {items.map(({ label, href, Icon }) => (
+              <Link
+                key={label}
+                href={href}
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className={cn(MENU_ITEM_BASE, MENU_ITEM_DEFAULT)}
+              >
+                <Icon size={MENU_ICON_SIZE} />
+                {label}
+              </Link>
+            ))}
+            <div className="mx-1 my-1.5 h-px bg-line" />
             <button
-              onClick={copyAddress}
-              className="w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-gray-50 border-b border-gray-100"
-              title={address}
-            >
-              <span className="font-mono text-xs text-gray-600">{`${address.slice(0, 6)}…${address.slice(-4)}`}</span>
-              <span className={`text-xs font-medium ${copied ? 'text-green-600' : 'text-blue-600'}`}>
-                {copied ? 'Copied!' : 'Copy'}
-              </span>
-            </button>
-          )}
-          {me?.isAdmin && (
-            <Link
-              href="/admin"
               role="menuitem"
-              onClick={() => setOpen(false)}
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              onClick={() => {
+                setOpen(false);
+                logout();
+              }}
+              className={cn(MENU_ITEM_BASE, MENU_ITEM_DESTRUCTIVE)}
             >
-              Admin dashboard
-            </Link>
-          )}
-          <button
-            role="menuitem"
-            onClick={() => {
-              setOpen(false);
-              logout();
-            }}
-            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-          >
-            Sign out
-          </button>
+              <SignOutIcon size={MENU_ICON_SIZE} />
+              Sign out
+            </button>
+          </div>
         </div>
       )}
     </div>
