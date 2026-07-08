@@ -1,12 +1,13 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import MarketingNav from '@/components/shared/MarketingNav';
 import PageContainer from '@/components/shared/PageContainer';
 import Footer from '@/components/shared/Footer';
 import { StatTile } from '@/components/ui';
 import { ExternalLinkIcon, QrIcon, SearchIcon } from '@/components/ui/icons';
 import { TOKEN_GRADIENTS } from '@/lib/tokenArt';
+import { BASESCAN_URL } from '@/lib/constants';
 import {
   useCollectors,
   useExploreStats,
@@ -17,7 +18,7 @@ import {
 import type { Collector, MintFeedItem, TrendingTopic } from '@/types';
 
 const SEARCH_PLACEHOLDER = 'Search by wallet, ENS, token #, or club…';
-const EXPLORER_TX_URL = 'https://sepolia.basescan.org/tx/';
+const EXPLORER_TX_URL = `${BASESCAN_URL}/tx/`;
 const NUMBER_LOCALE = 'en-US';
 const EDITION_PAD_LENGTH = 3;
 const TX_LEAD_CHARS = 4;
@@ -63,26 +64,41 @@ function statValue(config: StatTileConfig, stats: ExploreStats | undefined, empt
   return formatted;
 }
 
+function matchesQuery(item: MintFeedItem, query: string): boolean {
+  return (
+    item.handle.toLowerCase().includes(query) ||
+    item.topic.toLowerCase().includes(query) ||
+    item.club.toLowerCase().includes(query) ||
+    editionLabel(item.editionNumber).toLowerCase().includes(query)
+  );
+}
+
 export default function ExplorePage() {
   const feedQuery = useMintFeed();
   const collectorsQuery = useCollectors();
   const trendingQuery = useTrending();
   const statsQuery = useExploreStats();
 
-  const feed = feedQuery.data ?? [];
+  const [query, setQuery] = useState('');
+
+  const feed = useMemo(() => feedQuery.data ?? [], [feedQuery.data]);
   const collectors = collectorsQuery.data ?? [];
   const trending = trendingQuery.data ?? [];
   const isEmpty = feedQuery.isSuccess && feed.length === 0;
 
+  const filteredFeed = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return feed;
+    return feed.filter((item) => matchesQuery(item, q));
+  }, [feed, query]);
+
   return (
     <div className="min-h-screen bg-white">
-      <div className="border-b border-line">
-        <MarketingNav />
-      </div>
+      <MarketingNav />
 
       <main>
         <PageContainer className="py-8">
-          <SearchBar />
+          <SearchBar value={query} onChange={setQuery} />
 
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {STAT_TILES.map((config) => (
@@ -98,7 +114,7 @@ export default function ExplorePage() {
             <EmptyFeed />
           ) : (
             <div className="mt-7 grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_1fr]">
-              <LiveFeed feed={feed} />
+              <LiveFeed feed={filteredFeed} query={query} />
               <Sidebar collectors={collectors} trending={trending} />
             </div>
           )}
@@ -109,12 +125,14 @@ export default function ExplorePage() {
   );
 }
 
-function SearchBar() {
+function SearchBar({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   return (
     <div className="flex h-[52px] items-center gap-3 rounded-[14px] border border-[var(--l-input-border)] bg-white px-[18px]">
       <SearchIcon size={18} className="shrink-0 text-content-secondary" />
       <input
         type="search"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
         placeholder={SEARCH_PLACEHOLDER}
         aria-label="Search"
         className="w-full bg-transparent text-[15px] outline-none placeholder:text-[var(--l-input-placeholder)]"
@@ -123,15 +141,21 @@ function SearchBar() {
   );
 }
 
-function LiveFeed({ feed }: { feed: MintFeedItem[] }) {
+function LiveFeed({ feed, query }: { feed: MintFeedItem[]; query: string }) {
   return (
     <div>
       <FeedHeading live />
-      <div className={`overflow-hidden ${LIST_CARD_CLASSES}`}>
-        {feed.map((item) => (
-          <MintRow key={item.id} item={item} />
-        ))}
-      </div>
+      {feed.length === 0 ? (
+        <div className={`px-6 py-12 text-center text-sm text-content-secondary ${LIST_CARD_CLASSES}`}>
+          No results for “{query.trim()}”.
+        </div>
+      ) : (
+        <div className={`overflow-hidden ${LIST_CARD_CLASSES}`}>
+          {feed.map((item) => (
+            <MintRow key={item.id} item={item} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
