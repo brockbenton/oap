@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import MemberTopNav from '@/components/shared/MemberTopNav';
 import MobileTabBar from '@/components/shared/MobileTabBar';
+import { useProfile } from '@/hooks/useProfile';
+import { shortenAddress } from '@/lib/address';
 import { Avatar, Badge, CopyChip } from '@/components/ui';
 import type { IconProps } from '@/components/ui/icons';
 import {
@@ -19,11 +21,8 @@ import { cn } from '@/lib/cn';
 const AVATAR_SIZE = 80;
 const MENU_ICON_SIZE = 18;
 const CHEVRON_SIZE = 16;
-const ADDRESS_PREFIX_LEN = 6;
-const ADDRESS_SUFFIX_LEN = 4;
 
-// Handle, level and stats are display-only samples until the profile API lands.
-const HANDLE = 'alex.eth';
+// Level and stats are display-only samples (gamification isn't wired yet).
 const LEVEL = 6;
 const CLUB_LINE = "Blockchain Club · since Sep '25";
 const SAMPLE_WALLET_ADDRESS = '0x8f2ab9d1e6403f7c25a8e0d4b1f963072ac5c21e';
@@ -54,10 +53,6 @@ const MENU_LINKS: MenuLink[] = [
 
 const MENU_ROW = 'flex w-full items-center gap-3 px-4 py-3.5 text-sm font-medium';
 
-function shortenAddress(address: string): string {
-  return `${address.slice(0, ADDRESS_PREFIX_LEN)}…${address.slice(-ADDRESS_SUFFIX_LEN)}`;
-}
-
 export default function AccountPage() {
   const { user, logout } = usePrivy();
   const { wallets } = useWallets();
@@ -67,6 +62,9 @@ export default function AccountPage() {
   )?.toLowerCase();
 
   const walletValue = address ?? SAMPLE_WALLET_ADDRESS;
+  const { data: profile } = useProfile();
+  const displayName = profile?.username ?? shortenAddress(walletValue);
+  const avatarColor = profile?.avatarColor ?? undefined;
 
   return (
     <div className="flex min-h-screen flex-col bg-[#fbfbfc]">
@@ -77,12 +75,13 @@ export default function AccountPage() {
           <div className="mb-5 flex flex-col items-center text-center">
             <Avatar
               seed={walletValue}
-              label={HANDLE}
+              label={displayName}
+              colorIndex={avatarColor}
               size={AVATAR_SIZE}
               className="mb-3.5 shadow-[0_8px_24px_rgba(104,51,255,0.35)]"
             />
             <div className="mb-1.5 flex items-center gap-2">
-              <span className="text-[20px] font-semibold leading-none tracking-[-0.3px]">{HANDLE}</span>
+              <span className="text-[20px] font-semibold leading-none tracking-[-0.3px]">{displayName}</span>
               <Badge tone="rew">LVL {LEVEL}</Badge>
             </div>
             <div className="font-mono text-xs font-medium text-content-secondary">{CLUB_LINE}</div>

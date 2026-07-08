@@ -8,6 +8,8 @@ import Link from 'next/link';
 import { getAdminMe } from '@/lib/api/admin';
 import { queryKeys } from '@/lib/api/queryKeys';
 import { retryUnlessForbidden } from '@/lib/api/client';
+import { useProfile } from '@/hooks/useProfile';
+import { shortenAddress } from '@/lib/address';
 import { Avatar, Badge, Button, CopyChip } from '@/components/ui';
 import type { IconProps } from '@/components/ui/icons';
 import {
@@ -21,13 +23,10 @@ import {
 } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
 
-// Level + club are display-only samples until the profile API lands; hoisted so
-// the header reads from named constants rather than inline literals.
+// Level + club are display-only samples (gamification isn't wired yet).
 const SAMPLE_LEVEL = 6;
 const SAMPLE_CLUB = 'Blockchain Club';
 
-const ADDRESS_PREFIX_LEN = 6;
-const ADDRESS_SUFFIX_LEN = 4;
 const TRIGGER_AVATAR_SIZE = 32;
 const HEADER_AVATAR_SIZE = 44;
 const TRIGGER_CHEVRON_SIZE = 14;
@@ -43,7 +42,7 @@ interface MenuItem {
 }
 
 const MENU_ITEMS: MenuItem[] = [
-  { label: 'Profile', href: '/profile', Icon: UserIcon },
+  { label: 'Profile', href: '/settings#profile', Icon: UserIcon },
   { label: 'Wallet & keys', href: '/wallet', Icon: WalletIcon },
   { label: 'Settings', href: '/settings', Icon: GearIcon },
   { label: 'Help & docs', href: '/docs', Icon: ExternalLinkIcon },
@@ -55,10 +54,6 @@ const MENU_ITEM_BASE =
 const MENU_ITEM_DEFAULT = 'text-ink hover:bg-card-filled';
 const MENU_ITEM_DESTRUCTIVE = 'text-status-neg hover:bg-status-neg-bg';
 
-function shortenAddress(address: string): string {
-  return `${address.slice(0, ADDRESS_PREFIX_LEN)}…${address.slice(-ADDRESS_SUFFIX_LEN)}`;
-}
-
 // Compact account control: a single avatar button that opens a dropdown, so the
 // top bar never crowds on mobile. The "Admin dashboard" item only appears for
 // wallets that actually hold the on-chain ADMIN_ROLE (probed via /admin/me).
@@ -69,6 +64,7 @@ export default function AccountMenu() {
   const ref = useRef<HTMLDivElement>(null);
 
   const address = wallets.find((w) => w.walletClientType === 'privy')?.address ?? user?.wallet?.address;
+  const { data: profile } = useProfile();
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -107,8 +103,9 @@ export default function AccountMenu() {
     );
   }
 
-  const account = user?.email?.address ?? user?.google?.email ?? 'Account';
-  const avatarSeed = address ?? account;
+  const displayName = profile?.username ?? (address ? shortenAddress(address) : 'Account');
+  const avatarSeed = address ?? user?.id ?? 'account';
+  const avatarColor = profile?.avatarColor ?? undefined;
   const items = MENU_ITEMS.filter((item) => !item.adminOnly || me?.isAdmin);
 
   return (
@@ -119,7 +116,7 @@ export default function AccountMenu() {
         aria-expanded={open}
         className="flex items-center gap-1.5 rounded-full bg-card-filled py-[3px] pl-[3px] pr-1.5 transition hover:brightness-95"
       >
-        <Avatar seed={avatarSeed} label={account} size={TRIGGER_AVATAR_SIZE} />
+        <Avatar seed={avatarSeed} label={displayName} colorIndex={avatarColor} size={TRIGGER_AVATAR_SIZE} />
         <ChevronDown size={TRIGGER_CHEVRON_SIZE} className="text-content-secondary" />
       </button>
 
@@ -130,10 +127,10 @@ export default function AccountMenu() {
         >
           <div className="border-b border-line p-4">
             <div className="mb-3 flex items-center gap-3">
-              <Avatar seed={avatarSeed} label={account} size={HEADER_AVATAR_SIZE} />
+              <Avatar seed={avatarSeed} label={displayName} colorIndex={avatarColor} size={HEADER_AVATAR_SIZE} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="truncate text-[15px] font-semibold text-ink">{account}</span>
+                  <span className="truncate text-[15px] font-semibold text-ink">{displayName}</span>
                   <Badge tone="rew">LVL {SAMPLE_LEVEL}</Badge>
                 </div>
                 <div className="mt-[5px] font-mono text-xs font-medium text-content-secondary">
@@ -153,8 +150,8 @@ export default function AccountMenu() {
                 onClick={() => setOpen(false)}
                 className={cn(MENU_ITEM_BASE, MENU_ITEM_DEFAULT)}
               >
-                <Icon size={MENU_ICON_SIZE} />
-                {label}
+                <Icon size={MENU_ICON_SIZE} className="shrink-0" />
+                <span>{label}</span>
               </Link>
             ))}
             <div className="mx-1 my-1.5 h-px bg-line" />
@@ -166,8 +163,8 @@ export default function AccountMenu() {
               }}
               className={cn(MENU_ITEM_BASE, MENU_ITEM_DESTRUCTIVE)}
             >
-              <SignOutIcon size={MENU_ICON_SIZE} />
-              Sign out
+              <SignOutIcon size={MENU_ICON_SIZE} className="shrink-0" />
+              <span>Sign out</span>
             </button>
           </div>
         </div>
