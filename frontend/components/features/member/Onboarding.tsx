@@ -39,6 +39,14 @@ export default function Onboarding() {
   const usernameTaken =
     updateProfile.error instanceof ApiRequestError && updateProfile.error.code === 'USERNAME_TAKEN';
 
+  // Any non-"taken" failure otherwise leaves a new member stuck with no feedback.
+  const submitErrorMessage =
+    !updateProfile.isError || usernameTaken
+      ? null
+      : updateProfile.error instanceof ApiRequestError
+        ? updateProfile.error.message
+        : "Couldn't save — check your connection and try again.";
+
   const seed = address ?? 'account';
   const previewName = username || (address ? shortenAddress(address) : FALLBACK_NAME);
 
@@ -106,6 +114,9 @@ export default function Onboarding() {
           >
             {updateProfile.isPending ? CONTINUE_PENDING_LABEL : CONTINUE_LABEL}
           </Button>
+          {submitErrorMessage && (
+            <p className="text-center text-sm text-status-neg">{submitErrorMessage}</p>
+          )}
         </div>
       </div>
     </div>
