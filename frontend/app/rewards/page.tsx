@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import MemberTopNav from '@/components/shared/MemberTopNav';
+import MobileTabBar from '@/components/shared/MobileTabBar';
 import PageContainer from '@/components/shared/PageContainer';
 import { Badge, MonoNum, ProgressBar } from '@/components/ui';
 import type { BadgeProps } from '@/components/ui';
@@ -17,6 +18,8 @@ const NUMBER_LOCALE = 'en-US';
 const REWARD_ICON_SIZE = 20;
 const CLAIMED_CHECK_SIZE = 16;
 const LOADING_CARD_COUNT = 6;
+const MOBILE_LOADING_ROW_COUNT = 4;
+const PERCENT = 100;
 
 const SECTION_HEADING = 'Rewards';
 const INFO_TILE = {
@@ -52,6 +55,10 @@ const BUTTON_BASE =
   'flex h-[42px] w-full items-center justify-center gap-2 rounded-full text-sm font-semibold transition';
 const BUTTON_READY = 'bg-green-500 text-white hover:bg-green-600 active:scale-[0.98]';
 const BUTTON_DISABLED = 'cursor-not-allowed border border-line bg-white text-content-disabled';
+
+const BANNER_GLOW = 'radial-gradient(circle, rgba(134,92,255,.4), transparent 70%)';
+const BANNER_PROGRESS = 'linear-gradient(90deg, #6833ff, #26ddf9)';
+const MOBILE_TITLE = 'text-[22px] font-semibold leading-[28px] tracking-[-0.5px]';
 
 interface StatusMeta {
   card: string;
@@ -116,22 +123,40 @@ export default function RewardsPage() {
   return (
     <div className="min-h-screen bg-[#fbfbfc]">
       <MemberTopNav active="rewards" streakWeeks={STREAK_WEEKS} />
-      <PageContainer className="py-8">
+      <div className="hidden md:block">
+        <PageContainer className="py-8">
+          {level && rewardsData ? (
+            <>
+              <LevelBanner level={level} availableToClaim={availableToClaim} />
+              <h2 className="mb-4 text-base font-semibold leading-none">{SECTION_HEADING}</h2>
+              <div className="grid grid-cols-1 gap-[18px] md:grid-cols-2 lg:grid-cols-3">
+                {rewards.map((reward) => (
+                  <RewardCard key={reward.id} reward={reward} onClaim={claim} />
+                ))}
+                <InfoTile />
+              </div>
+            </>
+          ) : (
+            <LoadingState />
+          )}
+        </PageContainer>
+      </div>
+      <div className="px-5 pb-24 pt-4 md:hidden md:pb-0">
+        <h1 className={cn('mb-3', MOBILE_TITLE)}>{SECTION_HEADING}</h1>
         {level && rewardsData ? (
           <>
-            <LevelBanner level={level} availableToClaim={availableToClaim} />
-            <h2 className="mb-4 text-base font-semibold leading-none">{SECTION_HEADING}</h2>
-            <div className="grid grid-cols-1 gap-[18px] md:grid-cols-2 lg:grid-cols-3">
+            <MobileLevelBanner level={level} availableToClaim={availableToClaim} />
+            <div className="flex flex-col gap-3">
               {rewards.map((reward) => (
-                <RewardCard key={reward.id} reward={reward} onClaim={claim} />
+                <MobileRewardRow key={reward.id} reward={reward} onClaim={claim} />
               ))}
-              <InfoTile />
             </div>
           </>
         ) : (
-          <LoadingState />
+          <MobileLoadingState />
         )}
-      </PageContainer>
+      </div>
+      <MobileTabBar active="rewards" />
     </div>
   );
 }
@@ -145,7 +170,7 @@ function LevelBanner({ level, availableToClaim }: { level: Level; availableToCla
     <section className="relative mb-6 flex flex-col gap-6 overflow-hidden rounded-lg bg-ink px-7 py-[26px] text-white sm:flex-row sm:items-center sm:gap-7">
       <div
         className="pointer-events-none absolute -right-8 -top-10 h-52 w-52 rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(134,92,255,.4), transparent 70%)' }}
+        style={{ background: BANNER_GLOW }}
       />
       <div className="grid h-16 w-16 flex-none place-items-center rounded-tile bg-white/10">
         <MonoNum className="text-2xl font-bold text-purple-300">{level.level}</MonoNum>
@@ -228,6 +253,93 @@ function LoadingState() {
       <div className="grid grid-cols-1 gap-[18px] md:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: LOADING_CARD_COUNT }).map((_, index) => (
           <div key={index} className="h-[184px] rounded-tile border border-line bg-card-filled" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MobileLevelBanner({ level, availableToClaim }: { level: Level; availableToClaim: number }) {
+  const progress = level.xpForNextLevel > 0 ? level.xpIntoLevel / level.xpForNextLevel : 0;
+  const remaining = Math.max(0, level.xpForNextLevel - level.xpIntoLevel);
+  const nextLevel = level.level + 1;
+
+  return (
+    <section className="relative mb-4 overflow-hidden rounded-tile bg-ink p-[18px] text-white">
+      <div
+        className="pointer-events-none absolute -right-5 -top-[30px] h-[120px] w-[120px] rounded-full"
+        style={{ background: BANNER_GLOW }}
+      />
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-base font-semibold leading-none">
+          Level {level.level} · {tierFor(level.level)}
+        </span>
+        <span className="font-mono text-[13px] font-bold leading-none tabular-nums text-cyan">
+          {availableToClaim} ready
+        </span>
+      </div>
+      <div className="mb-2 h-2 overflow-hidden rounded-full bg-white/15">
+        <div
+          className="h-full rounded-full"
+          style={{ width: `${progress * PERCENT}%`, background: BANNER_PROGRESS }}
+        />
+      </div>
+      <div className="font-mono text-xs font-medium leading-none text-white/70">
+        {formatNumber(remaining)} XP to Level {nextLevel}
+      </div>
+    </section>
+  );
+}
+
+function MobileRewardRow({ reward, onClaim }: { reward: Reward; onClaim: (id: string) => void }) {
+  const meta = STATUS_META[reward.status];
+
+  return (
+    <div className={cn('flex items-center gap-3.5 rounded-card p-4', meta.card)}>
+      <div className={cn(ICON_TILE_BASE, meta.iconTile)}>{meta.icon}</div>
+      <div className="min-w-0 flex-1">
+        <div className={cn('text-sm font-semibold leading-[1.2]', meta.title)}>{reward.title}</div>
+        <div className="mt-1 text-[11px] leading-none text-content-secondary">
+          Level {reward.requiredLevel}
+        </div>
+      </div>
+      <MobileRewardTrailing reward={reward} onClaim={onClaim} />
+    </div>
+  );
+}
+
+function MobileRewardTrailing({ reward, onClaim }: { reward: Reward; onClaim: (id: string) => void }) {
+  if (reward.status === 'ready') {
+    return (
+      <button
+        type="button"
+        onClick={() => onClaim(reward.id)}
+        className={cn(
+          'flex h-9 flex-none items-center justify-center rounded-full px-4 text-xs font-semibold transition',
+          BUTTON_READY,
+        )}
+      >
+        Claim
+      </button>
+    );
+  }
+  if (reward.status === 'claimed') {
+    return (
+      <span className="flex flex-none items-center gap-1 text-xs font-semibold text-content-secondary">
+        <CheckIcon size={CLAIMED_CHECK_SIZE} /> Claimed
+      </span>
+    );
+  }
+  return <LockIcon size={REWARD_ICON_SIZE} className="flex-none text-content-disabled" />;
+}
+
+function MobileLoadingState() {
+  return (
+    <div className="animate-pulse">
+      <div className="mb-4 h-[110px] rounded-tile bg-card-filled" />
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: MOBILE_LOADING_ROW_COUNT }).map((_, index) => (
+          <div key={index} className="h-[76px] rounded-card border border-line bg-card-filled" />
         ))}
       </div>
     </div>
