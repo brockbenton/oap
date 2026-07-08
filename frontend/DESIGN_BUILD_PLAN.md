@@ -112,12 +112,12 @@ Build and get a clean `npm run typecheck` before starting screens.
 ---
 
 ## Milestone 2 — Signed-in member app (desktop)
-- [ ] **2.1 Home (1b, L1535) + new-member empty (7b, L83).** Greeting + next-meeting note; left col: black "Meeting is live — check in now" card (QR icon + cyan Scan CTA), 3 stat tiles (Level+progress / Streak / Rank+delta), My Vault preview (4 TokenCards); right col: Leaderboard top-3 + highlighted "you" row + "Next reward at Level 7" chip. Empty variant: black "Mint your first token" glow card, Level 1 (0/500 XP), Streak 0, empty-vault tile.
-- [ ] **2.2 Vault (4a, L617).** Header stats (tokens · rare · club), filter chips + sort, **5-wide** TokenCard grid (RARE tags), dashed "+N more tokens" tile. Wire to **real** `getMemberVault`; degrade gamified bits to mock. Collapses 5→2 cols mobile (5b).
-- [ ] **2.3 Leaderboard (4b, L673).** Timeframe segmented control (Semester/Month/All time), top-3 podium (raised gold winner, 🏆), ranked table (Rank/Member/Streak/Tokens/XP) with blue "you" row. Mock data.
-- [ ] **2.4 Rewards (4c, L767).** Black Level banner (glyph, purple→cyan progress, XP-to-next, available-to-claim count); grid of reward cards in 3 states: ready (green border + Claim + READY badge), locked (muted, lock, LEVEL n badge, disabled), + "more each semester" info tile. Mock; claim = optimistic toast.
-- [ ] **2.5 Account dropdown (4d, L848).** Avatar menu over blurred page: header (avatar, handle, LVL badge, club, wallet CopyChip), items (Profile/Wallet & keys/Settings/Help & docs), destructive red Sign out. Upgrade existing `AccountMenu.tsx`.
-- [ ] **2.6 Token detail modal (7a, L39).** 760px modal: left full-bleed gradient art + big edition # + sheen + "Edition 128 of 240"; right close btn, "ATTENDANCE TOKEN" badge, title + club/week, meta grid (Minted/Chain/Standard/XP), Traits chips, tx CopyChip, "View on Basescan" + Share. Opened from any TokenCard.
+- [x] **2.1 Home (1b, L1535) + new-member empty (7b, L83).** Greeting + next-meeting note; left col: black "Meeting is live — check in now" card (QR icon + cyan Scan CTA), 3 stat tiles (Level+progress / Streak / Rank+delta), My Vault preview (4 TokenCards); right col: Leaderboard top-3 + highlighted "you" row + "Next reward at Level 7" chip. Empty variant: black "Mint your first token" glow card, Level 1 (0/500 XP), Streak 0, empty-vault tile.
+- [x] **2.2 Vault (4a, L617).** Header stats (tokens · rare · club), filter chips + sort, **5-wide** TokenCard grid (RARE tags), dashed "+N more tokens" tile. Wire to **real** `getMemberVault`; degrade gamified bits to mock. Collapses 5→2 cols mobile (5b).
+- [x] **2.3 Leaderboard (4b, L673).** Timeframe segmented control (Semester/Month/All time), top-3 podium (raised gold winner, 🏆), ranked table (Rank/Member/Streak/Tokens/XP) with blue "you" row. Mock data.
+- [x] **2.4 Rewards (4c, L767).** Black Level banner (glyph, purple→cyan progress, XP-to-next, available-to-claim count); grid of reward cards in 3 states: ready (green border + Claim + READY badge), locked (muted, lock, LEVEL n badge, disabled), + "more each semester" info tile. Mock; claim = optimistic toast.
+- [x] **2.5 Account dropdown (4d, L848).** Avatar menu over blurred page: header (avatar, handle, LVL badge, club, wallet CopyChip), items (Profile/Wallet & keys/Settings/Help & docs), destructive red Sign out. Upgrade existing `AccountMenu.tsx`.
+- [x] **2.6 Token detail modal (7a, L39).** 760px modal: left full-bleed gradient art + big edition # + sheen + "Edition 128 of 240"; right close btn, "ATTENDANCE TOKEN" badge, title + club/week, meta grid (Minted/Chain/Standard/XP), Traits chips, tx CopyChip, "View on Basescan" + Share. Opened from any TokenCard.
 
 ---
 
