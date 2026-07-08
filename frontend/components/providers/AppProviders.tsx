@@ -20,9 +20,10 @@ interface AppProvidersProps {
 export default function AppProviders({ children }: AppProvidersProps) {
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
 
-  // During SSR / static generation Privy cannot be initialized (browser APIs unavailable).
-  // Render children directly; Privy mounts after hydration on the client.
-  if (typeof window === 'undefined' || !appId) {
+  // No `typeof window` gate on purpose: it would fork server vs. first client
+  // paint, forcing a hydration mismatch that re-mounts the (SSR-safe) provider.
+  // `appId` is build-inlined and identical both sides, so this branch is stable.
+  if (!appId) {
     return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
   }
 
