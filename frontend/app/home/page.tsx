@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import MemberTopNav from '@/components/shared/MemberTopNav';
+import MobileTabBar from '@/components/shared/MobileTabBar';
 import PageContainer from '@/components/shared/PageContainer';
 import TokenCard from '@/components/shared/TokenCard';
 import { Avatar, Button, MonoNum, StatTile } from '@/components/ui';
@@ -61,6 +62,22 @@ const GLOW_CYAN_SOFT = 'radial-gradient(circle, rgba(38,221,249,0.3), transparen
 const GLOW_PURPLE_SOFT = 'radial-gradient(circle, rgba(104,51,255,0.3), transparent 70%)';
 const SUBTLE_LIGHT = 'text-[rgba(218,229,247,0.7)]';
 
+const MOBILE_GREETING = 'Hey, alex.eth 👋';
+const LIVE_EYEBROW = '● Meeting live now';
+const LIVE_TOPIC = 'MEV & Flashbots';
+const LIVE_META = 'Week 8 · Room 214';
+const MOBILE_SCAN_LABEL = 'Scan to check in';
+const RECENT_TOKENS_TITLE = 'Recent tokens';
+const ALL_TOKENS_LABEL = `All ${VAULT_TOKEN_COUNT} →`;
+const MOBILE_TOKEN_COUNT = 2;
+const STAT_PLACEHOLDER = '—';
+
+const MOBILE_STATS = [
+  { key: 'level', label: 'Level', accent: false },
+  { key: 'weeks', label: 'Weeks', accent: true },
+  { key: 'rank', label: 'Rank', accent: false },
+] as const;
+
 interface SampleToken {
   editionNumber: number;
   topic: string;
@@ -104,21 +121,104 @@ function PopulatedHome() {
   return (
     <div className="min-h-screen bg-white">
       <MemberTopNav active="home" streakWeeks={STREAK_WEEKS} />
-      <PageContainer className="py-8">
-        <GreetingHeader title={GREETING} note={NEXT_MEETING} />
-        {loading ? (
-          <HomeSkeleton />
-        ) : (
-          <div className="grid animate-fade-in grid-cols-1 gap-5 lg:grid-cols-[1.55fr_1fr]">
-            <div className="flex flex-col gap-5">
-              <CheckInCard />
-              <StatRow level={level} rank={rank} />
-              <VaultPreview />
+      <div className="hidden md:block">
+        <PageContainer className="py-8">
+          <GreetingHeader title={GREETING} note={NEXT_MEETING} />
+          {loading ? (
+            <HomeSkeleton />
+          ) : (
+            <div className="grid animate-fade-in grid-cols-1 gap-5 lg:grid-cols-[1.55fr_1fr]">
+              <div className="flex flex-col gap-5">
+                <CheckInCard />
+                <StatRow level={level} rank={rank} />
+                <VaultPreview />
+              </div>
+              <LeaderboardPreview entries={board} />
             </div>
-            <LeaderboardPreview entries={board} />
+          )}
+        </PageContainer>
+      </div>
+      <MobileHome level={level} rank={rank} />
+      <MobileTabBar active="home" />
+    </div>
+  );
+}
+
+function MobileHome({ level, rank }: { level?: Level; rank?: RankSummary }) {
+  return (
+    <div className="px-5 pb-24 pt-1.5 md:hidden md:pb-0">
+      <h1 className="mb-4 text-[22px] font-semibold leading-[28px] tracking-[-0.5px]">
+        {MOBILE_GREETING}
+      </h1>
+      <MobileCheckInCard />
+      <MobileStatRow level={level} rank={rank} />
+      <div className="mb-3 flex items-center justify-between">
+        <div className="text-sm font-semibold leading-none">{RECENT_TOKENS_TITLE}</div>
+        <Link href={VAULT_HREF} className="text-xs font-semibold leading-none text-blue-500">
+          {ALL_TOKENS_LABEL}
+        </Link>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        {SAMPLE_TOKENS.slice(0, MOBILE_TOKEN_COUNT).map((token) => (
+          <TokenCard
+            key={token.editionNumber}
+            editionNumber={token.editionNumber}
+            topic={token.topic}
+            date={token.date}
+            gradient={token.gradient}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MobileCheckInCard() {
+  return (
+    <div className="relative mb-4 overflow-hidden rounded-lg bg-ink p-5 text-white">
+      <div
+        className="pointer-events-none absolute -right-[30px] -top-[30px] h-[140px] w-[140px] rounded-full"
+        style={{ background: GLOW_CYAN }}
+      />
+      <div className="relative mb-2 font-mono text-[11px] font-medium uppercase leading-none tracking-[0.06em] text-cyan">
+        {LIVE_EYEBROW}
+      </div>
+      <div className="relative mb-1 text-[17px] font-semibold leading-[1.3]">{LIVE_TOPIC}</div>
+      <div className={cn('relative mb-4 text-[13px] leading-none', SUBTLE_LIGHT)}>{LIVE_META}</div>
+      <Link
+        href={CHECK_IN_HREF}
+        className="relative flex h-[46px] w-full items-center justify-center rounded-full bg-cyan text-[15px] font-semibold leading-none text-ink transition active:scale-[0.98]"
+      >
+        {MOBILE_SCAN_LABEL}
+      </Link>
+    </div>
+  );
+}
+
+function MobileStatRow({ level, rank }: { level?: Level; rank?: RankSummary }) {
+  const values: Record<(typeof MOBILE_STATS)[number]['key'], string> = {
+    level: level ? `${level.level}` : STAT_PLACEHOLDER,
+    weeks: `${STREAK_WEEKS}`,
+    rank: rank ? `#${rank.rank}` : STAT_PLACEHOLDER,
+  };
+
+  return (
+    <div className="mb-4 grid grid-cols-3 gap-2.5">
+      {MOBILE_STATS.map((stat) => (
+        <div
+          key={stat.key}
+          className="rounded-[14px] border border-line bg-white p-3.5 text-center"
+        >
+          <MonoNum
+            className={cn('text-[22px] font-bold leading-none', stat.accent && 'text-yellow-700')}
+          >
+            {values[stat.key]}
+          </MonoNum>
+          <div className="mt-1.5 text-[11px] font-medium leading-none text-content-secondary">
+            {stat.label}
           </div>
-        )}
-      </PageContainer>
+        </div>
+      ))}
     </div>
   );
 }
