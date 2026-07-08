@@ -166,3 +166,83 @@ export interface ApiError {
     message: string;
   };
 }
+
+// --- Frontend sample-data domains (gamification, explore, live meeting) ---
+
+export interface Level {
+  level: number;
+  xp: number;
+  xpIntoLevel: number;
+  xpForNextLevel: number;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  handle: string;
+  avatarSeed: string;
+  streakWeeks: number;
+  tokens: number;
+  xp: number;
+  isYou: boolean;
+}
+
+export interface Reward {
+  id: string;
+  title: string;
+  description: string;
+  requiredLevel: number;
+  status: 'ready' | 'locked' | 'claimed';
+}
+
+export interface Club {
+  id: string;
+  name: string;
+  org: string;
+  handle: string;
+  category: 'University' | 'DAO' | 'Meetup';
+  monogram: string;
+  members: number;
+  meetings: number;
+  tokens: number;
+  joined: boolean;
+}
+
+export interface MintFeedItem {
+  id: string;
+  handle: string;
+  avatarSeed: string;
+  topic: string;
+  gradient: import('@/lib/tokenArt').GradientName;
+  club: string;
+  timeAgo: string;
+  txHash: string;
+  editionNumber: number;
+}
+
+export interface Collector {
+  rank: number;
+  handle: string;
+  avatarSeed: string;
+  tokens: number;
+}
+
+export interface TrendingTopic {
+  topic: string;
+  count: number;
+}
+
+export interface RosterEntry {
+  handle: string;
+  avatarSeed: string;
+  secondsAgo: number;
+}
+
+export interface LiveMeeting {
+  topic: string;
+  week: number;
+  club: string;
+  checkedIn: number;
+  totalMembers: number;
+  elapsedSeconds: number;
+  roster: RosterEntry[];
+}

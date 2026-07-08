@@ -1,0 +1,98 @@
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/api/queryKeys';
+import type { Club } from '@/types';
+
+export const MOCK_CLUBS: Club[] = [
+  {
+    id: 'club-blockchain-berkeley',
+    name: 'Blockchain at Berkeley',
+    org: 'UC Berkeley',
+    handle: 'blockchain-berkeley',
+    category: 'University',
+    monogram: 'BB',
+    members: 214,
+    meetings: 32,
+    tokens: 4820,
+    joined: true,
+  },
+  {
+    id: 'club-stanford-crypto',
+    name: 'Stanford Crypto Club',
+    org: 'Stanford University',
+    handle: 'stanford-crypto',
+    category: 'University',
+    monogram: 'SC',
+    members: 168,
+    meetings: 27,
+    tokens: 3610,
+    joined: true,
+  },
+  {
+    id: 'club-mit-bitcoin',
+    name: 'MIT Bitcoin Club',
+    org: 'MIT',
+    handle: 'mit-bitcoin',
+    category: 'University',
+    monogram: 'MB',
+    members: 143,
+    meetings: 21,
+    tokens: 2940,
+    joined: false,
+  },
+  {
+    id: 'club-optimism-collective',
+    name: 'Optimism Collective',
+    org: 'Optimism',
+    handle: 'op-collective',
+    category: 'DAO',
+    monogram: 'OP',
+    members: 512,
+    meetings: 44,
+    tokens: 9210,
+    joined: false,
+  },
+  {
+    id: 'club-ethglobal-dao',
+    name: 'ETHGlobal DAO',
+    org: 'ETHGlobal',
+    handle: 'ethglobal-dao',
+    category: 'DAO',
+    monogram: 'EG',
+    members: 386,
+    meetings: 38,
+    tokens: 7050,
+    joined: true,
+  },
+  {
+    id: 'club-bay-area-web3',
+    name: 'Bay Area Web3 Meetup',
+    org: 'Community',
+    handle: 'bay-area-web3',
+    category: 'Meetup',
+    monogram: 'BA',
+    members: 97,
+    meetings: 18,
+    tokens: 1640,
+    joined: false,
+  },
+  {
+    id: 'club-nyc-ethereum',
+    name: 'NYC Ethereum Meetup',
+    org: 'Community',
+    handle: 'nyc-ethereum',
+    category: 'Meetup',
+    monogram: 'NY',
+    members: 121,
+    meetings: 23,
+    tokens: 2110,
+    joined: false,
+  },
+];
+
+export function useClubs() {
+  return useQuery({
+    queryKey: queryKeys.clubs(),
+    queryFn: async () => MOCK_CLUBS,
+    staleTime: Infinity,
+  });
+}
