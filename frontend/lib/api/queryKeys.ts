@@ -10,6 +10,7 @@ export const queryKeys = {
   adminOverview: () => ['admin', 'overview'] as const,
   memberVault: (address: string) => ['member', address, 'vault'] as const,
   memberStats: (address: string) => ['member', address, 'stats'] as const,
+  myProfile: (userId?: string) => ['member', 'me', 'profile', userId ?? 'anon'] as const,
   level: () => ['level'] as const,
   leaderboard: (tf: string) => ['leaderboard', tf] as const,
   rank: () => ['rank'] as const,
