@@ -2,10 +2,13 @@
 
 import type { ComponentType } from 'react';
 import Link from 'next/link';
-import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { usePrivy } from '@privy-io/react-auth';
+import { useQuery } from '@tanstack/react-query';
 import MemberTopNav from '@/components/shared/MemberTopNav';
 import MobileTabBar from '@/components/shared/MobileTabBar';
-import { useProfile } from '@/hooks/useProfile';
+import { useDisplayName, useEmbeddedAddress, useProfile } from '@/hooks/useProfile';
+import { getPersonalStats } from '@/lib/api/members';
+import { queryKeys } from '@/lib/api/queryKeys';
 import { shortenAddress } from '@/lib/address';
 import { Avatar, Badge, CopyChip } from '@/components/ui';
 import type { IconProps } from '@/components/ui/icons';
@@ -22,22 +25,15 @@ const AVATAR_SIZE = 80;
 const MENU_ICON_SIZE = 18;
 const CHEVRON_SIZE = 16;
 
-// Level and stats are display-only samples (gamification isn't wired yet).
-const LEVEL = 6;
-const CLUB_LINE = "Blockchain Club · since Sep '25";
-const SAMPLE_WALLET_ADDRESS = '0x8f2ab9d1e6403f7c25a8e0d4b1f963072ac5c21e';
+// Single-club deployment: there is no clubs backend, so the name is a label.
+const CLUB_NAME = 'Blockchain Club';
+const STAT_PLACEHOLDER = '—';
 
 interface ProfileStat {
   label: string;
   value: string;
   accent?: boolean;
 }
-
-const STATS: ProfileStat[] = [
-  { label: 'Tokens', value: '23' },
-  { label: 'Streak', value: '7', accent: true },
-  { label: 'Rank', value: '#5' },
-];
 
 interface MenuLink {
   label: string;
@@ -54,17 +50,29 @@ const MENU_LINKS: MenuLink[] = [
 const MENU_ROW = 'flex w-full items-center gap-3 px-4 py-3.5 text-sm font-medium';
 
 export default function AccountPage() {
-  const { user, logout } = usePrivy();
-  const { wallets } = useWallets();
-
-  const address = (
-    wallets.find((w) => w.walletClientType === 'privy')?.address ?? user?.wallet?.address
-  )?.toLowerCase();
-
-  const walletValue = address ?? SAMPLE_WALLET_ADDRESS;
+  const { logout } = usePrivy();
+  const address = useEmbeddedAddress();
+  const displayName = useDisplayName();
   const { data: profile } = useProfile();
-  const displayName = profile?.username ?? shortenAddress(walletValue);
   const avatarColor = profile?.avatarColor ?? undefined;
+
+  const { data: stats } = useQuery({
+    queryKey: queryKeys.memberStats(address ?? ''),
+    queryFn: () => getPersonalStats(address!),
+    enabled: !!address,
+  });
+
+  const statValue = (value: number | undefined): string =>
+    value === undefined ? STAT_PLACEHOLDER : `${value}`;
+
+  const profileStats: ProfileStat[] = [
+    { label: 'Tokens', value: statValue(stats?.tokensEarned) },
+    { label: 'Streak', value: statValue(stats?.currentStreak), accent: true },
+    {
+      label: 'Attendance',
+      value: stats ? `${stats.allTimeAttendancePct}%` : STAT_PLACEHOLDER,
+    },
+  ];
 
   return (
     <div className="flex min-h-screen flex-col bg-[#fbfbfc]">
@@ -74,7 +82,7 @@ export default function AccountPage() {
         <div className="mx-auto w-full max-w-sm">
           <div className="mb-5 flex flex-col items-center text-center">
             <Avatar
-              seed={walletValue}
+              seed={address ?? displayName}
               label={displayName}
               colorIndex={avatarColor}
               size={AVATAR_SIZE}
@@ -82,13 +90,15 @@ export default function AccountPage() {
             />
             <div className="mb-1.5 flex items-center gap-2">
               <span className="text-[20px] font-semibold leading-none tracking-[-0.3px]">{displayName}</span>
-              <Badge tone="rew">LVL {LEVEL}</Badge>
+              {stats && <Badge tone="rew">{stats.statusTier}</Badge>}
             </div>
-            <div className="font-mono text-xs font-medium text-content-secondary">{CLUB_LINE}</div>
+            <div className="font-mono text-xs font-medium text-content-secondary">
+              {stats?.currentSemester ? `${CLUB_NAME} · ${stats.currentSemester}` : CLUB_NAME}
+            </div>
           </div>
 
           <div className="mb-4 grid grid-cols-3 gap-2.5">
-            {STATS.map((stat) => (
+            {profileStats.map((stat) => (
               <div key={stat.label} className="rounded-[14px] border border-line bg-white p-3.5 text-center">
                 <div
                   className={cn(
@@ -103,11 +113,13 @@ export default function AccountPage() {
             ))}
           </div>
 
-          <CopyChip
-            value={walletValue}
-            display={shortenAddress(walletValue)}
-            className="mb-4 rounded-[12px] px-3.5 py-3"
-          />
+          {address && (
+            <CopyChip
+              value={address}
+              display={shortenAddress(address)}
+              className="mb-4 rounded-[12px] px-3.5 py-3"
+            />
+          )}
 
           <div className="divide-y divide-line overflow-hidden rounded-[14px] border border-line bg-white">
             {MENU_LINKS.map(({ label, href, Icon }) => (

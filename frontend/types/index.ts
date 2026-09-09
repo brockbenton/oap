@@ -50,12 +50,24 @@ export interface MemberStats {
   currentSemesterAttendancePct: number;
   statusTier: 'General Member' | 'Official Member';
   lastSeen: string | null;
+  joinedAt: string;
+  currentStreak: number;
+  /** Attendance at each session in `recentSessions`, same order (oldest → newest). */
+  recentAttendance: boolean[];
+}
+
+// A meeting in the trailing window the members-table attendance matrix renders.
+export interface RecentSession {
+  sessionIdOnchain: string;
+  name: string;
+  date: string;
 }
 
 export interface MembersListResponse {
   members: MemberStats[];
   totalSessions: number;
   currentSemester: string | null;
+  recentSessions: RecentSession[];
 }
 
 // Attendance token in a member's vault (GET /api/v1/members/:address/tokens)

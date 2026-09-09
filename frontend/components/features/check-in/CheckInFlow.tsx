@@ -2,14 +2,17 @@
 
 import { useState, useCallback } from 'react';
 import { usePrivy, useWallets, useSignMessage, getIdentityToken } from '@privy-io/react-auth';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { submitCheckIn } from '@/lib/api/check-in';
+import { getMemberVault } from '@/lib/api/members';
+import { queryKeys } from '@/lib/api/queryKeys';
 import { ApiRequestError } from '@/lib/api/client';
-import { CheckInResponse } from '@/types';
+import { useEmbeddedAddress } from '@/hooks/useProfile';
+import { CheckInResponse, VaultToken } from '@/types';
 import { QrIcon, CheckIcon, ClockIcon, CloseIcon, type IconProps } from '@/components/ui/icons';
-import { TOKEN_GRADIENTS } from '@/lib/tokenArt';
+import { TOKEN_GRADIENTS, gradientNameForTopic } from '@/lib/tokenArt';
 
 // QrScanner accesses browser APIs — load client-side only
 const QrScanner = dynamic(() => import('./QrScanner'), { ssr: false });
@@ -20,8 +23,10 @@ type ErrorVariant = 'already-in' | 'closed' | 'invalid';
 const VAULT_HREF = '/vault';
 const FEED_HREF = '/explore';
 
-const MEETING_EYEBROW = 'Week 8 · Blockchain Club';
-const MEETING_TOPIC = 'MEV & Flashbots';
+// The meeting is only identified once the QR is decoded, so the scan screen
+// can't name it — it stays generic until there's a real session to show.
+const MEETING_EYEBROW = 'Blockchain Club';
+const MEETING_TOPIC = 'Check in to this meeting';
 const SCAN_INSTRUCTION = "Point your camera at the QR on the projector to mint today's token.";
 const PRIVY_CAPTION = 'Secured by Privy · gas-free mint';
 const OPEN_SCANNER_LABEL = 'Open scanner';
@@ -31,17 +36,36 @@ const SIGNING_SUB = 'Approve the request in the Privy popup.';
 const SUBMITTING_TITLE = 'Minting your token…';
 const SUBMITTING_SUB = 'Queuing your attendance token onchain.';
 
-// Sample flair — CheckInResponse carries no XP/edition data
+// The mint is queued, not yet confirmed, when this screen first renders — the
+// chip reflects the token's real mint status rather than claiming success.
 const MINTED_CHIP_LABEL = 'Minted onchain';
-const SAMPLE_TOKEN_SHORT = 'MEV';
-const SAMPLE_EDITION_LABEL = '#092';
-const SAMPLE_DATE_META = 'APR 11, 2026 · Week 8';
-const SAMPLE_EDITION_META = 'Edition 92 / 240';
-const XP_LABEL = '+180 XP · 720 XP to Level 7';
-const ADD_TO_VAULT_LABEL = 'Add to vault';
+const QUEUED_CHIP_LABEL = 'Check-in recorded · minting';
+const TOKEN_CARD_FALLBACK = 'Your token';
+const TOKEN_SHORT_MAX = 4;
+const EDITION_PAD = 3;
+// The token is already in the vault — the button navigates, it doesn't add.
+const ADD_TO_VAULT_LABEL = 'View in vault';
 const SHARE_LABEL = 'Share to feed';
 const SESSION_REF_PREFIX = 'Base ↗ #';
 const SESSION_REF_MAX = 8;
+const MINT_POLL_MS = 4000;
+const TOKEN_DATE_FORMAT: Intl.DateTimeFormatOptions = {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+};
+
+function findMintedToken(
+  tokens: VaultToken[] | undefined,
+  sessionId: string | undefined,
+): VaultToken | undefined {
+  if (!tokens || !sessionId) return undefined;
+  return tokens.find((t) => t.sessionIdOnchain === sessionId);
+}
+
+function formatTokenDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', TOKEN_DATE_FORMAT).toUpperCase();
+}
 
 const SUCCESS_PANEL_BG = 'radial-gradient(120% 90% at 50% 0%,#0b1830 0%,#010304 60%)';
 const TOKEN_HERO_OVERLAY = 'radial-gradient(circle at 30% 25%,rgba(255,255,255,.4),transparent 55%)';
@@ -94,6 +118,21 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [errorVariant, setErrorVariant] = useState<ErrorVariant>('invalid');
   const [result, setResult] = useState<CheckInResponse | null>(null);
+
+  // The check-in row exists the moment the API returns, so the vault is the
+  // source for what was actually minted — name, date and meeting number.
+  // It re-polls while the mint is still PENDING so the chip flips on confirm.
+  const address = useEmbeddedAddress();
+  const { data: vault } = useQuery({
+    queryKey: queryKeys.memberVault(address ?? ''),
+    queryFn: () => getMemberVault(address!),
+    enabled: step === 'success' && !!address,
+    refetchInterval: (query) =>
+      findMintedToken(query.state.data?.tokens, result?.sessionId)?.mintStatus === 'CONFIRMED'
+        ? false
+        : MINT_POLL_MS,
+  });
+  const mintedToken = findMintedToken(vault?.tokens, result?.sessionId);
 
   const { mutate: processCheckIn } = useMutation({
     mutationFn: async (qrPayload: string) => {
@@ -290,43 +329,61 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
       result.sessionId.length > SESSION_REF_MAX
         ? `${result.sessionId.slice(0, SESSION_REF_MAX)}…`
         : result.sessionId;
+    const confirmed = mintedToken?.mintStatus === 'CONFIRMED';
+    const topic = mintedToken?.name ?? TOKEN_CARD_FALLBACK;
+    const shortLabel = topic.slice(0, TOKEN_SHORT_MAX).toUpperCase();
+    const editionLabel = mintedToken
+      ? `#${String(mintedToken.meetingNumber).padStart(EDITION_PAD, '0')}`
+      : '#—';
+    const dateMeta = mintedToken
+      ? `${formatTokenDate(mintedToken.date)} · Meeting ${mintedToken.meetingNumber}`
+      : '';
+    const heroGradient = mintedToken
+      ? TOKEN_GRADIENTS[gradientNameForTopic(mintedToken.name)]
+      : TOKEN_GRADIENTS.blue;
     return (
       <div
         className="flex min-h-[600px] flex-col rounded-context p-7 text-white"
         style={{ background: SUCCESS_PANEL_BG }}
       >
         <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-green-500/20 px-3.5 py-1.5 text-xs font-bold text-green-300">
-            <CheckIcon size={14} />
-            {MINTED_CHIP_LABEL}
+          <div
+            className={
+              confirmed
+                ? 'inline-flex items-center gap-1.5 rounded-full bg-green-500/20 px-3.5 py-1.5 text-xs font-bold text-green-300'
+                : 'inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold text-[rgba(218,229,247,0.85)]'
+            }
+          >
+            {confirmed ? <CheckIcon size={14} /> : <ClockIcon size={14} />}
+            {confirmed ? MINTED_CHIP_LABEL : QUEUED_CHIP_LABEL}
           </div>
 
           <div className="mt-6 w-[214px] overflow-hidden rounded-[22px] border border-[rgba(173,199,238,0.2)] bg-[#0b0f16] shadow-[0_24px_70px_rgba(0,92,240,0.45)]">
             <div
               className="relative grid h-[150px] place-items-center overflow-hidden"
-              style={{ background: TOKEN_GRADIENTS.blue }}
+              style={{ background: heroGradient }}
             >
               <div className="absolute inset-0" style={{ background: TOKEN_HERO_OVERLAY }} />
               <div className={SHEEN_CLASSES} />
               <div className="absolute left-4 top-3.5 font-mono text-[15px] font-bold text-white/90">
-                {SAMPLE_TOKEN_SHORT}
+                {shortLabel}
               </div>
               <div className="font-mono text-5xl font-bold tracking-[-1px] text-white">
-                {SAMPLE_EDITION_LABEL}
+                {editionLabel}
               </div>
             </div>
             <div className="px-[18px] py-4 text-left">
-              <div className="text-base font-semibold leading-[1.2]">{MEETING_TOPIC}</div>
-              <div className="mt-2 font-mono text-xs text-[rgba(218,229,247,0.6)]">{SAMPLE_DATE_META}</div>
+              <div className="text-base font-semibold leading-[1.2]">{topic}</div>
+              {dateMeta && (
+                <div className="mt-2 font-mono text-xs text-[rgba(218,229,247,0.6)]">{dateMeta}</div>
+              )}
               <div className="my-3.5 h-px bg-white/10" />
               <div className="flex items-center justify-between font-mono text-[11px] text-[rgba(218,229,247,0.6)]">
-                <span>{SAMPLE_EDITION_META}</span>
+                <span>{mintedToken?.semester ?? ''}</span>
                 <span className="text-cyan">{`${SESSION_REF_PREFIX}${sessionSuffix}`}</span>
               </div>
             </div>
           </div>
-
-          <div className="mt-6 text-[13px] leading-[19px] text-[rgba(218,229,247,0.6)]">{XP_LABEL}</div>
         </div>
 
         <div className="mt-8 flex flex-col gap-2.5">

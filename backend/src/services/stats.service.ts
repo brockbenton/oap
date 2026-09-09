@@ -45,17 +45,31 @@ export interface MemberStat {
   currentSemesterAttendancePct: number;
   statusTier: StatusTier;
   lastSeen: string | null;
+  joinedAt: string;
+  currentStreak: number;
+  /** Attendance at each session in `recentSessions`, same order (oldest → newest). */
+  recentAttendance: boolean[];
+}
+
+/** The trailing window of meetings the admin members table renders as a matrix. */
+export const RECENT_SESSION_WINDOW = 6;
+
+export interface RecentSession {
+  sessionIdOnchain: string;
+  name: string;
+  date: string;
 }
 
 export async function buildMemberStats(includeLinkedAccount = true): Promise<{
   members: MemberStat[];
   totalSessions: number;
   currentSemester: string | null;
+  recentSessions: RecentSession[];
 }> {
   // 1. All confirmed sessions (needed for attendance % denominators)
   const sessions = await prisma.session.findMany({
     where: { onchainStatus: CONFIRMED_STATUS },
-    select: { id: true, semester: true },
+    select: { id: true, semester: true, sessionIdOnchain: true, name: true, date: true },
     orderBy: { date: 'desc' },
   });
 
@@ -66,6 +80,15 @@ export async function buildMemberStats(includeLinkedAccount = true): Promise<{
     sessions.filter((s) => s.semester === currentSemester).map((s) => s.id),
   );
   const currentSemesterTotal = currentSemesterSessionIds.size;
+
+  // Trailing window for the members-table attendance matrix, oldest → newest so
+  // the rendered columns read left-to-right in chronological order.
+  const recentSessionsDesc = sessions.slice(0, RECENT_SESSION_WINDOW);
+  const recentSessions: RecentSession[] = [...recentSessionsDesc].reverse().map((s) => ({
+    sessionIdOnchain: s.sessionIdOnchain,
+    name: s.name,
+    date: s.date.toISOString(),
+  }));
 
   // 2. All members with their check-ins (latest first for lastSeen)
   const members = await prisma.member.findMany({
@@ -117,6 +140,21 @@ export async function buildMemberStats(includeLinkedAccount = true): Promise<{
 
     const statusTier = tierFor(allTimeAttendancePct);
 
+    // Attendance history for this member, keyed by session row id. Reuses the
+    // same confirmed-mint definition as tokensEarned so the matrix, the streak
+    // and the token count can never disagree.
+    const attendedSessionIds = new Set(earnedCheckIns.map((c) => c.sessionId));
+
+    let currentStreak = 0;
+    for (const s of sessions) {
+      if (!attendedSessionIds.has(s.id)) break;
+      currentStreak += 1;
+    }
+
+    const recentAttendance = [...recentSessionsDesc]
+      .reverse()
+      .map((s) => attendedSessionIds.has(s.id));
+
     return {
       id: m.id,
       walletAddress: m.walletAddress,
@@ -127,6 +165,9 @@ export async function buildMemberStats(includeLinkedAccount = true): Promise<{
       currentSemesterAttendancePct,
       statusTier,
       lastSeen: m.checkIns[0]?.checkedInAt.toISOString() ?? null,
+      joinedAt: m.createdAt.toISOString(),
+      currentStreak,
+      recentAttendance,
     };
   });
 
@@ -134,7 +175,7 @@ export async function buildMemberStats(includeLinkedAccount = true): Promise<{
     (a, b) => b.allTimeAttendancePct - a.allTimeAttendancePct || b.tokensEarned - a.tokensEarned,
   );
 
-  return { members: data, totalSessions, currentSemester };
+  return { members: data, totalSessions, currentSemester, recentSessions };
 }
 
 // ── Phase 3: per-member vault & personal stats ──────────────────────────────

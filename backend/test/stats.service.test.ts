@@ -4,6 +4,7 @@ import {
   buildPersonalStats,
   buildMemberVault,
   buildAdminOverview,
+  RECENT_SESSION_WINDOW,
 } from '../src/services/stats.service';
 
 const ALICE = '0x1111111111111111111111111111111111111111';
@@ -90,6 +91,40 @@ describe('buildMemberStats', () => {
     const alice = members.find((m) => m.walletAddress === ALICE)!;
     expect(alice.tokensEarned).toBe(16);
     expect(members.every((m) => m.linkedAccount === null)).toBe(true);
+  });
+
+  it('returns the real trailing-window sessions, oldest first', async () => {
+    const { recentSessions } = await buildMemberStats(false);
+    expect(recentSessions).toHaveLength(RECENT_SESSION_WINDOW);
+    const dates = recentSessions.map((s) => new Date(s.date).getTime());
+    expect([...dates].sort((a, b) => a - b)).toEqual(dates);
+    expect(recentSessions.every((s) => s.name.length > 0)).toBe(true);
+  });
+
+  it('attendance matrix and streak match each member’s actual check-ins', async () => {
+    const { members, recentSessions } = await buildMemberStats(false);
+
+    // Alice attended every meeting: full matrix, streak equals the session count.
+    const alice = members.find((m) => m.walletAddress === ALICE)!;
+    expect(alice.recentAttendance).toHaveLength(recentSessions.length);
+    expect(alice.recentAttendance.every(Boolean)).toBe(true);
+    expect(alice.currentStreak).toBe(16);
+
+    // Dave's most recent mint is still PENDING, so it breaks the streak and does
+    // not fill its matrix cell (same CONFIRMED-only rule as tokensEarned).
+    const dave = members.find((m) => m.walletAddress === DAVE)!;
+    expect(dave.currentStreak).toBe(0);
+    expect(dave.recentAttendance[dave.recentAttendance.length - 1]).toBe(false);
+    expect(dave.recentAttendance.filter(Boolean).length).toBeLessThanOrEqual(dave.tokensEarned);
+
+    // Carol's streak is broken, matching her personal-stats streak.
+    const carol = members.find((m) => m.walletAddress === CAROL)!;
+    expect(carol.currentStreak).toBe(0);
+  });
+
+  it('exposes joinedAt for every member', async () => {
+    const { members } = await buildMemberStats(false);
+    expect(members.every((m) => !Number.isNaN(Date.parse(m.joinedAt)))).toBe(true);
   });
 });
 

@@ -101,8 +101,10 @@ router.patch(
 router.get('/', async (_req: Request, res: Response): Promise<void> => {
   const { members, totalSessions, currentSemester } = await buildMemberStats(false);
 
+  // joinedAt is account metadata rather than attendance, so it stays behind the
+  // admin gate alongside linkedAccount and the internal id (see AUDIT.md H1).
   const publicMembers = members.map(
-    ({ linkedAccount: _linkedAccount, id: _id, ...rest }) => rest,
+    ({ linkedAccount: _linkedAccount, id: _id, joinedAt: _joinedAt, ...rest }) => rest,
   );
 
   res.json({ data: { members: publicMembers, totalSessions, currentSemester } });
