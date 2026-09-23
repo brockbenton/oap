@@ -89,9 +89,9 @@ router.get('/sessions/:sessionId/attendees', async (req: Request, res: Response)
 // ── GET /api/v1/admin/members ─────────────────────────────────────────────
 
 router.get('/members', async (_req: Request, res: Response): Promise<void> => {
-  const { members, totalSessions, currentSemester } = await buildMemberStats();
+  const { members, totalSessions, currentSemester, recentSessions } = await buildMemberStats();
 
-  res.json({ data: { members, totalSessions, currentSemester } });
+  res.json({ data: { members, totalSessions, currentSemester, recentSessions } });
 });
 
 // ── PATCH /api/v1/admin/members/:memberId/founding-member ─────────────────

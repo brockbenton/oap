@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import type { GradientName } from '@/lib/tokenArt';
 import { TOKEN_GRADIENTS, gradientForTopic } from '@/lib/tokenArt';
 import { cn } from '@/lib/cn';
+import { BASESCAN_URL } from '@/lib/constants';
 import { Button, CopyChip, IconButton } from '@/components/ui';
 import { CloseIcon, ExternalLinkIcon } from '@/components/ui/icons';
 
@@ -11,18 +12,21 @@ type TraitTone = 'info' | 'neutral';
 
 export interface TokenDetailData {
   editionNumber: number;
-  editionOf: number;
+  /** Total editions, when the source knows it. The contract tracks no supply cap. */
+  editionOf?: number | null;
   topic: string;
   club: string;
   week: number;
   mintedAt: string;
   chain: string;
   standard: string;
-  xp: number;
+  /** Omitted when there is no XP model behind the token. */
+  xp?: number | null;
   gradient?: GradientName;
   rarity?: 'RARE' | null;
   traits: { label: string; value: string; tone?: TraitTone }[];
-  txHash: string;
+  /** Null while the mint is still pending — the tx row and Basescan link hide. */
+  txHash: string | null;
 }
 
 export interface TokenDetailModalProps {
@@ -49,6 +53,8 @@ const BADGE_LABEL = 'ATTENDANCE TOKEN';
 const TRAITS_LABEL = 'Traits';
 const CLOSE_LABEL = 'Close';
 const BASESCAN_LABEL = 'View on Basescan';
+const PENDING_TX_LABEL = 'Mint pending — the transaction hash appears once it confirms.';
+const PENDING_TX_CLASSES = 'mb-[18px] text-[13px] leading-[18px] text-content-secondary';
 const SHARE_LABEL = 'Share';
 const META_MINTED = 'Minted';
 const META_CHAIN = 'Chain';
@@ -120,8 +126,10 @@ export default function TokenDetailModal({ open, onClose, token }: TokenDetailMo
     { label: META_MINTED, value: token.mintedAt },
     { label: META_CHAIN, value: token.chain },
     { label: META_STANDARD, value: token.standard },
-    { label: META_XP, value: `${XP_PREFIX}${token.xp}${XP_SUFFIX}` },
   ];
+  if (token.xp != null) {
+    metaItems.push({ label: META_XP, value: `${XP_PREFIX}${token.xp}${XP_SUFFIX}` });
+  }
 
   return (
     <div className={OVERLAY_CLASSES} onClick={onClose}>
@@ -143,7 +151,9 @@ export default function TokenDetailModal({ open, onClose, token }: TokenDetailMo
               <div className={EDITION_CLASSES}>{`${EDITION_PREFIX}${token.editionNumber}`}</div>
             </div>
             <div className={EDITION_FOOTER_CLASSES}>
-              {`Edition ${token.editionNumber} of ${token.editionOf}`}
+              {token.editionOf != null
+                ? `Edition ${token.editionNumber} of ${token.editionOf}`
+                : `Edition ${token.editionNumber}`}
             </div>
           </div>
 
@@ -182,17 +192,29 @@ export default function TokenDetailModal({ open, onClose, token }: TokenDetailMo
               ))}
             </div>
 
-            <CopyChip
-              value={token.txHash}
-              display={`${TX_PREFIX}${shortHash(token.txHash)}`}
-              className="mb-[18px]"
-            />
+            {token.txHash ? (
+              <CopyChip
+                value={token.txHash}
+                display={`${TX_PREFIX}${shortHash(token.txHash)}`}
+                className="mb-[18px]"
+              />
+            ) : (
+              <div className={PENDING_TX_CLASSES}>{PENDING_TX_LABEL}</div>
+            )}
 
             <div className={ACTIONS_CLASSES}>
-              <Button variant="primary" className={PRIMARY_BUTTON_CLASSES}>
-                {BASESCAN_LABEL}
-                <ExternalLinkIcon size={14} />
-              </Button>
+              {token.txHash && (
+                <a
+                  href={`${BASESCAN_URL}/tx/${token.txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="primary" className={PRIMARY_BUTTON_CLASSES}>
+                    {BASESCAN_LABEL}
+                    <ExternalLinkIcon size={14} />
+                  </Button>
+                </a>
+              )}
               <Button variant="outline" className={SHARE_BUTTON_CLASSES}>
                 {SHARE_LABEL}
               </Button>

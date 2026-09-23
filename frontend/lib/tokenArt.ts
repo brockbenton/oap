@@ -31,9 +31,13 @@ function charSum(input: string): number {
   return sum;
 }
 
+/** The typed gradient name a topic maps to — for props that take a name, not CSS. */
+export function gradientNameForTopic(topic: string): GradientName {
+  return GRADIENT_NAMES[charSum(topic) % GRADIENT_NAMES.length];
+}
+
 export function gradientForTopic(topic: string): string {
-  const index = charSum(topic) % GRADIENT_NAMES.length;
-  return TOKEN_GRADIENTS[GRADIENT_NAMES[index]];
+  return TOKEN_GRADIENTS[gradientNameForTopic(topic)];
 }
 
 export function avatarGradient(seed: string): string {

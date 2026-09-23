@@ -1,14 +1,19 @@
 'use client';
 
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import MemberTopNav from '@/components/shared/MemberTopNav';
 import MobileTabBar from '@/components/shared/MobileTabBar';
 import PageContainer from '@/components/shared/PageContainer';
 import TokenCard from '@/components/shared/TokenCard';
+import LoadError from '@/components/shared/LoadError';
 import { Avatar, Button, MonoNum, StatTile } from '@/components/ui';
 import { QrIcon } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
-import type { GradientName } from '@/lib/tokenArt';
+import { gradientNameForTopic } from '@/lib/tokenArt';
+import { getMemberVault, getPersonalStats } from '@/lib/api/members';
+import { queryKeys } from '@/lib/api/queryKeys';
+import { useDisplayName, useEmbeddedAddress } from '@/hooks/useProfile';
 import {
   useLeaderboard,
   useLevel,
@@ -16,29 +21,26 @@ import {
   type LeaderboardTimeframe,
   type RankSummary,
 } from '@/lib/mock/gamification';
-import type { Level, LeaderboardEntry } from '@/types';
+import type { Level, LeaderboardEntry, MemberVault, PersonalStats, VaultToken } from '@/types';
 
-/** Flip to false to preview the new-member empty Home (frame 7b). Real vault wiring lands in M5. */
-const HAS_TOKENS = true;
-
-const CLUB_EYEBROW = "Blockchain Club · Spring '26";
-const GREETING = 'Welcome back, alex.eth';
-const EMPTY_GREETING = 'Welcome to OAP, riley.eth 👋';
-const NEXT_MEETING = 'Next meeting · Thu 6:00 PM';
-const STREAK_WEEKS = 7;
+/** Single-club deployment: there is no clubs backend, so the club name is a
+ *  deployment label. The semester beside it is real (from personal stats). */
+const CLUB_NAME = 'Blockchain Club';
 
 const CHECK_IN_HREF = '/check-in';
 const VAULT_HREF = '/vault';
 
-const LIVE_TITLE = 'Meeting is live — check in now';
-const LIVE_SUBTITLE = 'Week 8 · MEV & Flashbots · Room 214';
+// There is no member-facing "is a meeting live right now" endpoint (the QR is
+// admin-gated), so the card is a standing entry point rather than a live claim.
+const CHECK_IN_TITLE = 'Check in to a meeting';
+const CHECK_IN_SUBTITLE = 'Scan the QR on the projector to mint your attendance token.';
 const SCAN_LABEL = 'Scan QR code';
 
-const STREAK_HINT = 'Personal best. Miss a week to reset.';
+const STREAK_HINT = 'Consecutive meetings attended.';
 const RANK_DELTA_SUFFIX = 'this week';
 
-const VAULT_TOKEN_COUNT = 23;
 const VIEW_ALL = 'View all →';
+const VAULT_PREVIEW_COUNT = 4;
 
 const LEADERBOARD_TITLE = 'Leaderboard';
 const LEADERBOARD_TIMEFRAME: LeaderboardTimeframe = 'semester';
@@ -52,7 +54,7 @@ const NEXT_REWARD = { level: 7, title: 'Club hoodie raffle entry', xpToGo: 720 }
 const MINT_TITLE = 'Mint your first token';
 const MINT_BODY =
   'Head to a meeting and scan the QR on the projector. Your attendance token appears here the moment you check in.';
-const EMPTY_STREAK_HINT = 'Check in this week to start one.';
+const EMPTY_STREAK_HINT = 'Check in at a meeting to start one.';
 const EMPTY_VAULT_TITLE = 'Your vault is empty';
 const EMPTY_VAULT_SUB = 'Tokens you earn will show up here.';
 const EMPTY_LEVEL: Level = { level: 1, xp: 0, xpIntoLevel: 0, xpForNextLevel: 500 };
@@ -62,48 +64,93 @@ const GLOW_CYAN_SOFT = 'radial-gradient(circle, rgba(38,221,249,0.3), transparen
 const GLOW_PURPLE_SOFT = 'radial-gradient(circle, rgba(104,51,255,0.3), transparent 70%)';
 const SUBTLE_LIGHT = 'text-[rgba(218,229,247,0.7)]';
 
-const MOBILE_GREETING = 'Hey, alex.eth 👋';
-const LIVE_EYEBROW = '● Meeting live now';
-const LIVE_TOPIC = 'MEV & Flashbots';
-const LIVE_META = 'Week 8 · Room 214';
+const CHECK_IN_EYEBROW = '● Check in';
 const MOBILE_SCAN_LABEL = 'Scan to check in';
 const RECENT_TOKENS_TITLE = 'Recent tokens';
-const ALL_TOKENS_LABEL = `All ${VAULT_TOKEN_COUNT} →`;
 const MOBILE_TOKEN_COUNT = 2;
 const STAT_PLACEHOLDER = '—';
 
 const MOBILE_STATS = [
   { key: 'level', label: 'Level', accent: false },
-  { key: 'weeks', label: 'Weeks', accent: true },
+  { key: 'streak', label: 'Streak', accent: true },
   { key: 'rank', label: 'Rank', accent: false },
 ] as const;
 
-interface SampleToken {
-  editionNumber: number;
-  topic: string;
-  date: string;
-  gradient: GradientName;
-}
-
-const SAMPLE_TOKENS: SampleToken[] = [
-  { editionNumber: 128, topic: 'Solidity', date: 'APR 04', gradient: 'blue' },
-  { editionNumber: 87, topic: 'ZK Proofs', date: 'MAR 28', gradient: 'purple' },
-  { editionNumber: 204, topic: 'DeFi', date: 'MAR 21', gradient: 'green' },
-  { editionNumber: 61, topic: 'L2 Rollups', date: 'MAR 14', gradient: 'orange' },
-];
+const TOKEN_DATE_FORMAT: Intl.DateTimeFormatOptions = { month: 'short', day: '2-digit' };
 
 const fmt = (n: number): string => n.toLocaleString('en-US');
 
-export default function MemberHome() {
-  return HAS_TOKENS ? <PopulatedHome /> : <EmptyHome />;
+function formatTokenDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', TOKEN_DATE_FORMAT).toUpperCase();
 }
 
-function GreetingHeader({ title, note }: { title: string; note?: string }) {
+export default function MemberHome() {
+  const address = useEmbeddedAddress();
+  const displayName = useDisplayName();
+
+  const vaultQuery = useQuery({
+    queryKey: queryKeys.memberVault(address ?? ''),
+    queryFn: () => getMemberVault(address!),
+    enabled: !!address,
+  });
+
+  const statsQuery = useQuery({
+    queryKey: queryKeys.memberStats(address ?? ''),
+    queryFn: () => getPersonalStats(address!),
+    enabled: !!address,
+  });
+
+  if (vaultQuery.error || statsQuery.error) {
+    return (
+      <div className="min-h-screen bg-white">
+        <MemberTopNav active="home" />
+        <PageContainer className="py-8">
+          <LoadError
+            what="home"
+            onRetry={() => {
+              void vaultQuery.refetch();
+              void statsQuery.refetch();
+            }}
+          />
+        </PageContainer>
+        <MobileTabBar active="home" />
+      </div>
+    );
+  }
+
+  const loading = !address || vaultQuery.isLoading || statsQuery.isLoading;
+  const vault = vaultQuery.data;
+  const stats = statsQuery.data;
+
+  // A member with no confirmed tokens yet gets the new-member Home (frame 7b).
+  if (!loading && vault && stats && vault.tokenCount === 0) {
+    return <EmptyHome displayName={displayName} semester={stats.currentSemester} />;
+  }
+
+  return (
+    <PopulatedHome
+      displayName={displayName}
+      vault={vault}
+      stats={stats}
+      dataLoading={loading}
+    />
+  );
+}
+
+function GreetingHeader({
+  title,
+  note,
+  semester,
+}: {
+  title: string;
+  note?: string;
+  semester?: string | null;
+}) {
   return (
     <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
       <div>
         <div className="mb-2 font-mono text-[13px] uppercase tracking-[0.06em] text-status-neutral">
-          {CLUB_EYEBROW}
+          {semester ? `${CLUB_NAME} · ${semester}` : CLUB_NAME}
         </div>
         <h1 className="text-[32px] font-semibold leading-[38px] tracking-[-1px]">{title}</h1>
       </div>
@@ -112,64 +159,94 @@ function GreetingHeader({ title, note }: { title: string; note?: string }) {
   );
 }
 
-function PopulatedHome() {
+interface PopulatedHomeProps {
+  displayName: string;
+  vault?: MemberVault;
+  stats?: PersonalStats;
+  dataLoading: boolean;
+}
+
+function PopulatedHome({ displayName, vault, stats, dataLoading }: PopulatedHomeProps) {
   const { data: level } = useLevel();
   const { data: rank } = useRank();
   const { data: board, isLoading } = useLeaderboard(LEADERBOARD_TIMEFRAME);
-  const loading = isLoading || !level || !rank || !board;
+  const loading = dataLoading || isLoading || !level || !rank || !board || !vault || !stats;
 
   return (
     <div className="min-h-screen bg-white">
       <MemberTopNav active="home" />
       <div className="hidden md:block">
         <PageContainer className="py-8">
-          <GreetingHeader title={GREETING} note={NEXT_MEETING} />
+          <GreetingHeader
+            title={`Welcome back, ${displayName}`}
+            semester={stats?.currentSemester}
+          />
           {loading ? (
             <HomeSkeleton />
           ) : (
             <div className="grid animate-fade-in grid-cols-1 gap-5 lg:grid-cols-[1.55fr_1fr]">
               <div className="flex flex-col gap-5">
                 <CheckInCard />
-                <StatRow level={level} rank={rank} />
-                <VaultPreview />
+                <StatRow level={level} rank={rank} streak={stats.currentStreak} />
+                <VaultPreview vault={vault} />
               </div>
               <LeaderboardPreview entries={board} />
             </div>
           )}
         </PageContainer>
       </div>
-      <MobileHome level={level} rank={rank} />
+      <MobileHome displayName={displayName} level={level} rank={rank} vault={vault} stats={stats} />
       <MobileTabBar active="home" />
     </div>
   );
 }
 
-function MobileHome({ level, rank }: { level?: Level; rank?: RankSummary }) {
+function MobileHome({
+  displayName,
+  level,
+  rank,
+  vault,
+  stats,
+}: {
+  displayName: string;
+  level?: Level;
+  rank?: RankSummary;
+  vault?: MemberVault;
+  stats?: PersonalStats;
+}) {
+  const recent = (vault?.tokens ?? []).slice(0, MOBILE_TOKEN_COUNT);
+
   return (
     <div className="px-5 pb-24 pt-1.5 md:hidden md:pb-0">
       <h1 className="mb-4 text-[22px] font-semibold leading-[28px] tracking-[-0.5px]">
-        {MOBILE_GREETING}
+        Hey, {displayName} 👋
       </h1>
       <MobileCheckInCard />
-      <MobileStatRow level={level} rank={rank} />
+      <MobileStatRow level={level} rank={rank} streak={stats?.currentStreak} />
       <div className="mb-3 flex items-center justify-between">
         <div className="text-sm font-semibold leading-none">{RECENT_TOKENS_TITLE}</div>
         <Link href={VAULT_HREF} className="text-xs font-semibold leading-none text-blue-500">
-          {ALL_TOKENS_LABEL}
+          All {vault?.tokenCount ?? 0} →
         </Link>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        {SAMPLE_TOKENS.slice(0, MOBILE_TOKEN_COUNT).map((token) => (
-          <TokenCard
-            key={token.editionNumber}
-            editionNumber={token.editionNumber}
-            topic={token.topic}
-            date={token.date}
-            gradient={token.gradient}
-          />
+        {recent.map((token) => (
+          <VaultTokenCard key={token.tokenId} token={token} />
         ))}
       </div>
     </div>
+  );
+}
+
+/** One real vault token rendered as a TokenCard. */
+function VaultTokenCard({ token }: { token: VaultToken }) {
+  return (
+    <TokenCard
+      editionNumber={token.meetingNumber}
+      topic={token.name}
+      date={formatTokenDate(token.date)}
+      gradient={gradientNameForTopic(token.name)}
+    />
   );
 }
 
@@ -181,10 +258,12 @@ function MobileCheckInCard() {
         style={{ background: GLOW_CYAN }}
       />
       <div className="relative mb-2 font-mono text-[11px] font-medium uppercase leading-none tracking-[0.06em] text-cyan">
-        {LIVE_EYEBROW}
+        {CHECK_IN_EYEBROW}
       </div>
-      <div className="relative mb-1 text-[17px] font-semibold leading-[1.3]">{LIVE_TOPIC}</div>
-      <div className={cn('relative mb-4 text-[13px] leading-none', SUBTLE_LIGHT)}>{LIVE_META}</div>
+      <div className="relative mb-1 text-[17px] font-semibold leading-[1.3]">{CHECK_IN_TITLE}</div>
+      <div className={cn('relative mb-4 text-[13px] leading-[18px]', SUBTLE_LIGHT)}>
+        {CHECK_IN_SUBTITLE}
+      </div>
       <Link
         href={CHECK_IN_HREF}
         className="relative flex h-[46px] w-full items-center justify-center rounded-full bg-cyan text-[15px] font-semibold leading-none text-ink transition active:scale-[0.98]"
@@ -195,10 +274,18 @@ function MobileCheckInCard() {
   );
 }
 
-function MobileStatRow({ level, rank }: { level?: Level; rank?: RankSummary }) {
+function MobileStatRow({
+  level,
+  rank,
+  streak,
+}: {
+  level?: Level;
+  rank?: RankSummary;
+  streak?: number;
+}) {
   const values: Record<(typeof MOBILE_STATS)[number]['key'], string> = {
     level: level ? `${level.level}` : STAT_PLACEHOLDER,
-    weeks: `${STREAK_WEEKS}`,
+    streak: streak === undefined ? STAT_PLACEHOLDER : `${streak}`,
     rank: rank ? `#${rank.rank}` : STAT_PLACEHOLDER,
   };
 
@@ -234,8 +321,8 @@ function CheckInCard() {
         <QrIcon size={34} className="text-cyan" />
       </div>
       <div className="relative flex-1">
-        <div className="mb-1 text-xl font-semibold leading-[1.3]">{LIVE_TITLE}</div>
-        <div className={cn('text-sm leading-5', SUBTLE_LIGHT)}>{LIVE_SUBTITLE}</div>
+        <div className="mb-1 text-xl font-semibold leading-[1.3]">{CHECK_IN_TITLE}</div>
+        <div className={cn('text-sm leading-5', SUBTLE_LIGHT)}>{CHECK_IN_SUBTITLE}</div>
       </div>
       <Link href={CHECK_IN_HREF} className="relative flex-none">
         <Button variant="cyan" size="lg">
@@ -246,7 +333,7 @@ function CheckInCard() {
   );
 }
 
-function StatRow({ level, rank }: { level: Level; rank: RankSummary }) {
+function StatRow({ level, rank, streak }: { level: Level; rank: RankSummary; streak: number }) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <StatTile
@@ -257,7 +344,7 @@ function StatRow({ level, rank }: { level: Level; rank: RankSummary }) {
       />
       <StatTile
         label="Streak"
-        value={<span className="text-yellow-700">{STREAK_WEEKS} wk</span>}
+        value={<span className="text-yellow-700">{streak}</span>}
         hint={STREAK_HINT}
       />
       <StatTile
@@ -269,24 +356,22 @@ function StatRow({ level, rank }: { level: Level; rank: RankSummary }) {
   );
 }
 
-function VaultPreview() {
+function VaultPreview({ vault }: { vault: MemberVault }) {
+  const preview = vault.tokens.slice(0, VAULT_PREVIEW_COUNT);
+
   return (
     <div className="rounded-lg border border-line bg-white p-[22px]">
       <div className="mb-[18px] flex items-center justify-between">
-        <div className="text-base font-semibold">My Vault · {VAULT_TOKEN_COUNT} tokens</div>
+        <div className="text-base font-semibold">
+          My Vault · {vault.tokenCount} {vault.tokenCount === 1 ? 'token' : 'tokens'}
+        </div>
         <Link href={VAULT_HREF} className="text-[13px] font-semibold text-blue-500">
           {VIEW_ALL}
         </Link>
       </div>
       <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4">
-        {SAMPLE_TOKENS.map((token) => (
-          <TokenCard
-            key={token.editionNumber}
-            editionNumber={token.editionNumber}
-            topic={token.topic}
-            date={token.date}
-            gradient={token.gradient}
-          />
+        {preview.map((token) => (
+          <VaultTokenCard key={token.tokenId} token={token} />
         ))}
       </div>
     </div>
@@ -390,12 +475,12 @@ function NextRewardChip() {
   );
 }
 
-function EmptyHome() {
+function EmptyHome({ displayName, semester }: { displayName: string; semester: string | null }) {
   return (
     <div className="min-h-screen bg-white">
       <MemberTopNav active="home" />
       <PageContainer className="py-8">
-        <GreetingHeader title={EMPTY_GREETING} />
+        <GreetingHeader title={`Welcome to OAP, ${displayName} 👋`} semester={semester} />
 
         <div className="relative mb-5 overflow-hidden rounded-lg bg-ink p-9 text-center text-white">
           <div
@@ -433,7 +518,7 @@ function EmptyHome() {
           />
           <StatTile
             label="Streak"
-            value={<span className="text-content-disabled">0 wk</span>}
+            value={<span className="text-content-disabled">0</span>}
             hint={EMPTY_STREAK_HINT}
           />
           <div className="flex flex-col items-center justify-center gap-1.5 rounded-tile border border-dashed border-line-strong bg-card-filled p-5 text-center">

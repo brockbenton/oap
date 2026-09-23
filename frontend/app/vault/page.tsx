@@ -16,8 +16,7 @@ import PageContainer from '@/components/shared/PageContainer';
 import TokenCard from '@/components/shared/TokenCard';
 import TokenDetailModal, { type TokenDetailData } from '@/components/shared/TokenDetailModal';
 import { IconButton } from '@/components/ui';
-import { GRADIENT_NAMES } from '@/lib/tokenArt';
-import type { GradientName } from '@/lib/tokenArt';
+import { gradientNameForTopic } from '@/lib/tokenArt';
 import { cn } from '@/lib/cn';
 import { VaultToken } from '@/types';
 
@@ -57,15 +56,15 @@ const TONE_INFO = 'info' as const;
 
 const CLUB_NAME = 'Blockchain Club';
 const CHAIN_NAME = 'Base';
-const TOKEN_STANDARD = 'ERC-721 · soulbound';
-const SAMPLE_XP = 180;
-const SAMPLE_EDITION_OF = 240;
-const SAMPLE_TX_HASH = '0x9f2c7ab41d6e8305c1a4b7e0f93d2685a4c1de07f8b3629045ac1d7e6b0f2a3c';
+// AttendanceRegistry.sol is a soulbound ERC-1155 (one token id per meeting).
+const TOKEN_STANDARD = 'ERC-1155 · soulbound';
 const SEASON_TRAIT_LABEL = 'Season';
-const STATIC_TRAITS: TokenDetailData['traits'] = [
-  { label: 'Rarity', value: 'Common', tone: TONE_NEUTRAL },
-  { label: 'Check-in', value: 'On-time', tone: TONE_INFO },
-];
+const MINT_TRAIT_LABEL = 'Mint';
+const MINT_TRAIT_VALUES: Record<VaultToken['mintStatus'], string> = {
+  CONFIRMED: 'Confirmed onchain',
+  PENDING: 'Pending',
+  FAILED: 'Failed',
+};
 
 const CHIP_BASE = 'rounded-full px-3.5 py-2 text-xs transition';
 const CHIP_ACTIVE = 'bg-ink font-semibold text-white';
@@ -211,7 +210,7 @@ export default function VaultPage() {
                     editionNumber={token.meetingNumber}
                     topic={token.name}
                     date={formatCardDate(token.date)}
-                    gradient={gradientNameFor(token.name)}
+                    gradient={gradientNameForTopic(token.name)}
                     rarity={null}
                     onClick={() => setSelected(token)}
                   />
@@ -266,7 +265,7 @@ export default function VaultPage() {
                   editionNumber={token.meetingNumber}
                   topic={token.name}
                   date={formatCardDate(token.date)}
-                  gradient={gradientNameFor(token.name)}
+                  gradient={gradientNameForTopic(token.name)}
                   rarity={null}
                   onClick={() => setSelected(token)}
                 />
@@ -293,27 +292,26 @@ export default function VaultPage() {
 function toDetail(token: VaultToken): TokenDetailData {
   return {
     editionNumber: token.meetingNumber,
-    editionOf: SAMPLE_EDITION_OF,
+    // The contract mints on demand with no supply cap, so there is no "of N".
+    editionOf: null,
     topic: token.name,
     club: CLUB_NAME,
     week: token.meetingNumber,
     mintedAt: formatMintedAt(token.date),
     chain: CHAIN_NAME,
     standard: TOKEN_STANDARD,
-    xp: SAMPLE_XP,
-    gradient: gradientNameFor(token.name),
+    // No XP model exists in the backend; the tile is omitted rather than faked.
+    xp: null,
+    gradient: gradientNameForTopic(token.name),
     rarity: null,
-    traits: [...STATIC_TRAITS, { label: SEASON_TRAIT_LABEL, value: token.semester, tone: TONE_NEUTRAL }],
-    txHash: token.txHash ?? SAMPLE_TX_HASH,
+    traits: [
+      { label: SEASON_TRAIT_LABEL, value: token.semester, tone: TONE_NEUTRAL },
+      { label: MINT_TRAIT_LABEL, value: MINT_TRAIT_VALUES[token.mintStatus], tone: TONE_INFO },
+    ],
+    txHash: token.txHash,
   };
 }
 
-/** Mirrors gradientForTopic() to yield the typed GradientName the card + modal props require, not the CSS string. */
-function gradientNameFor(topic: string): GradientName {
-  let sum = 0;
-  for (let i = 0; i < topic.length; i += 1) sum += topic.charCodeAt(i);
-  return GRADIENT_NAMES[sum % GRADIENT_NAMES.length];
-}
 
 // ── components ───────────────────────────────────────────────────────────────
 

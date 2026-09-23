@@ -14,17 +14,10 @@ import { queryKeys } from '@/lib/api/queryKeys';
 import { retryUnlessForbidden, ApiRequestError } from '@/lib/api/client';
 import { ATTENDANCE_GOOD_PCT } from '@/lib/constants';
 import { cn } from '@/lib/cn';
-import { MemberStats } from '@/types';
+import { MemberStats, RecentSession } from '@/types';
 
-const ATTENDANCE_WEEKS = 6;
-const WEEK_RANGE_LABEL = 'W4–W9';
 const PRESENT_MARK = '✓';
-const MAX_SAMPLE_STREAK = 12;
-
-// SAMPLE: per-member attendance history, streak and join month aren't in the
-// admin backend yet. Derive them deterministically from the wallet address so
-// the demo is stable across reloads (real Tokens/Rate come from listAdminMembers).
-const SAMPLE_JOIN_LABELS = ["Sep '25", "Oct '25", "Nov '25", "Dec '25", "Jan '26", "Feb '26"];
+const NO_SESSIONS_LABEL = 'no meetings yet';
 
 interface Column {
   key: string;
@@ -32,13 +25,15 @@ interface Column {
   align: string;
 }
 
-const COLUMNS: Column[] = [
-  { key: 'member', label: 'Member', align: 'text-left' },
-  { key: 'tokens', label: 'Tokens', align: 'text-right' },
-  { key: 'streak', label: 'Streak', align: 'text-right' },
-  { key: 'attendance', label: `Attendance · ${WEEK_RANGE_LABEL}`, align: 'text-center' },
-  { key: 'rate', label: 'Rate', align: 'text-right' },
-];
+function columnsFor(rangeLabel: string): Column[] {
+  return [
+    { key: 'member', label: 'Member', align: 'text-left' },
+    { key: 'tokens', label: 'Tokens', align: 'text-right' },
+    { key: 'streak', label: 'Streak', align: 'text-right' },
+    { key: 'attendance', label: `Attendance · ${rangeLabel}`, align: 'text-center' },
+    { key: 'rate', label: 'Rate', align: 'text-right' },
+  ];
+}
 
 const ROW_GRID = 'grid grid-cols-[1.4fr_90px_90px_240px_90px] items-center gap-4 px-5';
 const HEADER_LABEL = 'font-mono text-[11px] font-medium uppercase tracking-[0.06em] text-content-secondary';
@@ -46,27 +41,23 @@ const CELL_PRESENT =
   'grid h-[22px] w-[22px] place-items-center rounded-[6px] bg-status-pos-bg font-mono text-[11px] font-bold text-green-600';
 const CELL_ABSENT = 'h-[22px] w-[22px] rounded-[6px] bg-card-filled';
 
-function hashAddress(address: string): number {
-  let hash = 0;
-  for (let i = 0; i < address.length; i += 1) {
-    hash = (hash * 31 + address.charCodeAt(i)) >>> 0;
-  }
-  return hash;
+const MONTH_YEAR_FORMAT: Intl.DateTimeFormatOptions = { month: 'short', year: '2-digit' };
+const DAY_MONTH_FORMAT: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+
+function formatJoined(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', MONTH_YEAR_FORMAT);
 }
 
-interface SampleAttendance {
-  weeks: boolean[];
-  streak: number;
-  joined: string;
+function formatSessionDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', DAY_MONTH_FORMAT);
 }
 
-function sampleAttendance(address: string): SampleAttendance {
-  const hash = hashAddress(address);
-  return {
-    weeks: Array.from({ length: ATTENDANCE_WEEKS }, (_, i) => ((hash >> i) & 3) !== 0),
-    streak: (hash % MAX_SAMPLE_STREAK) + 1,
-    joined: SAMPLE_JOIN_LABELS[hash % SAMPLE_JOIN_LABELS.length],
-  };
+/** "Mar 7 – Apr 11" across the matrix window, so the columns are self-describing. */
+function rangeLabelFor(sessions: RecentSession[]): string {
+  if (!sessions.length) return NO_SESSIONS_LABEL;
+  const first = formatSessionDate(sessions[0].date);
+  const last = formatSessionDate(sessions[sessions.length - 1].date);
+  return first === last ? first : `${first} – ${last}`;
 }
 
 function truncateAddress(address: string): string {
@@ -121,6 +112,7 @@ export default function OrganizerMembersPage() {
   });
 
   const members = useMemo(() => data?.members ?? [], [data]);
+  const recentSessions = useMemo(() => data?.recentSessions ?? [], [data]);
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return members;
@@ -141,7 +133,12 @@ export default function OrganizerMembersPage() {
               <div>
                 <h1 className="mb-1.5 text-[26px] font-semibold leading-[30px] tracking-[-0.8px]">Members</h1>
                 <p className="text-[14px] leading-[20px] text-content-secondary">
-                  {members.length} total · attendance across the last {ATTENDANCE_WEEKS} weeks ({WEEK_RANGE_LABEL}).
+                  {members.length} total
+                  {recentSessions.length > 0 &&
+                    ` · attendance across the last ${recentSessions.length} ${
+                      recentSessions.length === 1 ? 'meeting' : 'meetings'
+                    } (${rangeLabelFor(recentSessions)})`}
+                  .
                 </p>
               </div>
               <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:items-center">
@@ -229,14 +226,14 @@ export default function OrganizerMembersPage() {
       <div className="overflow-x-auto">
         <Card className="min-w-[760px] overflow-hidden rounded-card shadow-none">
           <div className={cn(ROW_GRID, 'bg-card-filled py-3')}>
-            {COLUMNS.map((col) => (
+            {columnsFor(rangeLabelFor(recentSessions)).map((col) => (
               <span key={col.key} className={cn(HEADER_LABEL, col.align)}>
                 {col.label}
               </span>
             ))}
           </div>
           {filtered.map((member) => (
-            <MemberRow key={member.id} member={member} />
+            <MemberRow key={member.id} member={member} sessions={recentSessions} />
           ))}
         </Card>
       </div>
@@ -244,9 +241,8 @@ export default function OrganizerMembersPage() {
   }
 }
 
-function MemberRow({ member }: { member: MemberStats }) {
+function MemberRow({ member, sessions }: { member: MemberStats; sessions: RecentSession[] }) {
   const handle = displayHandle(member);
-  const { weeks, streak, joined } = sampleAttendance(member.walletAddress);
   const rateGood = member.allTimeAttendancePct >= ATTENDANCE_GOOD_PCT;
 
   return (
@@ -256,7 +252,7 @@ function MemberRow({ member }: { member: MemberStats }) {
         <div className="min-w-0">
           <div className="truncate text-[14px] font-semibold leading-[1.2]">{handle}</div>
           <div className="mt-[3px] font-mono text-[11px] font-medium text-content-secondary">
-            Joined {joined}
+            Joined {formatJoined(member.joinedAt)}
           </div>
         </div>
       </div>
@@ -264,14 +260,23 @@ function MemberRow({ member }: { member: MemberStats }) {
         {member.tokensEarned}
       </span>
       <span className="text-right font-mono text-[14px] font-semibold tabular-nums text-yellow-700">
-        {streak}
+        {member.currentStreak}
       </span>
       <div className="flex justify-center gap-[6px]">
-        {weeks.map((present, i) => (
-          <span key={i} className={present ? CELL_PRESENT : CELL_ABSENT}>
-            {present ? PRESENT_MARK : ''}
-          </span>
-        ))}
+        {sessions.map((session, i) => {
+          const present = member.recentAttendance[i] === true;
+          return (
+            <span
+              key={session.sessionIdOnchain}
+              title={`${session.name} · ${formatSessionDate(session.date)} — ${
+                present ? 'attended' : 'absent'
+              }`}
+              className={present ? CELL_PRESENT : CELL_ABSENT}
+            >
+              {present ? PRESENT_MARK : ''}
+            </span>
+          );
+        })}
       </div>
       <span
         className={cn(
