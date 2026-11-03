@@ -38,7 +38,7 @@ Design source of truth: `MASTER_PLAN.md` → Phase 5 + Security Considerations (
 | Party | Trusted for | Cannot do (by design) |
 |---|---|---|
 | **Members** | Their own check-ins and votes | Transfer tokens or Rep; vote with someone else's power |
-| **Officers** (`ADMIN_ROLE`) | Running sessions, setting attendance caps, confirming Rep | ✅ Nothing beyond sessions today. 🟡 v1: credit Rep alone (needs a second officer); exceed per-session / weekly Rep caps; drop below 2 officers |
+| **Officers** (`ADMIN_ROLE`) | Running sessions, setting attendance caps, confirming Rep | Role changes require an approved governance vote and Timelock execution; officers must not grant or revoke roles directly. ⚠️ Live backend bypass when `DEFAULT_ADMIN_PRIVATE_KEY` is configured (#82). 🟡 v1: credit Rep alone (needs a second officer); exceed per-session / weekly Rep caps; drop below 2 officers |
 | **Backend + relay** | Verifying check-ins (attendance is attested **off-chain**), paying gas, submitting signed votes | 🟡 v1: create Rep, forge votes, change roles or parameters |
 | **Governance** (Governor + Timelock) | Roles, parameters, officer elections, Rep grants/revokes | 🟡 v1: remove its own admin role; set parameters outside on-chain bounds |
 | **Guardian** (Safe, bootstrap only) | Vetoing (cancelling) malicious proposals during bootstrap | 🟡 v1: propose or execute anything; keep the veto past 120 days |
@@ -55,10 +55,11 @@ Design source of truth: `MASTER_PLAN.md` → Phase 5 + Security Considerations (
 |---|---|---|---|
 | `RELAY_PRIVATE_KEY` | `RELAY_ROLE` | `mint` from the check-in queue | Mint attendance tokens into any **open** session, to any address ⚠️ |
 | `ADMIN_SIGNER_PRIVATE_KEY` | `ADMIN_ROLE` | `createSession` / `closeSession` **and** signing QR payloads | Create sessions + forge valid QR codes; with the relay key, fabricate attendance ⚠️ |
-| `DEFAULT_ADMIN_PRIVATE_KEY` (optional) | `DEFAULT_ADMIN_ROLE` | Grant/revoke `ADMIN_ROLE` from the dashboard, `setBaseCid` | **Full control of the contract** ⚠️ |
+| `DEFAULT_ADMIN_PRIVATE_KEY` (optional) | `DEFAULT_ADMIN_ROLE` | Legacy dashboard role grants/revocations and `setBaseCid`; role-change path must be removed (#82, #55) | **Full control of the contract** ⚠️; officers can invoke the backend signer to grant/revoke other officers without a vote when configured (#82) |
 
 - ✅ All keys live only in backend env vars — never shipped to the frontend.
-- ✅ If `DEFAULT_ADMIN_PRIVATE_KEY` is unset, dashboard role management and metadata publishing are disabled.
+- If `DEFAULT_ADMIN_PRIVATE_KEY` is unset, dashboard role grants/revocations return `503`; metadata publishing can still stage/pin metadata, but cannot update the on-chain base CID.
+- ⚠️ Deployment state is unverified: audit whether this key is configured in each environment and which on-chain privileges its signer holds. Remove the governance bypass and retire the key/code paths; rotation alone does not fix authorization (#82, #55).
 
 ### v1 target (Phase 5)
 
@@ -178,6 +179,7 @@ Attendance tokens and Rep are separate: tokens mint instantly as a record; **Rep
 | Uniform error format, no stack traces | ✅ | Global error handler returns `{ error: { code, message } }` |
 | Async errors reach the error handler | ✅ | `express-async-errors` |
 | Admin auth checks the chain, fails closed | ✅ | `adminMiddleware` reads on-chain `ADMIN_ROLE` on every request; RPC failure → `503`, not access (`backend/src/middleware/admin.ts`) |
+| Governance-only role changes | ⚠️ → 🟡 | Both grants and revocations require an approved governance vote and Timelock execution. Live POST/DELETE `/api/v1/admin/roles` paths allow officers to use the default-admin signer when configured; remove this bypass and add regression tests (#82, #55) |
 | Live officer checks stay live | 🟡 | Revocations must never wait on an indexer cache (#69) |
 | CORS | ⚠️ | `cors()` allows any origin. Low impact (Bearer tokens, not cookies), but should be restricted to the frontend origin (#80) |
 | Security headers | ⚠️ | No `helmet` / security headers on the API (#81) |
@@ -201,7 +203,7 @@ Attendance tokens and Rep are separate: tokens mint instantly as a record; **Rep
 | Feature | Status | Details |
 |---|---|---|
 | On-chain voting with Rep | 🟡 | OZ Governor + Timelock; members vote gaslessly |
-| Officer elections via proposals | 🟡 | Proposals call `grantRole` / `revokeRole(ADMIN_ROLE)`; one semester per term by convention. Approval-voting elections contract is v2 (#53) |
+| Officer elections via proposals | 🟡 | All role grants and revocations require approved governance proposals and Timelock execution; no direct officer or backend-signer bypass (#82). Proposals call `grantRole` / `revokeRole(ADMIN_ROLE)`; one semester per term by convention. Approval-voting elections contract is v2 (#53) |
 | Proposing needs gas | 🟡 | Officers (and funded members) propose directly; gasless proposals are v2 (#63) |
 | Timelock delay on every change | 🟡 | 1–7 days (bounded) so members can react to a bad proposal |
 | Guardian veto during bootstrap | 🟡 | Cancel-only; renounced after the first election or expired after 120 days |
@@ -250,3 +252,4 @@ Attendance tokens and Rep are separate: tokens mint instantly as a record; **Rep
 | 2026-11-03 | Officer sets max attendance per session; minimum 2 officers |
 | 2026-11-03 | Rep caps: per session `max(500, 20%)`, per member 100/week, club-wide `max(1,000, 25%)`/week |
 | 2026-11-03 | Dashboard warning for sessions left open (no auto-close) |
+| 2026-11-03 | All role grants and revocations require governance approval and Timelock execution; officers must not change roles directly. Existing backend default-admin bypass and deployment key audit tracked in #82; retirement in #55 |
