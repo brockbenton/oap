@@ -421,13 +421,36 @@ admin_roles    (id, wallet_address, granted_by, granted_at, revoked_at)
 
 ## Security Considerations
 
-- **QR payload** is signed by admin private key — never exposed to frontend
-- **Relay wallet** has `RELAY_ROLE` only — cannot create sessions or change admin roles
-- **Soulbound enforcement** is at contract level — not just frontend
-- **Re-entrancy** guard on mint function
-- **Rate limiting** on check-in endpoint (prevent spam)
+### Current (Phases 1–4)
+
+The backend holds three keys. Only the relay key is mint-only:
+
+| Env var | On-chain role | Used for | Blast radius if leaked |
+|---|---|---|---|
+| `RELAY_PRIVATE_KEY` | `RELAY_ROLE` | `mint` (check-in queue) | Can mint ATs into any session that is still open — sessions an admin forgets to close stay mintable indefinitely |
+| `ADMIN_SIGNER_PRIVATE_KEY` | `ADMIN_ROLE` | `createSession` / `closeSession`, **and** signing QR payloads | Can create sessions and forge valid QR codes; combined with the relay key, can fabricate attendance |
+| `DEFAULT_ADMIN_PRIVATE_KEY` (optional) | `DEFAULT_ADMIN_ROLE` | `grantRole` / `revokeRole(ADMIN_ROLE)` from the dashboard, `setBaseCid` on IPFS publish | **Full control of the contract** — can grant itself or anyone every role, including `RELAY_ROLE` |
+
+- All three keys live only in backend env — never exposed to the frontend. If `DEFAULT_ADMIN_PRIVATE_KEY` is unset, role management and metadata publishing are disabled and must be done from the deployer wallet.
+- **Soulbound enforcement** is at contract level (`_update` reverts on transfer; `setApprovalForAll` reverts) — not just frontend
+- **One token per member per session** enforced on-chain and by the `check_ins` unique constraint
+- **Re-entrancy** guard on mint
+- **Rate limiting** on the check-in endpoint (`checkInLimiter`)
 - **Input validation** on all backend endpoints
-- Member wallet address is their identity — Privy ties it to a real account (email/social)
+- Member wallet address is their identity — Privy ties it to a real account (email/Google/passkey). Nothing currently prevents one person from holding multiple accounts.
+- **Known gaps:** no on-chain mint deadline (see relay row); the backend is a single trusted operator for attendance — it mints without on-chain proof of presence.
+
+### Phase 5 target
+
+Governance makes these keys matter more, because Rep = voting power. Target model (details and open issues in Phase 5 and its architect review):
+
+- **No backend admin key after bootstrap:** each club's Timelock holds `DEFAULT_ADMIN_ROLE`; the backend's `DEFAULT_ADMIN_PRIVATE_KEY` path is retired, officer rotation goes through Elections/Timelock, and metadata updates move to `ADMIN_ROLE` (officers) so they don't need a 10-day proposal.
+- **Relay is trusted for liveness, not authority:** it submits members' signed votes/proposals (`castVoteBySig` / `proposeBySig`) but cannot forge them; members can self-submit if the relay censors.
+- **Bound the relay's minting power on-chain:** per-session mint deadline and minimum session spacing, so a leaked relay key or a rogue officer can't inflate Rep.
+- **Officer-signed session creation** (`createSessionBySig`) instead of a backend-held `ADMIN_ROLE`, so a compromised backend can only mint into sessions officers actually created.
+- **Guardian during bootstrap is a canceller (veto) only**, and `endBootstrap()` leaves the Timelock as the sole admin on every club contract (asserted in tests).
+- **Sybil resistance:** require a verified `.edu` email via Privy before a wallet can earn Rep.
+- Run `contract-auditor` + `security-reviewer` after 5a; external audit before mainnet.
 
 ---
 
@@ -439,7 +462,7 @@ admin_roles    (id, wallet_address, granted_by, granted_at, revoked_at)
 4. **What constitutes a "semester"** — ✅ **Resolved:** Admin-defined free-text label set per session (the `semester` field); the "current" semester is the most recent session's label. Not calendar-derived, so summer/irregular terms just work.
 5. **Public vs private stats** — ✅ **Resolved:** A member's vault and stats are public by wallet address but carry no PII — email / linked social is never exposed on public endpoints (stripped from `GET /members`; served only behind the admin gate). On-chain attendance is already public, so this adds no disclosure.
 6. **Mainnet timing** — ✅ **Decided (pending owner sign-off):** Stay on Base Sepolia for the pilot; migrate to Base Mainnet after semester 1, once check-in volume and relay-gas costs are validated. Requires an explicit go-ahead before the mainnet deploy.
-7. **DAO pivot (Phase 5)** — Pending approval: the Phase 5 design reverses the "DAO governance or token-weighted voting" non-goal. Decide before 5a starts; see "Open design questions for architect review" in Phase 5.
+7. **DAO pivot (Phase 5)** — ✅ **Decided:** On-chain governance (Rep-weighted voting, officer elections) is in scope; the old "no DAO governance" non-goal is removed. Design details still go through the architect review in Phase 5 before 5a starts.
 
 ---
 
@@ -458,5 +481,5 @@ admin_roles    (id, wallet_address, granted_by, granted_at, revoked_at)
 - Token trading, marketplaces, or transferability
 - Integration with any other attendance system (Google Forms, etc.)
 - Mobile native app (PWA via Next.js is sufficient)
-- DAO governance or token-weighted voting
+- Transferable or purchasable governance power — voting power (Rep) is earned only, never bought, sold, or delegated for money
 - Paying members in tokens (no financial instrument)
