@@ -79,10 +79,15 @@ function _update(address from, address to, uint256[] memory ids, uint256[] memor
   (list emitted in the event; strictly increasing; each holds the AT) → Pending;
   `confirmSessionRep(id)` by a different officer (or the Timelock) fixes
   `perAttendee = min(REP_PER_CHECKIN, sessionCap / count)` with
-  `sessionCap = max(repFloor, capBps × totalSupply / 10_000)` and checks the weekly budget;
-  `creditSessionRep(id, attendees, from, to)` (anyone) credits in sequential pages;
+  `sessionCap = max(repFloor, capBps × totalSupply / 10_000)` and checks + reserves the
+  club-wide weekly budget; `creditSessionRep(id, attendees, from, to)` (anyone) credits in
+  sequential pages, each member capped at `memberWeeklyCap` per week with the excess moved to a
+  `deferred` balance (same packed slot: `{uint32 week, uint96 creditedThisWeek, uint128 deferred}`);
+  `claimDeferredRep(accounts)` (anyone) credits deferred Rep up to the current week's allowance;
   `rejectSessionRep(id)` (any officer, while Pending) voids the session's Rep. Pending Rep never
-  expires and has no voting power.
+  expires and has no voting power; same for deferred Rep (cleared by a Timelock `revoke`).
+- **Weekly limits use fixed calendar-week buckets** (`block.timestamp / 7 days`), not rolling
+  windows: constant gas, no history storage.
 
 ### Metadata
 - `uri()` returns IPFS URL: `ipfs://{BASE_CID}/{sessionId}.json`
@@ -131,7 +136,8 @@ function _update(address from, address to, uint256[] memory ids, uint256[] memor
   quorum numerator 10% ∈ [5%, 30%]; quorum = `max(numerator × supply, min(minQuorum, 50% × supply))`
   with immutable `minQuorum = 100` Rep.
 - **Registry params** (Timelock-only, bounded): `repFloor` 500 Rep ∈ [100, 5,000],
-  `capBps` 2,000 ∈ [500, 5,000], `weeklyFloor` 1,000 Rep ∈ [500, 20,000],
+  `capBps` 2,000 ∈ [500, 5,000], `memberWeeklyCap` 100 Rep ∈ [20, 1,000],
+  `weeklyFloor` 1,000 Rep ∈ [500, 20,000],
   `weeklyBps` 2,500 ∈ [500, 5,000]. Constants: `MAX_ATTENDEES = 300`, `mintBatch` ≤ 200,
   credit pages ~100, officer floor 2.
 - **Pause**: any officer, 14 days, once per officer per 30 days; unpause needs 2 distinct
@@ -147,7 +153,7 @@ function _update(address from, address to, uint256[] memory ids, uint256[] memor
 - Upgradeable proxies — KISS, the contracts are simple enough to redeploy if needed (Phase 6 may use non-upgradeable clones; that needs its own amendment)
 - `tx.origin` for auth — always use `msg.sender`
 - `block.timestamp` for access control (who may call what). It **is** allowed for durations and
-  windows: pause expiry, guardian expiry, the weekly Rep budget bucket, and the ERC-6372
+  windows: pause expiry, guardian expiry, the weekly Rep buckets (per-member and club-wide), and the ERC-6372
   governance clock (validators can skew it by seconds, which is irrelevant at hour/day scales).
   Do not add time limits on creating sessions (owner decision).
 - Storing off-chain data on-chain (token metadata belongs on IPFS)

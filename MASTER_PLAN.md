@@ -246,6 +246,8 @@ Anti-cheat properties:
 
 > **Revision 3.1 (2026-11-03):** applies the contract audit of Revision 3 (Timelock construction, import ordering, bounded governance setters, locked Timelock admin, 2-officer floor, gas test) and a new owner decision: **no time limits on creating sessions or QR codes**, and **two-officer Rep sign-off** with a per-session Rep cap (supersedes the single-officer close in Revision 3).
 
+> **Revision 3.2 (2026-11-03):** owner's final decisions — QR valid for **5 minutes** (auto-refresh); **both** weekly Rep limits (per-member 100 Rep/week + club-wide budget); off-chain **open-session warnings** (sessions still never auto-close); 2-officer minimum, two-officer sign-off / "Rep pending", and organizer-set `maxAttendees` kept as designed.
+
 #### Roles (only two human roles)
 
 | Role | Who | Power |
@@ -284,26 +286,28 @@ ClubTimelock         OZ TimelockController + guardian CANCELLER in constructor +
 | Clock | ERC-6372 **timestamp** (`clock() = uint48(block.timestamp)`, `CLOCK_MODE() = "mode=timestamp"`) | Two small overrides; every governance duration is in seconds and maps 1:1 to UI countdowns, independent of Base block time. Not used for access control. |
 | Decay | **None in v1** | Accepted risk: alumni keep voting power. Mitigated by the Timelock-only `revoke` and the club's size; epochs/decay are Phase 6. |
 | Rep per check-in | Constant `REP_PER_CHECKIN = 10` | Simple, predictable thresholds. |
-| Rep sign-off | **Two officers** (one closes with the list, a different one confirms), capped per session and per week | Owner decision 2026-11-03 (#50). No single key — backend or officer — can create Rep. |
-| Session timing | **No time limits** on creating sessions or QR codes; a session stays open until an officer closes it | Owner decision 2026-11-03. Abuse is bounded by the Rep sign-off and caps instead. |
+| Rep sign-off | **Two officers** (one closes with the list, a different one confirms), capped per session, per member per week, and club-wide per week | Owner decisions 2026-11-03 (#50). No single key — backend or officer — can create Rep. |
+| Session timing | **No time limits** on creating sessions or QR codes; a session stays open until an officer closes it (never auto-closes on-chain). Off-chain warning after N hours open (default 6 h) | Owner decisions 2026-11-03. Abuse is bounded by the Rep sign-off and caps instead. |
 | Weighting | Linear | Keeps quorum-fraction math exact. |
 
 **AttendanceRegistry2 rules (#50, #52, #59, #60):**
-- `createSession(id, date, name, semester, maxAttendees, metadataCid)` — `ADMIN_ROLE`, sent from the officer's own wallet. **No timing restrictions**: sessions can be created at any time and stay open until an officer closes them. `1 ≤ maxAttendees ≤ MAX_ATTENDEES` (300) caps the number of ATs in the session (a count, not a time limit).
+- `createSession(id, date, name, semester, maxAttendees, metadataCid)` — `ADMIN_ROLE`, sent from the officer's own wallet. **No timing restrictions**: sessions can be created at any time and stay open until an officer closes them. `1 ≤ maxAttendees ≤ MAX_ATTENDEES` (300) caps the number of ATs in the session (a count, not a time limit). **The organizer chooses `maxAttendees` when creating each session** (the UI pre-fills a suggestion from recent attendance).
 - **Minting:** `mint` / `mintBatch` revert after close, at the `maxAttendees` cap, or while paused. ATs mint instantly and **carry no Rep**.
 - `mint(to, id)` reverts on duplicates (unchanged); `mintBatch(to[], id)` (≤ 200 addresses) **skips** duplicates and emits per-recipient events, so one bad entry never reverts the batch. Mints call `_update` directly (no ERC-1155 receiver hook), so a contract recipient can't brick a batch.
 - **Two-officer Rep sign-off (owner decision 2026-11-03, #50):**
   1. `closeSession(id, address[] attendees)` — officer A. Stops minting, stores only `keccak256(abi.encode(attendees))` and `count` (one slot, no per-address storage) and emits the full list in `SessionClosed`. Addresses strictly increasing (cheap uniqueness), each must hold the session's AT, `count ≤` ATs minted. Rep state → **Pending**. Nothing is credited; pending Rep has **zero voting power** and **never expires**.
-  2. `confirmSessionRep(id)` — a **different** officer B (`msg.sender != closer`), or the Timelock (governance override; also the confirmer of last resort if fewer than 2 officers ever exist). Fixes `perAttendee = min(REP_PER_CHECKIN, floor(sessionCap / count))` with `sessionCap = max(repFloor, capBps × totalSupply / 10_000)` at confirmation — over the cap, Rep is reduced pro-rata, equally per attendee. Also checks the weekly budget (below). State → **Confirmed**.
-  3. `creditSessionRep(id, attendees, from, to)` — **anyone** (normally the relay, or any officer, since the list is public in the event log). Re-submits the full list (checked against the stored hash) and credits `perAttendee` to `attendees[from:to]`; a per-session cursor enforces sequential, non-overlapping pages. State → **Credited** when the cursor reaches `count`.
+  2. `confirmSessionRep(id)` — a **different** officer B (`msg.sender != closer`), or the Timelock (governance override; also the confirmer of last resort if fewer than 2 officers ever exist). Fixes `perAttendee = min(REP_PER_CHECKIN, floor(sessionCap / count))` with `sessionCap = max(repFloor, capBps × totalSupply / 10_000)` at confirmation — over the cap, Rep is reduced pro-rata, equally per attendee. Also checks and reserves the **club-wide weekly budget** (below) for the full `perAttendee × count`. State → **Confirmed**.
+  3. `creditSessionRep(id, attendees, from, to)` — **anyone** (normally the relay, or any officer, since the list is public in the event log). Re-submits the full list (checked against the stored hash) and credits `perAttendee` to `attendees[from:to]`, **subject to each member's weekly cap** (below — any excess goes to that member's deferred balance); a per-session cursor enforces sequential, non-overlapping pages. State → **Credited** when the cursor reaches `count`.
   4. `rejectSessionRep(id)` — **any** officer (or the Timelock) while Pending. State → **Rejected**: no Rep for that session, ever. ATs stay.
   - *Why hash + cursor:* storing 300 addresses costs ~6.6M gas in SSTOREs and a single-tx credit of 300 attendees is ~15–18M gas (audit estimate). The hash is one slot, the list lives in calldata and the event log, and the expensive Rep checkpoints are paginated (~100 per tx).
-- **Weekly Rep budget (added in 3.1, needs owner confirmation — Open Question 8):** total Rep confirmed per calendar week (`block.timestamp / 7 days`) ≤ `max(weeklyFloor, weeklyBps × totalSupply / 10_000)`. A confirmation that would exceed it reverts; the session simply stays Pending until the next week. This limits **how fast Rep can be confirmed**, not when sessions or QR codes can be created. Without it, two colluding officers could run back-to-back sessions and compound the per-session cap (+20% supply each) to a majority within hours.
+- **Two weekly Rep limits (owner decision 2026-11-03).** Both limit **how fast Rep is credited**, never when sessions or QR codes can be created. Both use a fixed **calendar-week bucket** (`week = block.timestamp / 7 days`) rather than a rolling window: one packed slot per member / one for the club, no history arrays, constant gas. A rolling window would need per-credit history (unbounded storage or ring buffers) for little benefit — the bucket edge allows at most 2× a limit across two adjacent days, which the other limits still bound.
+  - **Per-member cap — stops one person farming:** each account is credited at most `memberWeeklyCap` (default **100 Rep** = 10 check-ins) per week. The excess is **not dropped**: it goes to the member's `deferred` balance, stored in the **same packed slot** as the member's weekly counter (`{uint32 week, uint96 creditedThisWeek, uint128 deferred}`), so it costs no extra storage write. `claimDeferredRep(address[] accounts)` — **anyone** (the relay runs it weekly) — credits each account's deferred Rep up to its remaining allowance for the current week. Deferred Rep is pending: zero voting power, never expires, and is cleared by a Timelock `revoke`.
+  - **Club-wide budget — stops collusion between officers and fake accounts:** total Rep **confirmed** per week ≤ `max(weeklyFloor, weeklyBps × totalSupply / 10_000)` (default `max(1,000 Rep, 25% × supply)`). Checked and reserved at `confirmSessionRep` for the whole session; a confirmation that would exceed it reverts, and the session simply stays Pending until a later week. Deferred claims don't count again (they were reserved at confirmation). Without it, two colluding officers could run back-to-back sessions full of fake accounts and compound the per-session cap (+20% of supply each) to a majority within hours — the per-member cap alone doesn't stop that, because each fake account stays under 100 Rep.
 - **Metadata:** `setBaseCid` and `setSessionMetadata(id, cid)` — `ADMIN_ROLE` (no proposal needed).
 - **Pause:** `pauseMinting()` — any officer; sets `pausedUntil = now + 14 days`; each officer can pause at most once per 30 days. `unpauseMinting()` needs **two distinct officers** (or the Timelock). Pause only blocks AT minting; close/confirm/reject/credit still work.
 - **Officer floor (2):** `AccessControlEnumerable`; the `_revokeRole` override (covers both `revokeRole` and `renounceRole`) reverts if `ADMIN_ROLE` would drop below **2** holders. `DeployClub` requires ≥ 2 founding officers. Proposal templates **grant the new officer before revoking the old one**.
 - **Locked Timelock admin:** `_grantRole(DEFAULT_ADMIN_ROLE, x)` reverts unless `x == timelock` (immutable); `_revokeRole(DEFAULT_ADMIN_ROLE, timelock)` reverts. Same on `ClubRep`.
-- **Timelock-changeable params** (bounded on-chain): `repFloor` ∈ [100, 5,000] Rep, `capBps` ∈ [500, 5,000], `weeklyFloor` ∈ [500, 20,000] Rep, `weeklyBps` ∈ [500, 5,000].
+- **Timelock-changeable params** (bounded on-chain): `repFloor` ∈ [100, 5,000] Rep, `capBps` ∈ [500, 5,000], `memberWeeklyCap` ∈ [20, 1,000] Rep, `weeklyFloor` ∈ [500, 20,000] Rep, `weeklyBps` ∈ [500, 5,000].
 
 **ClubRep rules (#51, #68):**
 - Constructor `(timelock, legacyRegistry, importer)`: the Timelock is `DEFAULT_ADMIN_ROLE` from the start (locked, as on the registry); `setRegistry(registry)` is a one-time importer call that grants the registry `MINTER_ROLE`.
@@ -327,7 +331,8 @@ Every setter OZ exposes to governance is overridden with bounds (audit B3) — e
 | Quorum | `max(numerator × supply(t), min(minQuorum, 50% × supply(t)))`, `minQuorum` = **100 Rep** (immutable) | `minQuorum` fixed | The floor stops one member passing proposals in a tiny club; `min(…, 50%)` keeps it **always reachable**. Immutable, so live proposals never see a retroactive change. |
 | `REP_PER_CHECKIN` | 10 | constant | |
 | `repFloor` / `capBps` (per-session Rep cap) | 500 Rep (50 attendees × 10) / 2,000 (20%) | [100, 5,000] Rep / [500, 5,000] (registry setters, Timelock only) | Applied at confirmation; over the cap → equal pro-rata reduction. |
-| `weeklyFloor` / `weeklyBps` (weekly Rep budget) | 1,000 Rep / 2,500 (25%) | [500, 20,000] Rep / [500, 5,000] | Proposed in 3.1 — Open Question 8. |
+| `memberWeeklyCap` (per-member weekly Rep) | 100 Rep (10 check-ins) | [20, 1,000] Rep (registry setter, Timelock only) | Stops one person farming; excess deferred, claimable later. Accepted 2026-11-03. |
+| `weeklyFloor` / `weeklyBps` (club-wide weekly budget) | 1,000 Rep / 2,500 (25%) | [500, 20,000] Rep / [500, 5,000] | Stops officer + fake-account collusion. Accepted 2026-11-03. |
 | `MAX_ATTENDEES` / `mintBatch` / credit page | 300 / 200 / ~100 | constants | Credit pages sized to stay well under 10M gas. |
 | Pause | 14 days; 1 per officer per 30 days; 2-officer unpause | constants | Longer than a full proposal cycle (1 + 7 + 2 = 10 days), so a relay-rotation proposal fits inside one pause. |
 | Officer floor | 2 | constant | |
@@ -357,20 +362,22 @@ Every setter OZ exposes to governance is overridden with bounds (audit B3) — e
 - **New QR signing key with no on-chain role**, separate per environment. `ADMIN_SIGNER_PRIVATE_KEY` is no longer used for sessions (officers send `createSession` themselves).
 - **Legacy registry:** frozen **before** the import (Bootstrap step 0): close all sessions, revoke `RELAY_ROLE` / `ADMIN_ROLE`, renounce `DEFAULT_ADMIN_ROLE` (reads keep working; history stays visible).
 - **EIP-712 QR and member check-in signatures**, domain `{name: "OCP Check-In", version, chainId, verifyingContract: registry}`, with the session ID and member address in the struct — no replay across chains (Sepolia ↔ mainnet) or registries (legacy ↔ v2, future clubs).
-- **The QR rotates every 30–60 s** (`QR_TTL_MS` = 60000); the admin QR page already auto-refreshes. This is how long one QR image stays valid, **not** a limit on when QR codes or sessions can be created.
+- **Each QR is valid for 5 minutes** (`QR_TTL_MS` = 300000) and the admin QR page **auto-refreshes it before it expires** (owner decision 2026-11-03). This is how long one QR image stays valid, **not** a limit on when QR codes or sessions can be created. **Trade-off:** a photo of the QR shared in a group chat works remotely for up to 5 minutes. Mitigated by the organizer-set `maxAttendees`, the two-officer Rep sign-off (officers see the attendee list and anomaly flags) and the per-session / weekly Rep caps.
 - **Live officer checks:** sensitive routes (QR, sessions, exports, PII) read `hasRole(ADMIN_ROLE)` on-chain per request (cache TTL ≤ 30 s), so a removed officer loses access immediately.
 
 #### Backend changes
 - **Relay sender (#59):** one sender with a nonce manager that sends without waiting, replaces stuck txs (gas bump / cancel) and reconciles receipts; check-ins coalesced into `mintBatch` per session; statuses `PENDING → SUBMITTED → CONFIRMED` (after N confirmations) / `FAILED`.
 - **Schema (v2-ready, single club):** add `Session.registryAddress` with `@@unique([registryAddress, sessionIdOnchain])`, `maxAttendees`, `repStatus` (`NONE / PENDING / CONFIRMED / REJECTED / CREDITED`), `attendeesHash`, `closedBy`, `confirmedBy`; new indexed tables `Proposal`, `Vote` (`@@unique([proposalId, voter])`), `RepEvent`; populate `TokenEvent`; drop `AdminRole` (the chain is the truth). Contract addresses come from config (Phase 6 moves them to a `Club` row). Reviewed by `db-schema-reviewer`.
 - **Indexer:** one worker, single cursor, confirmation depth; indexes registry, Rep, Governor and Timelock events.
-- **Rep sign-off support:** an API returns the session's confirmed attendees (sorted addresses) for officer A's `closeSession`; a **pending-review queue** for the other officers with **anomaly flags** (attendance far above the trailing median of recent sessions, many first-time wallets, wallets created in the last 24 h, list differs from the backend's confirmed check-ins); an **alert to all officers** when a session is anomalous; after confirmation the relay submits `creditSessionRep` pages.
+- **Open-session warning (owner decision 2026-11-03):** a backend job flags sessions still open after `OPEN_SESSION_WARN_HOURS` (default **6 h**, env-configurable, off-chain only) and alerts the officers. It's a nudge — sessions never auto-close on-chain.
+- **Rep sign-off support:** an API returns the session's confirmed attendees (sorted addresses) for officer A's `closeSession`; a **pending-review queue** for the other officers with **anomaly flags** (attendance far above the trailing median of recent sessions, many first-time wallets, wallets created in the last 24 h, list differs from the backend's confirmed check-ins); an **alert to all officers** when a session is anomalous; after confirmation the relay submits `creditSessionRep` pages, and a weekly job submits `claimDeferredRep` for members with deferred Rep.
 - **Stats:** remove `tierFor` / `OFFICIAL_MEMBER_THRESHOLD`; members ranked by attendance % then Rep. Real Rep/rank/leaderboard replace `frontend/lib/mock/gamification.ts`.
 - **Funding:** keep the relay balance small with alerts (exists); runbook for topping up the relay and officer wallets.
 
 #### Frontend changes
-- **Officer meeting flow:** "Start meeting" sends `createSession` from the officer's Privy wallet (showing the ETH balance and a top-up link), then the rotating QR; "End meeting" shows the attendee list → `closeSession(id, attendees)` (Rep pending). Other officers get a **review queue** (list, anomaly flags) → `confirmSessionRep` / `rejectSessionRep`. Pause / unpause buttons.
-- **Member view:** after a meeting, the AT shows immediately with "**Rep pending officer confirmation**", then the credited Rep.
+- **Officer meeting flow:** "Start meeting" asks the organizer for **`maxAttendees`** (pre-filled from recent attendance) and sends `createSession` from the officer's Privy wallet (showing the ETH balance and a top-up link), then the auto-refreshing 5-minute QR; "End meeting" shows the attendee list → `closeSession(id, attendees)` (Rep pending). Other officers get a **review queue** (list, anomaly flags) → `confirmSessionRep` / `rejectSessionRep`. Pause / unpause buttons.
+- **Organizer dashboard:** a list of **open sessions** with how long each has been open, and a warning badge after 6 h (configurable) — "still open, close it?".
+- **Member view:** after a meeting, the AT shows immediately with "**Rep pending**" (officer confirmation), then the credited Rep; Rep held back by the weekly cap shows as "deferred — credited next week".
 - **Governance UI:** proposal list/detail, templates, create (funded wallets), vote buttons (`signTypedData` → relay), live tally, quorum ("TBD" while Pending — `quorum(snapshot)` reverts before the snapshot), timelock countdown, queue/execute, "your vote hasn't landed — have an officer submit it" from public-RPC `hasVoted`.
 - **Officer roster** (from `RoleGranted` / `RoleRevoked`), bootstrap banner, Rep on profile and leaderboard.
 - **Replace mocks:** `gamification.ts` → Rep/rank; `rewards.ts` → drop or rebuild from real data; `meeting.ts` → real sessions.
@@ -386,7 +393,8 @@ Every setter OZ exposes to governance is overridden with bounds (audit B3) — e
 | **Two colluding officers** | Can confirm Rep only for holders of that session's AT, at most `max(repFloor, 20% × supply)` per session and the weekly budget per week. Anomaly flags + the public pending queue make it visible. **Response:** any honest officer pauses minting; governance removes the officers and `revoke`s the Rep (~10 days: 1 d delay + 7 d vote + 2 d timelock); the guardian can cancel hostile proposals during bootstrap. | **Up to the weekly budget per week for ~10 days.** The two colluders can also unpause each other (2-officer unpause). With low turnout, that Rep could swing votes before removal lands. Accepted for a small club with elected officers. |
 | Compromised backend | No admin key; the QR key has no role; the relay can't create Rep or forge votes. | Can censor or delay relayed votes (any officer can submit a member's signed vote instead) and can issue QRs. |
 | Malicious guardian | Cancel only; auto-expires after 120 days. | Can veto proposals during bootstrap. |
-| Sybil | One Privy account per member; two officers review attendees; Timelock `revoke`. | No `.edu` gating in v1 (Phase 6). |
+| Sybil / farming | One Privy account per member; two officers review attendees; per-member cap (100 Rep/week); club-wide weekly budget; Timelock `revoke`. | No `.edu` gating in v1 (Phase 6). |
+| Remote check-in via QR photo | Organizer-set `maxAttendees`; two-officer sign-off with anomaly flags; Rep caps. | A shared photo works for up to 5 minutes (QR TTL). |
 | Alumni power (no decay) | Small club; Timelock `revoke`. | Accepted for v1. |
 | Low turnout | 7-day votes spanning a meeting; quorum floor always reachable. | Tune after the pilot. |
 
@@ -394,7 +402,7 @@ Every setter OZ exposes to governance is overridden with bounds (audit B3) — e
 
 | Issue | v1 / v2 | How v1 handles it |
 |---|---|---|
-| #50 Rep mass-mint | **v1** | Rep only after **two-officer sign-off** (`closeSession` → `confirmSessionRep` by a different officer; any officer can reject); per-session cap `max(repFloor, capBps × supply)` + weekly budget; `maxAttendees` caps ATs. No time limits on sessions (owner decision 2026-11-03). |
+| #50 Rep mass-mint | **v1** | Rep only after **two-officer sign-off** (`closeSession` → `confirmSessionRep` by a different officer; any officer can reject); per-session cap `max(repFloor, capBps × supply)`; per-member 100 Rep/week (excess deferred); club-wide weekly budget; organizer-set `maxAttendees` caps ATs. No time limits on sessions (owner decision 2026-11-03). |
 | #51 Guardian import | **v1** | Legacy registry frozen first; `importLegacy` derives Rep from legacy balances on-chain over **closed** sessions only (≤ 10× ATs), deployer-only, then `finalizeImport` before the handoff; `propose` gated; guardian = Safe, CANCELLER only (constructor), auto-expiry. |
 | #52 Deadlock | **v1** | 14-day pause (2-officer unpause) instead of a revoke; quorum floor always reachable; immutable `minQuorum`; relay rotation fits inside one pause. |
 | #53 Election hardening | v2 | v1 elections are plain proposals; approval voting, seats and nominations are Phase 6. |
@@ -416,7 +424,7 @@ Every setter OZ exposes to governance is overridden with bounds (audit B3) — e
 | #69 Live officer checks | **v1** | Per-request `hasRole` on sensitive routes. |
 | #70 Readable signing | **v1** | Readable vote UI before the prompt, Privy prompts on, no delegated/session signers. |
 | #71 `.edu` gating | v2 | Phase 6. |
-| #72 QR rotation | **v1** | 30–60 s, `QR_TTL_MS` = 60000. |
+| #72 QR validity | **v1** | Owner decision: each QR valid **5 minutes** (`QR_TTL_MS` = 300000), auto-refreshed before expiry; trade-off stated in Keys and check-in hardening. |
 | #73 Gas budgets | v2 | v1 keeps relay balance alerts + a top-up runbook. |
 | #74 Low-severity hardening | **v1** | Metadata CID preview before the officer tx; identity pinned to the embedded wallet. Slug reservation is Phase 6. |
 | #75 Gas optimizations | v2 | Not needed for a working product. |
@@ -427,23 +435,23 @@ Every setter OZ exposes to governance is overridden with bounds (audit B3) — e
 **5a — Contracts**
 - [x] Amend `smart-contract/CLAUDE.md` for Phase 5 v1 (owner-approved, #67); optimizer on in `foundry.toml`
 - [ ] `ClubRep` (OZ `Votes`, soulbound, no delegation, timestamp clock, locked Timelock admin, minter/grant/revoke, `importLegacy` over closed legacy sessions + `finalizeImport`)
-- [ ] `AttendanceRegistry2` (sessions with `maxAttendees` and no time limits, `mint`/`mintBatch` without the receiver hook, two-officer sign-off `closeSession` → `confirmSessionRep` / `rejectSessionRep` → paged `creditSessionRep`, per-session cap + weekly budget, officer metadata, pause/2-officer unpause, 2-officer floor, locked Timelock admin, bounded params)
+- [ ] `AttendanceRegistry2` (sessions with `maxAttendees` and no time limits, `mint`/`mintBatch` without the receiver hook, two-officer sign-off `closeSession` → `confirmSessionRep` / `rejectSessionRep` → paged `creditSessionRep`, per-session cap, per-member weekly cap with deferred balance + `claimDeferredRep`, club-wide weekly budget, officer metadata, pause/2-officer unpause, 2-officer floor, locked Timelock admin, bounded params)
 - [ ] `ClubGovernor` (reachable quorum floor, bounded setters, `propose` gated on import) + `ClubTimelock` (guardian CANCELLER in constructor, bounded `updateDelay`, `expireGuardian`)
 - [ ] `DeployClub.s.sol` + `ImportLegacy.s.sol` (freeze legacy → deploy → import → finalize → deployer renounces); handoff/order test
-- [ ] Tests: unit + fuzz (AT cap, pause rules, sign-off state machine incl. same-officer confirm revert, cap/pro-rata math, weekly budget, import math, quorum floor, setter bounds, 2-officer floor, locked admin); **gas test: close + confirm + paged credit for 300 attendees, every tx < 10M gas**; `forge build --sizes` on all four contracts
+- [ ] Tests: unit + fuzz (AT cap, pause rules, sign-off state machine incl. same-officer confirm revert, cap/pro-rata math, per-member cap + deferral + claim across week boundaries, club-wide budget, import math, quorum floor, setter bounds, 2-officer floor, locked admin); **gas test: close + confirm + paged credit for 300 attendees, every tx < 10M gas**; `forge build --sizes` on all four contracts
 - [ ] `contract-auditor` + `security-reviewer` pass on the code
 - [ ] Deploy to Base Sepolia; `addresses.json` + ABI sync
 
 **5b — Backend**
 - [ ] Relay sender (nonce manager, replacement, SUBMITTED), `mintBatch` coalescing
-- [ ] EIP-712 QR + check-in signatures, role-less QR key, 60 s TTL, live officer checks
+- [ ] EIP-712 QR + check-in signatures, role-less QR key, 5-min TTL with auto-refresh, live officer checks; open-session warning job (`OPEN_SESSION_WARN_HOURS`, default 6)
 - [ ] Remove `DEFAULT_ADMIN_PRIVATE_KEY` paths; officer-tx flows replace the backend's `createSession` / `closeSession`
 - [ ] Schema migration (`registryAddress`, session caps, `Proposal` / `Vote` / `RepEvent`, drop `AdminRole`) — `db-schema-reviewer`
-- [ ] Indexer for registry/Rep/Governor/Timelock events; attendee API for close; pending-review queue + anomaly flags + officer alerts; `creditSessionRep` paging after confirmation; vote relay endpoint (validate + simulate)
+- [ ] Indexer for registry/Rep/Governor/Timelock events; attendee API for close; pending-review queue + anomaly flags + officer alerts; `creditSessionRep` paging after confirmation; weekly `claimDeferredRep` job; vote relay endpoint (validate + simulate)
 - [ ] Remove General/Official tiers; Rep/rank/leaderboard APIs
 
 **5c — Frontend**
-- [ ] Officer meeting flow (create tx, rotating QR, close tx with attendee list, second-officer review queue with confirm/reject, pause/unpause, ETH balance); member "Rep pending officer confirmation" state
+- [ ] Officer meeting flow (organizer sets `maxAttendees`, create tx, auto-refreshing 5-min QR, close tx with attendee list, second-officer review queue with confirm/reject, pause/unpause, ETH balance); open-sessions list with 6 h warning; member "Rep pending" / "deferred" states
 - [ ] Governance UI (proposals, templates, gasless voting, public-RPC `hasVoted`, queue/execute, officer-submit fallback)
 - [ ] Officer roster, bootstrap banner, real Rep/leaderboard; remove `lib/mock/*`
 
@@ -520,12 +528,13 @@ Rep is voting power, so these guarantees matter. What v1 actually guarantees (de
 | Relay (`RELAY_PRIVATE_KEY`, backend) | `RELAY_ROLE`: mint ATs only | ATs into open sessions only, up to each session's `maxAttendees`. **Cannot create Rep** (ATs carry none). Can delay or drop relayed votes (anyone, e.g. an officer, can submit a member's signed vote). Officers pause minting (14 days) and reject affected pending Rep; a proposal rotates the relay. |
 | QR signer (new key, backend) | **None** | Can forge QR codes for open sessions; only matters combined with the relay, and still bounded by the cap and officer sign-off. |
 | One officer (Privy wallet) | `ADMIN_ROLE` | Create sessions any time, close with an attendee list (Pending), reject pending lists, set metadata, pause. **Cannot create Rep alone.** Removed by proposal. |
-| Two colluding officers | `ADMIN_ROLE` ×2 | Confirm Rep for holders of a session's AT: ≤ `max(repFloor, 20% × supply)` per session and ≤ the weekly budget per week; can unpause each other. Response: pause + governance removal + Rep `revoke` (~10 days). |
+| Two colluding officers | `ADMIN_ROLE` ×2 | Confirm Rep for holders of a session's AT: ≤ `max(repFloor, 20% × supply)` per session, ≤ 100 Rep per account per week, and ≤ the club-wide weekly budget; can unpause each other. Response: pause + governance removal + Rep `revoke` (~10 days). |
 | Guardian (founders' Safe) | Timelock `CANCELLER` only | Veto during bootstrap; auto-expires after 120 days. |
 | Deployer | Temporary Timelock admin during `DeployClub` only; none after handoff | Grants the Governor its Timelock roles; runs the one-time `importLegacy` (closed legacy sessions only, derived on-chain), finalized before it renounces. |
 
 - **Votes can't be forged** by the backend: they are member-signed EIP-712 messages. Privy delegated actions / session signers must never be enabled.
-- **Check-in signatures are EIP-712**, bound to `chainId` and the registry — no replay across chains or registries. QR codes rotate every 30–60 s.
+- **Check-in signatures are EIP-712**, bound to `chainId` and the registry — no replay across chains or registries. Each QR is valid for **5 minutes** (auto-refreshed): a photo of it works remotely for up to 5 minutes, bounded by `maxAttendees`, the two-officer sign-off and the Rep caps.
+- **Rep accrual is rate-limited:** per member (100 Rep/week, excess deferred) and club-wide (`max(1,000, 25% × supply)`/week), on top of the per-session cap.
 - **Officer access is checked live** on-chain on sensitive backend routes.
 - **Soulbound** ATs and Rep: no transfer, approval or delegation surface.
 - **Not in v1:** `.edu`/sybil gating beyond one Privy account per member, Rep decay, multi-club isolation (Phase 6).
@@ -535,14 +544,14 @@ Rep is voting power, so these guarantees matter. What v1 actually guarantees (de
 
 ## Open Questions / Decisions Pending
 
-1. **QR expiry window** — ✅ **Resolved (Phase 5):** QR rotates every 30–60 s (`QR_TTL_MS` = 60000) because ATs now lead to voting power.
+1. **QR expiry window** — ✅ **Resolved (owner, 2026-11-03):** each QR is valid for 5 minutes (`QR_TTL_MS` = 300000) and auto-refreshes before expiry; remote use of a photo is bounded by `maxAttendees`, two-officer sign-off and the Rep caps.
 2. **Token art** — ✅ **Resolved:** Generic club logo per semester for MVP (Phase 3). Unique per-meeting art is a post-launch stretch goal, revisit for semester 2.
 3. **Attendance % denominator** — ✅ **Resolved:** All confirmed sessions to date (club-wide), so every member is measured against the same meeting count and the vault / stats / admin views never disagree. Chosen over membership-period to keep a single shared definition; revisit if it unfairly penalizes mid-semester joiners.
 4. **What constitutes a "semester"** — ✅ **Resolved:** Admin-defined free-text label set per session (the `semester` field); the "current" semester is the most recent session's label. Not calendar-derived, so summer/irregular terms just work. v1 has no on-chain epochs (Rep doesn't decay); on-chain epochs are a Phase 6 item.
 5. **Public vs private stats** — ✅ **Resolved:** A member's vault and stats are public by wallet address but carry no PII — email / linked social is never exposed on public endpoints (stripped from `GET /members`; served only behind the admin gate). On-chain attendance is already public, so this adds no disclosure.
 6. **Mainnet timing** — ✅ **Decided (pending owner sign-off):** Stay on Base Sepolia for the pilot; migrate to Base Mainnet after semester 1, once check-in volume and relay-gas costs are validated. Requires an explicit go-ahead before the mainnet deploy.
 7. **DAO pivot (Phase 5)** — ✅ **Decided:** On-chain governance (Rep-weighted voting, officer elections via proposals) is in scope for **our club** in v1; multi-club is Phase 6. Revision 3 applies the review tracker (#77).
-8. **Phase 5 v1 defaults to confirm during 5a** — Pending: per-session Rep cap `repFloor` 500 Rep / `capBps` 20%; **weekly Rep budget** `weeklyFloor` 1,000 Rep / `weeklyBps` 25% (added in Revision 3.1 to stop colluding officers compounding the per-session cap with back-to-back sessions — keep, retune or drop?); default `maxAttendees` per session; proposal threshold 30 Rep; `minQuorum` 100 Rep; guardian Safe signers; who funds officer wallets (club or founders) and the top-up amount.
+8. **Phase 5 v1 defaults** — ✅ **Accepted (owner, 2026-11-03):** 2-officer minimum; two-officer sign-off with "Rep pending"; per-member cap 100 Rep/week (excess deferred); club-wide weekly budget `max(1,000 Rep, 25% × supply)`; QR TTL 5 min; open-session warning after 6 h (off-chain); organizer sets `maxAttendees` per session. **Still to confirm during 5a (tunable, bounded):** per-session cap `repFloor` 500 Rep / `capBps` 20%; proposal threshold 30 Rep; `minQuorum` 100 Rep; guardian Safe signers; who funds officer wallets (club or founders) and the top-up amount.
 
 ---
 
