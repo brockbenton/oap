@@ -15,10 +15,5 @@ export const queryKeys = {
   leaderboard: (tf: string) => ['leaderboard', tf] as const,
   rank: () => ['rank'] as const,
   rewards: () => ['rewards'] as const,
-  clubs: () => ['clubs'] as const,
-  mintFeed: () => ['mintFeed'] as const,
-  collectors: () => ['collectors'] as const,
-  trending: () => ['trending'] as const,
-  exploreStats: () => ['exploreStats'] as const,
   liveMeeting: (id?: string) => ['liveMeeting', id ?? 'current'] as const,
 } as const;

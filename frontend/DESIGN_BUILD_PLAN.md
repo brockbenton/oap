@@ -1,6 +1,6 @@
-# Frontend Design Build Plan — OAP (Hubble recreation)
+# Frontend Design Build Plan — OCP (Hubble recreation)
 
-Recreate the full OAP design handoff in the existing Next.js frontend. Work is broken
+Recreate the full OCP design handoff in the existing Next.js frontend. Work is broken
 into bite-sized, checkbox-driven tasks so each can be attacked independently. Check items
 off as they land.
 
@@ -96,7 +96,7 @@ Build and get a clean `npm run typecheck` before starting screens.
 - [x] **0.7 Primitives → `components/ui/`.** `Button` (pill, black/cyan-on-dark/outline/ghost/destructive variants, `scale(0.98)` press, sizes xs/sm/md/lg), `Card` (white, 1px border, radius 16–20, elev-sm), `Badge`/`Pill` (status + neutral + eyebrow-mono), `StatTile` (mono numeral + label + optional progress bar / delta), `ProgressBar` (gradient fill), `Input`/`Textarea`/`Select` (Hubble input styling), `Avatar` (gradient monogram), `IconButton`, `CopyChip` (mono text + Copy button), `MonoNum`. No inline magic values — reference token classes.
 - [x] **0.8 Icon set → `components/ui/icons.tsx`.** Inline stroke SVGs (`currentColor`): QR, chevrons, arrows, search, gear, wallet, lock, trophy, gift, home, grid, user, sign-out, close, check, clock, plus, external-link, flame. One export per icon.
 - [x] **0.9 Token art card → `components/shared/TokenCard.tsx`.** Rounded card, per-topic gradient hero panel, large mono edition `#128`, topic title, date + edition ratio meta, optional `RARE` tag, animated sheen for freshly-minted/featured. Click → opens Token Detail modal (7a). Replaces the current plain vault card.
-- [x] **0.10 Layout shells → `components/shared/`.** `MemberTopNav` (OAP logo w/ cyan dot · Home/Vault/Leaderboard/Rewards active-pill nav · 🔥 streak pill · avatar→AccountMenu), `OrganizerTopNav` (adds purple `ORGANIZER` badge + Overview/Meetings/Members/Settings), `MarketingNav` (Protocol·Clubs·Explore·Docs + Sign in/Launch app), `MobileTabBar` (Home·Vault·raised black Scan·Ranks·Rewards, fixed bottom), `PageContainer` (~1180px max, responsive). Active pill = `bg-[rgba(1,3,4,0.06)]`.
+- [x] **0.10 Layout shells → `components/shared/`.** `MemberTopNav` (OCP logo w/ cyan dot · Home/Vault/Leaderboard/Rewards active-pill nav · 🔥 streak pill · avatar→AccountMenu), `OrganizerTopNav` (adds purple `ORGANIZER` badge + Overview/Meetings/Members/Settings), `MarketingNav` (Protocol·Clubs·Explore·Docs + Sign in/Launch app), `MobileTabBar` (Home·Vault·raised black Scan·Ranks·Rewards, fixed bottom), `PageContainer` (~1180px max, responsive). Active pill = `bg-[rgba(1,3,4,0.06)]`.
 
 **Milestone 0 done when:** tokens/tailwind/fonts wired, mock layer + hooks typecheck, primitives + shells render in isolation, `npm run typecheck` clean.
 
@@ -135,7 +135,7 @@ Build and get a clean `npm run typecheck` before starting screens.
 
 ## Milestone 4 — Organizer console (desktop)
 Reuse existing admin API wiring (`lib/api/admin.ts`); club-level metadata is mock.
-- [x] **4.1 Create club (6a, L184).** Centered 600px form: "Step 1 of 2 · Basics", logo dropzone, Club name (focused input), Handle (`oap.xyz/c/` prefix), Description textarea, Category select, Chain (Base, locked), Cancel/Continue. Mock submit.
+- [x] **4.1 Create club (6a, L184).** Centered 600px form: "Step 1 of 2 · Basics", logo dropzone, Club name (focused input), Handle (`ocp.xyz/c/` prefix), Description textarea, Category select, Chain (Base, locked), Cancel/Continue. Mock submit.
 - [x] **4.2 Club dashboard (6b, L237).** Club header (logo, name, handle) + Invite members / Start a meeting; 4 stat cards (Members/Meetings/Avg attendance/Tokens, deltas) — wire to **real** `getAdminOverview`; Recent meetings table (real sessions) + Next meeting card w/ Open meeting.
 - [x] **4.3 Run meeting projector (6c, L294).** Top bar "Meeting live · timer" + Pause / End (red); left big 280px QR (real `getSessionQR`) + topic; right black counter card ("42 checked in of 312") + live "Just checked in" roster (poll stub / mock). Restyle existing `/admin/sessions/[id]/qr`.
 - [x] **4.4 Members & attendance (6d, L342).** Search + Export CSV (real `downloadMembersCSV`); table Member (avatar+join date) / Tokens / Streak / **6-week attendance matrix** (green ✓ / gray empty) / Rate %. Wire to real `listAdminMembers` + derive matrix from sessions/check-ins.

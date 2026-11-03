@@ -16,7 +16,7 @@ import type { RosterEntry, SessionWithCount } from '@/types';
 
 // Club handle/slug is not modelled in the backend yet — sample metadata for the check-in URL caption.
 const SAMPLE_CLUB_SLUG = 'blockchain-club';
-const CHECKIN_URL_BASE = 'oap.xyz/c';
+const CHECKIN_URL_BASE = 'ocp.xyz/c';
 const QR_CAPTION_SUFFIX = 'code expires when meeting ends';
 
 const LIVE_LABEL = 'Meeting live';

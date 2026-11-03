@@ -17,7 +17,7 @@ interface FooterColumn {
 const HOME_ROUTE = '/';
 const TAGLINE = 'Proof you showed up. Onchain.';
 const NETWORK_NOTE = 'Running on Base Sepolia · testnet';
-const COPYRIGHT = '© 2026 OAP';
+const COPYRIGHT = '© 2026 Onchain Club Protocol';
 
 // Deep-link to the deployed registry on Basescan when the address is configured;
 // fall back to the explorer home so the link is never dead.
@@ -28,15 +28,12 @@ const FOOTER_COLUMNS: FooterColumn[] = [
   {
     heading: 'Product',
     links: [
-      { label: 'Clubs', href: '/clubs' },
-      { label: 'Explore', href: '/explore' },
       { label: 'Protocol', href: '/#protocol' },
     ],
   },
   {
     heading: 'Resources',
     links: [
-      { label: 'Documentation', href: '/docs' },
       { label: 'GitHub', href: GITHUB_URL, external: true },
       { label: 'Basescan', href: BASESCAN_HREF, external: true },
     ],
@@ -54,10 +51,6 @@ export default function Footer() {
           <div className="max-w-[280px]">
             <Brand href={HOME_ROUTE} />
             <p className="mt-3 text-sm text-content-secondary">{TAGLINE}</p>
-            <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-status-info-bg px-3 py-1 text-xs font-semibold text-blue-600">
-              <span className="h-[7px] w-[7px] rounded-full bg-blue-500" />
-              Built on Base
-            </span>
           </div>
           <div className="grid grid-cols-2 gap-10 sm:gap-16">
             {FOOTER_COLUMNS.map((column) => (

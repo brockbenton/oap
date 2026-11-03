@@ -14,19 +14,17 @@ import { Avatar, Badge, CopyChip } from '@/components/ui';
 import type { IconProps } from '@/components/ui/icons';
 import {
   ChevronRight,
-  ExternalLinkIcon,
   GearIcon,
   SignOutIcon,
   WalletIcon,
 } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
+import { CLUB_NAME } from '@/lib/constants';
 
 const AVATAR_SIZE = 80;
 const MENU_ICON_SIZE = 18;
 const CHEVRON_SIZE = 16;
 
-// Single-club deployment: there is no clubs backend, so the name is a label.
-const CLUB_NAME = 'Blockchain Club';
 const STAT_PLACEHOLDER = '—';
 
 interface ProfileStat {
@@ -44,7 +42,6 @@ interface MenuLink {
 const MENU_LINKS: MenuLink[] = [
   { label: 'Wallet & keys', href: '/wallet', Icon: WalletIcon },
   { label: 'Settings', href: '/settings', Icon: GearIcon },
-  { label: 'Help & docs', href: '/docs', Icon: ExternalLinkIcon },
 ];
 
 const MENU_ROW = 'flex w-full items-center gap-3 px-4 py-3.5 text-sm font-medium';

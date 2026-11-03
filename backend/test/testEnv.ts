@@ -3,7 +3,7 @@
 export const TEST_ENV: Record<string, string> = {
   DATABASE_URL:
     process.env.TEST_DATABASE_URL ??
-    'postgresql://brock.benton@localhost:5432/onchain_attendance_test',
+    'postgresql://brock.benton@localhost:5432/ocp_test',
   REDIS_URL: 'redis://localhost:6379',
   ALCHEMY_API_KEY: 'test',
   CONTRACT_ADDRESS: '0x0000000000000000000000000000000000000001',

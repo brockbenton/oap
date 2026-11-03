@@ -10,8 +10,9 @@ import { TrophyIcon } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
 import { useLeaderboard, type LeaderboardTimeframe } from '@/lib/mock/gamification';
 import type { LeaderboardEntry } from '@/types';
+import { CLUB_NAME } from '@/lib/constants';
 
-const CLUB_SUBTITLE = 'Blockchain Club · ranked by XP and attendance streak.';
+const CLUB_SUBTITLE = `${CLUB_NAME} · ranked by XP and attendance streak.`;
 const PODIUM_COUNT = 3;
 const WINNER_AVATAR_SIZE = 72;
 const PODIUM_AVATAR_SIZE = 60;

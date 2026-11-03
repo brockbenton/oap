@@ -206,43 +206,6 @@ export interface Reward {
   status: 'ready' | 'locked' | 'claimed';
 }
 
-export interface Club {
-  id: string;
-  name: string;
-  org: string;
-  handle: string;
-  category: 'University' | 'DAO' | 'Meetup';
-  monogram: string;
-  members: number;
-  meetings: number;
-  tokens: number;
-  joined: boolean;
-}
-
-export interface MintFeedItem {
-  id: string;
-  handle: string;
-  avatarSeed: string;
-  topic: string;
-  gradient: import('@/lib/tokenArt').GradientName;
-  club: string;
-  timeAgo: string;
-  txHash: string;
-  editionNumber: number;
-}
-
-export interface Collector {
-  rank: number;
-  handle: string;
-  avatarSeed: string;
-  tokens: number;
-}
-
-export interface TrendingTopic {
-  topic: string;
-  count: number;
-}
-
 export interface RosterEntry {
   handle: string;
   avatarSeed: string;

@@ -29,7 +29,7 @@ const AVATAR_SEED_FALLBACK = 'account';
 const EMBEDDED_WALLET_CLIENT_TYPE = 'privy';
 
 const EMBEDDED_TITLE = 'Embedded wallet';
-const EMBEDDED_DESC = 'The self-custodial wallet OAP created for you. It holds your attendance tokens.';
+const EMBEDDED_DESC = 'The self-custodial wallet OCP created for you. It holds your attendance tokens.';
 const BASESCAN_LABEL = 'View on Basescan';
 const EXPORT_KEY_LABEL = 'Export private key';
 const EXPORT_KEY_WARNING = 'Anyone with your private key controls this wallet — never share it.';

@@ -132,7 +132,7 @@ export default function SettingsPage() {
             <section id="profile" className={SECTION_CARD}>
               <h2 className="text-[17px] font-semibold">Profile</h2>
               <p className="mt-1 text-sm text-content-secondary">
-                How you appear across OAP. Your email is never shown publicly.
+                How you appear across OCP. Your email is never shown publicly.
               </p>
 
               <div className="mt-5 flex items-center gap-4">
@@ -368,7 +368,7 @@ function AccountSection() {
   return (
     <section id={SECTION_ACCOUNT} className={SECTION_CARD}>
       <h2 className={SECTION_HEADING}>Account</h2>
-      <p className={SECTION_CAPTION}>Sign out of OAP on this device.</p>
+      <p className={SECTION_CAPTION}>Sign out of OCP on this device.</p>
 
       <div className="mt-5">
         <Button variant="outline" onClick={() => logout()}>

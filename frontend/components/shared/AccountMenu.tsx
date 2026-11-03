@@ -14,7 +14,6 @@ import { Avatar, Badge, Button, CopyChip } from '@/components/ui';
 import type { IconProps } from '@/components/ui/icons';
 import {
   ChevronDown,
-  ExternalLinkIcon,
   GearIcon,
   GridIcon,
   SignOutIcon,
@@ -22,10 +21,11 @@ import {
   WalletIcon,
 } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
+import { CLUB_NAME } from '@/lib/constants';
 
 // Level + club are display-only samples (gamification isn't wired yet).
 const SAMPLE_LEVEL = 6;
-const SAMPLE_CLUB = 'Blockchain Club';
+const SAMPLE_CLUB = CLUB_NAME;
 
 const TRIGGER_AVATAR_SIZE = 32;
 const HEADER_AVATAR_SIZE = 44;
@@ -45,7 +45,6 @@ const MENU_ITEMS: MenuItem[] = [
   { label: 'Profile', href: '/settings#profile', Icon: UserIcon },
   { label: 'Wallet & keys', href: '/wallet', Icon: WalletIcon },
   { label: 'Settings', href: '/settings', Icon: GearIcon },
-  { label: 'Help & docs', href: '/docs', Icon: ExternalLinkIcon },
   { label: 'Admin dashboard', href: '/admin', Icon: GridIcon, adminOnly: true },
 ];
 

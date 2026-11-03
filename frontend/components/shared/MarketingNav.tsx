@@ -12,14 +12,11 @@ interface MarketingNavItem {
 }
 
 const HOME_ROUTE = '/';
-const EXPLORE_ROUTE = '/explore';
 const LAUNCH_LABEL = 'Launch app';
 const OPEN_LABEL = 'Open app';
 
 const NAV_ITEMS: MarketingNavItem[] = [
   { label: 'Protocol', href: '/#protocol' },
-  { label: 'Clubs', href: '/clubs' },
-  { label: 'Docs', href: '/docs' },
 ];
 
 const NAV_ITEM_CLASSES = 'px-3.5 py-2 text-sm text-content-secondary transition hover:text-ink';
@@ -29,7 +26,7 @@ export default function MarketingNav() {
   const { ready, authenticated, login } = usePrivy();
 
   // Signed-in members jump straight to the app (the root switch renders their Home);
-  // logged-out visitors go through Privy login first. "Explore" is public — no auth.
+  // logged-out visitors go through Privy login first.
   const launchApp = () => {
     if (authenticated) router.push(HOME_ROUTE);
     else login();
@@ -47,9 +44,6 @@ export default function MarketingNav() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2.5">
-          <Link href={EXPLORE_ROUTE}>
-            <Button variant="ghost">Explore</Button>
-          </Link>
           <Button variant="primary" onClick={launchApp} disabled={!ready}>
             {authenticated ? OPEN_LABEL : LAUNCH_LABEL}
           </Button>

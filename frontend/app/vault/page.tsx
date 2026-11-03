@@ -19,6 +19,7 @@ import { IconButton } from '@/components/ui';
 import { gradientNameForTopic } from '@/lib/tokenArt';
 import { cn } from '@/lib/cn';
 import { VaultToken } from '@/types';
+import { CLUB_NAME } from '@/lib/constants';
 
 const ALL_SEMESTERS = 'All semesters';
 const ALL_LABEL = 'All';
@@ -54,7 +55,6 @@ const RARE_TOKEN_COUNT = 0;
 const TONE_NEUTRAL = 'neutral' as const;
 const TONE_INFO = 'info' as const;
 
-const CLUB_NAME = 'Blockchain Club';
 const CHAIN_NAME = 'Base';
 // AttendanceRegistry.sol is a soulbound ERC-1155 (one token id per meeting).
 const TOKEN_STANDARD = 'ERC-1155 · soulbound';

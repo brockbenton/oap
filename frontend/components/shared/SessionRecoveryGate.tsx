@@ -13,7 +13,7 @@ const STUCK_TIMEOUT_MS = 15_000;
 const LOGOUT_TIMEOUT_MS = 2_000;
 // Survives the auto-heal reload within a tab session, so we self-heal at most
 // once and never fall into a reload loop if the heal doesn't take.
-const RECOVERY_FLAG = 'oap:session-recovery-attempted';
+const RECOVERY_FLAG = 'ocp:session-recovery-attempted';
 // Scope the clear to Privy's own storage (localStorage `privy:*`, cookies
 // `privy-*`) so recovery doesn't wipe unrelated app state.
 const PRIVY_KEY_PREFIX = 'privy';

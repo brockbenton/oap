@@ -6,7 +6,7 @@ export const MOCK_REWARDS: Reward[] = [
   {
     id: 'rw-founding-member',
     title: 'Founding Member',
-    description: 'Awarded to the first cohort to join your club on OAP.',
+    description: 'Awarded to the first cohort to join your club on OCP.',
     requiredLevel: 1,
     status: 'claimed',
   },

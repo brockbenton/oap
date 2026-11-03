@@ -334,8 +334,8 @@
 .hb { font-family: var(--font-ui); color: var(--content-default); background: var(--bg-base); -webkit-font-smoothing: antialiased; }
 .hb .num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
 
-@keyframes oapSheen { 0% { transform: translateX(-120%); } 100% { transform: translateX(220%); } }
-@keyframes oapPulse { 0%,100% { opacity:.5; transform:scale(1);} 50% { opacity:1; transform:scale(1.06);} }
+@keyframes ocpSheen { 0% { transform: translateX(-120%); } 100% { transform: translateX(220%); } }
+@keyframes ocpPulse { 0%,100% { opacity:.5; transform:scale(1);} 50% { opacity:1; transform:scale(1.06);} }
 @keyframes fadeInUp { from { opacity:0; transform: translateY(6px);} to { opacity:1; transform:none;} }
 
 @layer base {

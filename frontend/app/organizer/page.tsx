@@ -17,13 +17,14 @@ import { retryUnlessForbidden, ApiRequestError } from '@/lib/api/client';
 import { TOKEN_GRADIENTS } from '@/lib/tokenArt';
 import { cn } from '@/lib/cn';
 import type { AdminOverview, SessionWithCount } from '@/types';
+import { CLUB_NAME } from '@/lib/constants';
 
 // The backend has no clubs surface: club identity (name/handle/logo), meeting cadence and the
 // next scheduled meeting aren't persisted, so they're sample and mirror the design frame. Every
 // figure inside the stat row, the recent-meetings table and the tokens total is real admin data.
 const CLUB = {
-  name: 'Blockchain Club',
-  handle: 'oap.xyz/c/blockchain-club',
+  name: CLUB_NAME,
+  handle: 'ocp.xyz/c/blockchain-club',
   logo: '◆',
   gradient: TOKEN_GRADIENTS.blue,
 } as const;
