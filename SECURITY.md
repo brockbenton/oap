@@ -1,6 +1,23 @@
-# Security Model — Onchain Club Protocol (OCP)
+# Security — Onchain Club Protocol (OCP)
 
 A single running inventory of every security feature, known gap, and accepted risk in OCP. Keep it current: when a feature ships, changes, or a decision is made, update the row and the [decision log](#decision-log).
+
+## Reporting a vulnerability
+
+Please don't open a public issue. Use GitHub's **Security → Report a vulnerability** (private advisory) on this repo.
+
+## Security review guidelines (for human and AI reviewers)
+
+When reviewing a PR, check it against the inventory below and flag:
+
+1. **Weakened or removed protections:** any ✅ Live item made weaker, or a 🟡 v1 item implemented differently from what's described here without updating this file.
+2. **Key and role changes:** new private keys, new on-chain roles, or wider powers for an existing key. Update §2 with what the key can do if leaked.
+3. **Rep / voting power:** any path that credits Rep without the two-officer confirmation, bypasses the per-session / per-member / club-wide caps, or lets Rep move between accounts.
+4. **Signatures:** signed messages without `chainId` + contract binding, a nonce, or an expiry; replay across sessions, contracts, or chains.
+5. **AuthZ:** officer/admin checks that aren't read live from the chain, that fail open on RPC errors, or that trust client-supplied addresses.
+6. **Privacy:** PII (email, linked accounts) on any unauthenticated endpoint.
+7. **Contracts:** violations of `smart-contract/CLAUDE.md` (upgradeable proxies, `tx.origin`, `block.timestamp` in access control, unbounded governance parameters, transfers of soulbound tokens or Rep).
+8. **This file:** if the PR changes security behavior, it must update the matching row and the decision log.
 
 **Status legend**
 
