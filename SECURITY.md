@@ -179,8 +179,8 @@ Attendance tokens and Rep are separate: tokens mint instantly as a record; **Rep
 | Async errors reach the error handler | ✅ | `express-async-errors` |
 | Admin auth checks the chain, fails closed | ✅ | `adminMiddleware` reads on-chain `ADMIN_ROLE` on every request; RPC failure → `503`, not access (`backend/src/middleware/admin.ts`) |
 | Live officer checks stay live | 🟡 | Revocations must never wait on an indexer cache (#69) |
-| CORS | ⚠️ | `cors()` allows any origin. Low impact (Bearer tokens, not cookies), but should be restricted to the frontend origin |
-| Security headers | ⚠️ | No `helmet` / security headers on the API |
+| CORS | ⚠️ | `cors()` allows any origin. Low impact (Bearer tokens, not cookies), but should be restricted to the frontend origin (#80) |
+| Security headers | ⚠️ | No `helmet` / security headers on the API (#81) |
 | Structured logging | ✅ | pino; no `console.log` |
 
 ---
