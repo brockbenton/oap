@@ -28,15 +28,12 @@ const FOOTER_COLUMNS: FooterColumn[] = [
   {
     heading: 'Product',
     links: [
-      { label: 'Clubs', href: '/clubs' },
-      { label: 'Explore', href: '/explore' },
       { label: 'Protocol', href: '/#protocol' },
     ],
   },
   {
     heading: 'Resources',
     links: [
-      { label: 'Documentation', href: '/docs' },
       { label: 'GitHub', href: GITHUB_URL, external: true },
       { label: 'Basescan', href: BASESCAN_HREF, external: true },
     ],

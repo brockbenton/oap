@@ -22,7 +22,6 @@ type CheckInStep = 'scan' | 'signing' | 'submitting' | 'success' | 'error';
 type ErrorVariant = 'already-in' | 'closed' | 'invalid';
 
 const VAULT_HREF = '/vault';
-const FEED_HREF = '/explore';
 
 // The meeting is only identified once the QR is decoded, so the scan screen
 // can't name it — it stays generic until there's a real session to show.
@@ -46,7 +45,6 @@ const TOKEN_SHORT_MAX = 4;
 const EDITION_PAD = 3;
 // The token is already in the vault — the button navigates, it doesn't add.
 const ADD_TO_VAULT_LABEL = 'View in vault';
-const SHARE_LABEL = 'Share to feed';
 const SESSION_REF_PREFIX = 'Session #';
 const SESSION_REF_MAX = 8;
 const MINT_POLL_MS = 4000;
@@ -393,12 +391,6 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
             className="flex h-14 items-center justify-center rounded-full bg-cyan text-base font-semibold text-ink transition active:scale-[0.98]"
           >
             {ADD_TO_VAULT_LABEL}
-          </Link>
-          <Link
-            href={FEED_HREF}
-            className="flex h-12 items-center justify-center rounded-full bg-white/10 text-[15px] font-semibold text-white transition hover:bg-white/[0.15]"
-          >
-            {SHARE_LABEL}
           </Link>
         </div>
       </div>

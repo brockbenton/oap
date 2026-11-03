@@ -188,11 +188,6 @@ export default function Landing() {
                   <ArrowRight size={16} />
                 </Button>
               </Link>
-              <Link href="/explore">
-                <Button variant="ghost" size="lg">
-                  See the explorer
-                </Button>
-              </Link>
             </div>
             <div className="mt-11 flex gap-9">
               {HERO_STATS.map((stat) => (
