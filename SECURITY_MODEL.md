@@ -86,8 +86,8 @@ Design source of truth: `MASTER_PLAN.md` → Phase 5 + Security Considerations (
 | Session must be open and confirmed on-chain | ✅ | Closed or unconfirmed sessions rejected |
 | Per-user rate limit | ✅ | 30 check-in attempts/min keyed by Privy user, not IP (a whole room shares one wifi IP) |
 | QR + check-in signatures bound to chain + contract | ⚠️ → 🟡 | Today they carry no `chainId` / contract address. v1 moves both to EIP-712 with `{chainId, verifyingContract}` so they can't replay across testnet/mainnet (#56) |
-| Officer-set max attendance per session | 🟡 | Officer sets `maxAttendees` when creating the session; enforced on-chain for minting (#50) |
-| Open-session warning | 🟡 | Dashboard + officer alert for sessions still open after ~6 h (configurable). A nudge only — sessions never auto-close |
+| Officer-set max attendance per session | 🟡 | Officer sets `maxAttendees` when starting each meeting (pre-filled from recent attendance); enforced on-chain for minting (#50) |
+| Open-session warning | 🟡 | Officer alert + organizer-dashboard list for sessions open longer than `OPEN_SESSION_WARN_HOURS` (default 6, off-chain config). A nudge only — sessions never auto-close |
 | No time limits on creating sessions / QR codes | 🟡 decided | Officers can start a session any time; protection comes from sign-off and caps, not spacing |
 
 > ⚠️ A photo of the QR shared in a group chat works remotely until it expires (5 min once #72 ships). Mitigated by `maxAttendees`, two-officer Rep sign-off, and Rep caps.
@@ -104,8 +104,8 @@ Attendance tokens and Rep are separate: tokens mint instantly as a record; **Rep
 | Rep pending until a second officer confirms | 🟡 decided | Officer A closes the session → attendee list is **Pending** (zero voting power). A **different** officer B confirms → Rep credited. Any officer can reject. Pending never expires (#50) |
 | Rep only for real token holders | 🟡 | Only listed addresses that hold that session's attendance token are credited, at most `maxAttendees` |
 | Per-session Rep cap | 🟡 decided | Credited ≤ `max(500 Rep, 20% of total supply)`; over the cap → pro-rata per attendee (#50) |
-| Per-member weekly cap | 🟡 decided | Each member ≤ 100 Rep/week; excess stays pending until the window allows (#50) |
-| Club-wide weekly budget | 🟡 decided | Confirmed Rep ≤ `max(1,000, 25% of supply)`/week — stops two colluding officers compounding fake-account Rep (#50) |
+| Per-member weekly cap | 🟡 decided | Each member ≤ 100 Rep per calendar week (bounded 20–1,000, Timelock-only). Excess becomes **deferred** Rep — no voting power, never expires — credited the following week via `claimDeferredRep` (anyone can call; relay runs it weekly). Fixed weekly buckets keep gas constant; a member can receive up to 2× across a week boundary, still bounded by the other caps (#50) |
+| Club-wide weekly budget | 🟡 decided | Confirmed Rep ≤ `max(1,000, 25% of supply)`/week, reserved per session at confirmation — stops two colluding officers compounding Rep through many fake accounts that each stay under the per-member cap (#50) |
 | Minimum 2 officers | 🟡 decided | Enforced in `_revokeRole` (covers revoke + renounce); election templates grant the new officer before revoking the old (#60) |
 | Relay can't create Rep | 🟡 | A leaked relay key can only mint attendance tokens, which carry no Rep |
 | Mint pause | 🟡 | Any officer can pause minting; auto-expires after 14 days; each officer may pause once per 30 days; unpause by 2 officers or the Timelock (#52) |
@@ -197,7 +197,7 @@ Attendance tokens and Rep are separate: tokens mint instantly as a record; **Rep
 |---|---|---|
 | No secrets in the client | ✅ | Only `NEXT_PUBLIC_*` values (Privy app id, API URL) |
 | Fail fast without Privy config | ⚠️ | Builds without `NEXT_PUBLIC_PRIVY_APP_ID` succeed with wallet features silently broken (#49) |
-| "Rep pending" shown to members | 🟡 | Members see pending Rep awaiting officer confirmation |
+| "Rep pending" / "deferred" shown to members | 🟡 | Members see Rep awaiting officer confirmation, and Rep deferred by the weekly cap ("credited next week") |
 
 ---
 
