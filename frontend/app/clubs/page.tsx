@@ -73,7 +73,7 @@ export default function ClubsPage() {
             <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
               <div>
                 <h1 className="text-[32px] font-semibold leading-[38px] tracking-[-1px]">
-                  Clubs on OAP
+                  Clubs on OCP
                 </h1>
                 <p className="mt-2 text-[15px] leading-[22px] text-content-secondary">
                   {clubs.length} communities tracking attendance onchain.
@@ -200,7 +200,7 @@ function ClubsEmpty() {
     <div className="animate-fade-in">
       <div className="mb-7">
         <h1 className="mb-2 text-[32px] font-semibold leading-[38px] tracking-[-1px]">
-          Clubs on OAP
+          Clubs on OCP
         </h1>
         <p className="text-[15px] leading-[22px] text-content-secondary">
           No clubs are live yet — that&apos;s a good thing. Yours can be the first.

@@ -57,16 +57,16 @@ export const DOC_SECTIONS: DocSection[] = [
       {
         "type": "callout",
         "tone": "warn",
-        "text": "A few surrounding pieces are UI previews, not live. The Create your club builder at `/organizer/new` doesn't persist — there's no clubs backend yet, so a session is the real unit; its Continue button only navigates. The XP, edition number, and Share to feed flair on the check-in success screen are sample values (the check-in response carries no XP/edition data). And the branded `oap.xyz/c/...` link plus the live \"just checked in\" roster and counts on the organizer run view (`/organizer/run`) come from mock data (`lib/mock/meeting.ts`), not the backend — members enter through the in-app scanner, and organizers hand out QR codes from `/admin/sessions/<id>/qr`."
+        "text": "A few surrounding pieces are UI previews, not live. The Create your club builder at `/organizer/new` doesn't persist — there's no clubs backend yet, so a session is the real unit; its Continue button only navigates. The XP, edition number, and Share to feed flair on the check-in success screen are sample values (the check-in response carries no XP/edition data). And the branded `ocp.xyz/c/...` link plus the live \"just checked in\" roster and counts on the organizer run view (`/organizer/run`) come from mock data (`lib/mock/meeting.ts`), not the backend — members enter through the in-app scanner, and organizers hand out QR codes from `/admin/sessions/<id>/qr`."
       }
     ]
   },
   {
-    "id": "what-is-oap",
+    "id": "what-is-ocp",
     "group": "Getting started",
-    "title": "What is OAP?",
+    "title": "What is OCP?",
     "status": "live",
-    "lede": "OAP (the Onchain Attendance Protocol) turns showing up to a meeting into a permanent, non-transferable token in the member's own wallet. Instead of a name in a spreadsheet, every check-in is a soulbound token minted on Base — a record that is tamper-proof, publicly verifiable, and owned by the member.",
+    "lede": "OCP (the Onchain Club Protocol) turns showing up to a meeting into a permanent, non-transferable token in the member's own wallet. Instead of a name in a spreadsheet, every check-in is a soulbound token minted on Base — a record that is tamper-proof, publicly verifiable, and owned by the member.",
     "blocks": [
       {
         "type": "subheading",
@@ -129,7 +129,7 @@ export const DOC_SECTIONS: DocSection[] = [
       },
       {
         "type": "paragraph",
-        "text": "OAP runs on Base, an Ethereum L2 whose low fees make sponsoring every mint practical. Token metadata (the session's name, date, and semester) is served from IPFS — `uri()` returns `ipfs://{baseCid}/{sessionId}.json`."
+        "text": "OCP runs on Base, an Ethereum L2 whose low fees make sponsoring every mint practical. Token metadata (the session's name, date, and semester) is served from IPFS — `uri()` returns `ipfs://{baseCid}/{sessionId}.json`."
       },
       {
         "type": "callout",
@@ -193,7 +193,7 @@ export const DOC_SECTIONS: DocSection[] = [
       {
         "type": "callout",
         "tone": "warn",
-        "text": "The club identity in the dashboard header — name, handle, and logo (\"Blockchain Club\", `oap.xyz/c/blockchain-club`) — is hardcoded sample data in `frontend/app/organizer/page.tsx`, not editable or persisted. There is currently no way to name, brand, or configure a club."
+        "text": "The club identity in the dashboard header — name, handle, and logo (\"Blockchain Club\", `ocp.xyz/c/blockchain-club`) — is hardcoded sample data (the name comes from `CLUB_NAME` in `frontend/lib/constants.ts`; the handle and logo from `frontend/app/organizer/page.tsx`), not editable or persisted. There is currently no way to name, brand, or configure a club."
       }
     ]
   },

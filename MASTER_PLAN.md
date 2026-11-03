@@ -1,4 +1,4 @@
-# MASTER_PLAN.md — Onchain Attendance Protocol
+# MASTER_PLAN.md — Onchain Club Protocol (OCP)
 
 ## Mission
 

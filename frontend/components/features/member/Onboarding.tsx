@@ -17,7 +17,7 @@ const AVATAR_SIZE = 88;
 const DEFAULT_AVATAR_COLOR = 0;
 const COLOR_SWATCHES = Array.from({ length: AVATAR_COLOR_COUNT }, (_, i) => i);
 
-const HEADING = 'Welcome to OAP';
+const HEADING = 'Welcome to OCP';
 const SUBHEADING =
   'Set up your profile to get started. Pick a username and a color — you can change both anytime in Settings.';
 const USERNAME_LABEL = 'Username';

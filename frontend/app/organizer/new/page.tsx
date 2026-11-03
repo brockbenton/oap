@@ -6,12 +6,13 @@ import OrganizerTopNav from '@/components/shared/OrganizerTopNav';
 import PageContainer from '@/components/shared/PageContainer';
 import { Button, Input, Textarea, Select } from '@/components/ui';
 import { ArrowRight } from '@/components/ui/icons';
+import { CLUB_NAME } from '@/lib/constants';
 
 const STEP_EYEBROW = 'Step 1 of 2 · Basics';
 const HEADING = 'Create your club';
 const SUBCOPY = 'Set the basics — you can invite members and run your first meeting right after.';
 
-const HANDLE_PREFIX = 'oap.xyz/c/';
+const HANDLE_PREFIX = 'ocp.xyz/c/';
 const CATEGORY_OPTIONS = ['University', 'DAO', 'Meetup'] as const;
 const CHAIN_LABEL = 'Base';
 const CHAIN_TAG = 'default';
@@ -24,7 +25,7 @@ const NEXT_ROUTE = '/organizer';
 // Club metadata isn't persisted here — the backend has no clubs surface; Continue is a router
 // action only. These sample defaults mirror the design frame.
 const SAMPLE_CLUB = {
-  name: 'Blockchain Club',
+  name: CLUB_NAME,
   handle: 'blockchain-club',
   description: 'Weekly meetings on everything Ethereum — from Solidity to ZK. Beginners welcome.',
   category: CATEGORY_OPTIONS[0] as string,

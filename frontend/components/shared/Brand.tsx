@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { cn } from '@/lib/cn';
+import { APP_SHORT_NAME } from '@/lib/constants';
 
 export interface BrandProps {
   href?: string;
@@ -11,7 +12,7 @@ const WORDMARK_CLASSES = 'font-bold text-[19px] tracking-[-0.02em]';
 export default function Brand({ href, className }: BrandProps) {
   const wordmark = (
     <>
-      OAP<span className="text-cyan">.</span>
+      {APP_SHORT_NAME}<span className="text-cyan">.</span>
     </>
   );
 

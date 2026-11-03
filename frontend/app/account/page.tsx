@@ -20,13 +20,12 @@ import {
   WalletIcon,
 } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
+import { CLUB_NAME } from '@/lib/constants';
 
 const AVATAR_SIZE = 80;
 const MENU_ICON_SIZE = 18;
 const CHEVRON_SIZE = 16;
 
-// Single-club deployment: there is no clubs backend, so the name is a label.
-const CLUB_NAME = 'Blockchain Club';
 const STAT_PLACEHOLDER = '—';
 
 interface ProfileStat {

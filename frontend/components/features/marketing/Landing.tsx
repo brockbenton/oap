@@ -6,7 +6,7 @@ import { Button, CopyChip, Eyebrow } from '@/components/ui';
 import { ArrowRight } from '@/components/ui/icons';
 import { TOKEN_GRADIENTS } from '@/lib/tokenArt';
 import { cn } from '@/lib/cn';
-import { BASESCAN_URL } from '@/lib/constants';
+import { APP_NAME, APP_SHORT_NAME, BASESCAN_URL } from '@/lib/constants';
 
 const HERO_GRADIENT = 'radial-gradient(120% 120% at 0% 0%, #f2f7fe 0%, #ffffff 55%)';
 const CARD_SHEEN = 'radial-gradient(circle at 30% 25%,rgba(255,255,255,.35),transparent 55%)';
@@ -117,7 +117,7 @@ interface ValueProp {
   dotClass: string;
 }
 
-const WHY_OAP: ValueProp[] = [
+const WHY_OCP: ValueProp[] = [
   {
     title: 'Tamper-proof by default',
     body: 'Every check-in is a soulbound token on Base — non-transferable, timestamped, and impossible to backfill or fake after the fact.',
@@ -171,7 +171,7 @@ export default function Landing() {
           <div className="self-center">
             <div className="mb-[22px] inline-flex items-center gap-2 rounded-full bg-status-info-bg px-3 py-1.5 text-xs font-semibold leading-none text-blue-600">
               <span className="h-[7px] w-[7px] rounded-full bg-blue-500" />
-              Live on Base · 41 clubs
+              {APP_NAME} · Live on Base · 41 clubs
             </div>
             <h2 className="mb-5 text-[44px] font-semibold leading-[46px] tracking-[-2px] sm:text-[60px] sm:leading-[60px] sm:tracking-[-3px]">
               Proof you
@@ -286,12 +286,12 @@ export default function Landing() {
 
       <section id={PROTOCOL_ANCHOR} className="scroll-mt-20 border-t border-line">
         <PageContainer className="py-14">
-          <Eyebrow className={cn('mb-2', MKT_EYEBROW)}>Why OAP</Eyebrow>
+          <Eyebrow className={cn('mb-2', MKT_EYEBROW)}>Why {APP_SHORT_NAME}</Eyebrow>
           <h3 className="mb-8 max-w-[22ch] text-[30px] font-semibold leading-[38px] tracking-[-1px]">
             Attendance that can&apos;t be faked, forgotten, or lost.
           </h3>
           <div className="grid gap-5 sm:grid-cols-2">
-            {WHY_OAP.map((prop) => (
+            {WHY_OCP.map((prop) => (
               <div key={prop.title} className="rounded-lg border border-line p-6">
                 <span className={cn('mb-4 block h-2.5 w-2.5 rounded-full', prop.dotClass)} />
                 <div className="mb-2 text-[17px] font-semibold leading-[1.3]">{prop.title}</div>

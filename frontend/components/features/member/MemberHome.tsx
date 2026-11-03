@@ -22,10 +22,7 @@ import {
   type RankSummary,
 } from '@/lib/mock/gamification';
 import type { Level, LeaderboardEntry, MemberVault, PersonalStats, VaultToken } from '@/types';
-
-/** Single-club deployment: there is no clubs backend, so the club name is a
- *  deployment label. The semester beside it is real (from personal stats). */
-const CLUB_NAME = 'Blockchain Club';
+import { APP_SHORT_NAME, CLUB_NAME } from '@/lib/constants';
 
 const CHECK_IN_HREF = '/check-in';
 const VAULT_HREF = '/vault';
@@ -480,7 +477,7 @@ function EmptyHome({ displayName, semester }: { displayName: string; semester: s
     <div className="min-h-screen bg-white">
       <MemberTopNav active="home" />
       <PageContainer className="py-8">
-        <GreetingHeader title={`Welcome to OAP, ${displayName} 👋`} semester={semester} />
+        <GreetingHeader title={`Welcome to ${APP_SHORT_NAME}, ${displayName} 👋`} semester={semester} />
 
         <div className="relative mb-5 overflow-hidden rounded-lg bg-ink p-9 text-center text-white">
           <div

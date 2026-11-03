@@ -18,7 +18,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: APP_NAME,
-  description: 'Soulbound onchain attendance — QR check-in, gasless tokens, and member stats.',
+  description: `${APP_NAME} — soulbound onchain attendance for clubs: QR check-in, gasless tokens, and member stats.`,
 };
 
 export default function RootLayout({

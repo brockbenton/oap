@@ -22,10 +22,11 @@ import {
   WalletIcon,
 } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
+import { CLUB_NAME } from '@/lib/constants';
 
 // Level + club are display-only samples (gamification isn't wired yet).
 const SAMPLE_LEVEL = 6;
-const SAMPLE_CLUB = 'Blockchain Club';
+const SAMPLE_CLUB = CLUB_NAME;
 
 const TRIGGER_AVATAR_SIZE = 32;
 const HEADER_AVATAR_SIZE = 44;

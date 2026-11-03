@@ -1,6 +1,6 @@
-# Onchain Attendance
+# Onchain Club Protocol (OCP)
 
-Soulbound onchain attendance for a university blockchain club. Members check in at a meeting by scanning a time‑boxed, admin‑signed QR and receive a non‑transferable ERC‑1155 attendance token — minting is **gasless** (a backend relay sponsors it). Tokens power attendance stats, member tiers, and an admin dashboard.
+Onchain Club Protocol (OCP) — soulbound onchain attendance for clubs, starting with a university blockchain club. Members check in at a meeting by scanning a time‑boxed, admin‑signed QR and receive a non‑transferable ERC‑1155 attendance token — minting is **gasless** (a backend relay sponsors it). Tokens power attendance stats, member tiers, and an admin dashboard.
 
 ## Structure
 

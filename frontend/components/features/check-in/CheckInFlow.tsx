@@ -13,6 +13,7 @@ import { useEmbeddedAddress } from '@/hooks/useProfile';
 import { CheckInResponse, VaultToken } from '@/types';
 import { QrIcon, CheckIcon, ClockIcon, CloseIcon, type IconProps } from '@/components/ui/icons';
 import { TOKEN_GRADIENTS, gradientNameForTopic } from '@/lib/tokenArt';
+import { CLUB_NAME } from '@/lib/constants';
 
 // QrScanner accesses browser APIs — load client-side only
 const QrScanner = dynamic(() => import('./QrScanner'), { ssr: false });
@@ -25,7 +26,7 @@ const FEED_HREF = '/explore';
 
 // The meeting is only identified once the QR is decoded, so the scan screen
 // can't name it — it stays generic until there's a real session to show.
-const MEETING_EYEBROW = 'Blockchain Club';
+const MEETING_EYEBROW = CLUB_NAME;
 const MEETING_TOPIC = 'Check in to this meeting';
 const SCAN_INSTRUCTION = "Point your camera at the QR on the projector to mint today's token.";
 const PRIVY_CAPTION = 'Secured by Privy · gas-free mint';

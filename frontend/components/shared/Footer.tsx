@@ -17,7 +17,7 @@ interface FooterColumn {
 const HOME_ROUTE = '/';
 const TAGLINE = 'Proof you showed up. Onchain.';
 const NETWORK_NOTE = 'Running on Base Sepolia · testnet';
-const COPYRIGHT = '© 2026 OAP';
+const COPYRIGHT = '© 2026 Onchain Club Protocol';
 
 // Deep-link to the deployed registry on Basescan when the address is configured;
 // fall back to the explorer home so the link is never dead.
