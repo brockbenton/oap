@@ -47,7 +47,7 @@ const EDITION_PAD = 3;
 // The token is already in the vault — the button navigates, it doesn't add.
 const ADD_TO_VAULT_LABEL = 'View in vault';
 const SHARE_LABEL = 'Share to feed';
-const SESSION_REF_PREFIX = 'Base ↗ #';
+const SESSION_REF_PREFIX = 'Session #';
 const SESSION_REF_MAX = 8;
 const MINT_POLL_MS = 4000;
 const TOKEN_DATE_FORMAT: Intl.DateTimeFormatOptions = {

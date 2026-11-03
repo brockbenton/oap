@@ -23,8 +23,6 @@ interface HeroStat {
 }
 
 const HERO_STATS: HeroStat[] = [
-  { value: '12,480', label: 'tokens minted' },
-  { value: '3,142', label: 'members' },
   { value: '$0.00', label: 'gas to mint' },
 ];
 
@@ -120,7 +118,7 @@ interface ValueProp {
 const WHY_OCP: ValueProp[] = [
   {
     title: 'Tamper-proof by default',
-    body: 'Every check-in is a soulbound token on Base — non-transferable, timestamped, and impossible to backfill or fake after the fact.',
+    body: 'Every check-in is a soulbound token — non-transferable, timestamped, and impossible to backfill or fake after the fact.',
     dotClass: 'bg-blue-500',
   },
   {
@@ -146,7 +144,6 @@ interface TokenFact {
 }
 
 const TOKEN_FACTS: TokenFact[] = [
-  { label: 'Chain', value: 'Base · low-cost L2' },
   { label: 'Standard', value: 'ERC-721, soulbound' },
   { label: 'Metadata', value: 'Topic · date · edition · club' },
   { label: 'Gas', value: 'Sponsored — $0 to member' },
@@ -171,7 +168,7 @@ export default function Landing() {
           <div className="self-center">
             <div className="mb-[22px] inline-flex items-center gap-2 rounded-full bg-status-info-bg px-3 py-1.5 text-xs font-semibold leading-none text-blue-600">
               <span className="h-[7px] w-[7px] rounded-full bg-blue-500" />
-              {APP_NAME} · Live on Base · 41 clubs
+              {APP_NAME}
             </div>
             <h2 className="mb-5 text-[44px] font-semibold leading-[46px] tracking-[-2px] sm:text-[60px] sm:leading-[60px] sm:tracking-[-3px]">
               Proof you
@@ -333,7 +330,7 @@ export default function Landing() {
                   rel="noopener noreferrer"
                   className="text-blue-500 transition hover:text-blue-600"
                 >
-                  Base ↗
+                  Basescan ↗
                 </a>
               </div>
             </div>
