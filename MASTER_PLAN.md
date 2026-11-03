@@ -238,172 +238,260 @@ Anti-cheat properties:
 ---
 
 ### Phase 5 — Multi-Club DAO (Onchain Club Protocol)
-**Goal**: Turn OAP into **Onchain Club Protocol (OCP)** — any club can deploy its own onchain org where showing up earns non-transferable **Rep**, Rep is voting power, and officers are elected onchain. Members stay gasless end to end.
+**Goal**: Turn the single-club app into **Onchain Club Protocol (OCP)** — any club can deploy its own onchain org where showing up earns non-transferable **Rep**, Rep is voting power, and officers are elected onchain. Members stay gasless end to end.
 
-> Supersedes the "DAO governance or token-weighted voting" entry under **Non-Goals** — remove that line when this phase is approved. "No transferability" and "no financial instrument" still hold: Rep is soulbound and has no market.
+> "No transferability" and "no financial instrument" still hold (see **Non-Goals**): Rep is soulbound, cannot be delegated, and has no market.
+
+> **Revision 2 (2026-11-02):** this section has been rewritten to apply the architect review. Every finding is mapped below.
+
+#### Architect review (2026-11-02) — changes applied
+
+| ID | Finding | Where / how addressed |
+|---|---|---|
+| **B1** | Guardian as Timelock PROPOSER = full, persistent control | *Bootstrap → handoff*: guardian is **CANCELLER only** + a guardian-only `importRep` disabled at handoff. `endBootstrap()` lives in `ClubTimelock`. Test: after handoff no address but the Timelock holds an admin role on any of the 5 contracts. |
+| **B2** | `startEpoch` snapshot manipulation | *Rep → Epochs*: epoch start is always `block.timestamp`; `now ≥ lastStart + minEpochLength` enforced onchain (default 90 days, Timelock-only to change, floor 60 days). |
+| **B3** | Unlimited Rep via session spam | *Registry v2*: `minSessionSpacing` (default 12 h) between Rep-bearing sessions per club + per-session mint deadline `openedAt + mintWindow` (default 24 h); `mint` reverts after. |
+| **B4** | `setBaseCid` becomes a 10-day proposal | *Registry v2*: `metadataCid` per session (officer-signed at creation) + `setBaseCid` callable by `ADMIN_ROLE` (direct or relayed sig). |
+| **B5** | Shared relay nonce collisions / throughput | *Relay*: one sender service with a nonce manager (fire-and-reconcile) for all queues; `mintBatch(address[], sessionId)` on registry v2; OZ `Multicall` on `ClubGovernor` + `ClubElections`. |
+| **S1** | Elections would need `DEFAULT_ADMIN_ROLE` | *Roles*: `_setRoleAdmin(ADMIN_ROLE, OFFICER_MANAGER_ROLE)`, held by Elections + Timelock. Elections owns the officer set; registry uses `AccessControlEnumerable`. |
+| **S2** | Election failure modes / incumbents dodging | *Officer elections*: `open()` permissionless once per epoch after `epochStart + electionOpenAfter`; min-approval threshold; holdover rule (never zero officers); candidate cap 16; bitmap ballots; ballot sig binds election id + nonce. |
+| **S3** | Tiny-supply quorum | *Governance params*: `quorum(t) = max(10% × totalPower(t), minQuorum)`. |
+| **S4** | `floor(x/2)` breaks Σ invariant | *Rep → Voting power*: power = `2·current + previous` (integers only); thresholds rescaled. |
+| **S5** | Past-epoch lookup rules | *Rep → Implementation rules*: `upperLookup(t)` for previous epoch; mints/grants write current epoch only; credited to epoch of mint; `uint48` timestamp clock; delegation functions revert. |
+| **S6** | Backend `OPERATOR_ROLE` can fabricate Rep | `OPERATOR_ROLE` **removed**. `createSessionBySig` / `closeSessionBySig` verify an EIP-712 sig from an `ADMIN_ROLE` holder; relay submits. |
+| **S7** | Shared nonces across `proposeBySig` / `castVoteBySig` | *Gasless governance*: backend assigns `onchainNonce + pendingCount` and submits in order; full `proposeBySig` spec. |
+| **S8** | Relay censorship | *Gasless governance*: signed payload returned to member; indexer flags unlanded votes 24 h before deadline; self-submit path. Relay documented as trusted for liveness only. |
+| **S9** | Migration safety / source of truth | *Backend*: expand → backfill → contract migrations; `Session.registryAddress`; drop `AdminRole` + global `Member.foundingMember`; new indexes; single indexer worker; CONFIRMED-only rankings; source-of-truth table. |
+| **S10** | Docs alignment | 5a checklist item to amend `smart-contract/CLAUDE.md` (owner approval); Open Question 4 re-resolved; Non-Goal line removed. |
+| **S11** | Wrong implementation order | *Sub-phases*: own-club migration on Sepolia (5d) before governance; opening to other clubs is last, after audit (5h). |
+| **S12** | Import re-mints duplicate ATs | *Migrating the existing club*: legacy ATs stay on the legacy registry (`Club.legacyRegistryAddress`); only Rep is seeded via `importRep(accounts, prev, curr)`. |
+| **Nice-to-haves** | Clone hardening, Rep revoke, bytecode size, Pending-quorum UI | Checklist items in 5a / 5e. |
+| **OQ1–7** | Open questions | All resolved — see *Design decisions (resolved)* at the end of this phase. |
 
 #### Roles (only two human roles)
 
 | Role | Who | Power |
 |---|---|---|
-| **Member** | Anyone holding ≥1 Attendance Token in the club | Earns Rep, votes, can propose once over the proposal threshold. Ranked by attendance stats — **no other tiers** (the General / Official Member split is retired). |
-| **Officer** | Elected wallets holding `ADMIN_ROLE` on the club's registry | Runs meetings (backend dashboard), small capped Rep grants. No extra voting power. |
+| **Member** | Anyone holding ≥1 Attendance Token in the club | Earns Rep, votes, can propose once over the proposal threshold, can nominate for office. Ranked by attendance stats — **no other tiers** (the General / Official Member split is retired). |
+| **Officer** | Elected wallets holding `ADMIN_ROLE` on the club's registry | Runs meetings (signs session create/close), sets token metadata, can **revoke** (not grant) the relay as an emergency brake. **No extra voting power, no Rep grants.** |
 
-System roles (not people): `RELAY_ROLE` (backend mint/vote relay), `OPERATOR_ROLE` (backend key that sends session txs on officers' behalf — see open question 1), `DEFAULT_ADMIN_ROLE` (the club's Timelock).
+System roles (not people):
+
+| Role | Holder | Purpose |
+|---|---|---|
+| `DEFAULT_ADMIN_ROLE` | The club's `ClubTimelock` only | Everything else, via proposals |
+| `OFFICER_MANAGER_ROLE` | `ClubElections` + `ClubTimelock` | Role admin of `ADMIN_ROLE` — rotates officers without holding `DEFAULT_ADMIN_ROLE` |
+| `RELAY_ROLE` | Shared OCP relay wallet (granted per club) | `mint` / `mintBatch`; submits signed votes, proposals, ballots, session ops |
+| Guardian (bootstrap only) | Founder wallet or Safe | Timelock `CANCELLER` (veto) + one-shot `importRep`; both removed by `endBootstrap()` |
+
+The backend holds **no** admin key on v2 clubs. The factory ends up with no role anywhere (Timelock is initialized with `admin = address(0)`).
 
 #### Contract architecture
 
 ```
-ClubFactory (one per chain)
-  └─ createClub(params) → deploys ERC-1167 clones in one tx:
-       AttendanceRegistry   soulbound ERC-1155, sessions + check-in mints (existing logic)
-       ClubRep              soulbound, epoch-decaying IVotes (voting power)
-       ClubGovernor         OZ Governor + CountingSimple + VotesQuorumFraction + TimelockControl + proposeBySig
-       ClubTimelock         OZ TimelockController — holds DEFAULT_ADMIN_ROLE on registry + Rep
-       ClubElections        multi-candidate officer elections, Rep-weighted
+ClubFactory (one per chain, allowlisted createClub until audit)
+  └─ createClub(params) → deploys ERC-1167 clones (Clones.clone / CREATE) in one tx:
+       AttendanceRegistry   soulbound ERC-1155, officer-signed sessions, mint/mintBatch (+ Rep mint)
+       ClubRep              soulbound, epoch-scoped IVotes (voting power), timestamp clock
+       ClubGovernor         OZ Governor + CountingSimple + VotesQuorumFraction (+ floor) + TimelockControl + proposeBySig + Multicall
+       ClubTimelock         OZ TimelockController — DEFAULT_ADMIN_ROLE on registry + Rep; endBootstrap()
+       ClubElections        approval-voting officer elections, holds OFFICER_MANAGER_ROLE, Multicall
 ```
 
 | Decision | Choice | Rationale |
 |---|---|---|
-| Deploy model | **ERC-1167 minimal clones** of immutable implementations, initialized in the same tx | A factory embedding creation code for 5 contracts blows past the 24 KB bytecode limit; clones make club creation one cheap tx and every club runs identical audited code. Clones are **not upgradeable** — v2 ships new implementations + a new factory, clubs opt in by migrating. Init happens inside `createClub`, so no initializer front-running window. |
-| Registry changes | Keep the session/mint/soulbound logic; convert to an initializer (OZ upgradeable base contracts) and have `mint()` also call `ClubRep.mint(to, REP_PER_CHECKIN)` atomically | One relay tx per check-in, AT and Rep can never drift, `AlreadyCheckedIn` still guarantees idempotency. Existing tests port nearly 1:1. |
-| Clock | ERC-6372 **timestamp** mode | Semesters and voting periods are human calendar concepts; Base block times are an implementation detail. |
-| Delegation | **Disabled** — votes = own Rep; `delegate()` reverts | Nothing to forget (no "self-delegate on first mint" footgun) and no vote-buying via delegation. Revisit only if turnout forces it. |
-| Relay | One relay wallet, granted `RELAY_ROLE` on every club by the factory | One gas wallet to fund/monitor (existing balance check in `mint.job.ts` carries over); per-club spend tracked offchain. |
+| Deploy model | **ERC-1167 minimal clones** of immutable implementations, initialized in the same tx | A factory embedding creation code for 5 contracts blows past the 24 KB limit; clones make club creation one cheap tx and every club runs identical audited code. **Not upgradeable** — v2 = new implementations + new factory + opt-in migration (same import path as below). No upgrade-admin key, which would contradict governance. |
+| Clone hardening | Implementation constructors call `_disableInitializers()`; `Clones.clone` (CREATE, not predictable CREATE2 salts); init params validated (non-empty officer list, bounded params) | No initializer front-running or address squatting. |
+| Registry changes | Keep session/mint/soulbound logic; convert to initializer (OZ `contracts-upgradeable` bases used non-upgradeably); `mint`/`mintBatch` also mint Rep atomically; add `createSessionBySig`/`closeSessionBySig`, per-session `metadataCid`, mint deadline, session spacing | One relay tx per check-in (or per batch), AT and Rep never drift, `AlreadyCheckedIn` still guarantees idempotency. |
+| Clock | ERC-6372 **timestamp** mode (`clock()` returns `uint48(block.timestamp)`, `CLOCK_MODE() = "mode=timestamp"`) | Semesters and voting periods are calendar concepts. Governor delay/period are in **seconds**. |
+| Delegation | **Disabled** — `delegates(a) == a`; `delegate` / `delegateBySig` revert | No "self-delegate first" footgun, no vote-buying via delegation. |
+| Relay | One shared relay wallet, granted `RELAY_ROLE` per club by the factory; officers can revoke it per club | One gas wallet to fund/monitor; each club's Timelock stays sovereign; onchain mint deadline + spacing bound a leaked key to currently open sessions. |
+
+**Registry v2 session rules (B3, B4, S6):**
+- `createSessionBySig(sessionId, date, name, metadataCid, deadline, officerSig)` — verifies an EIP-712 signature from a current `ADMIN_ROLE` holder (officers can also call `createSession` directly). Records `openedAt = block.timestamp`.
+- **Spacing:** reverts if `openedAt < lastSessionOpenedAt + minSessionSpacing` (default 12 h; Timelock-changeable).
+- **Mint window:** `mint`/`mintBatch` revert after `openedAt + mintWindow` (default 24 h) or after close, whichever is first. Forgotten sessions stop being mintable on their own.
+- **Metadata:** `uri(id)` uses the session's `metadataCid` when set, else `baseCid`; `setBaseCid` is `ADMIN_ROLE` (direct or relayed officer sig) — no proposal needed.
+- **Emergency brake:** `ADMIN_ROLE` can call `revokeRelay()`; re-granting `RELAY_ROLE` requires a Timelock proposal.
 
 #### Rep: earning and decay
 
 **Earning (onchain sources only):**
-- **Check-in:** fixed `REP_PER_CHECKIN` (default 10), minted by the registry inside `mint()`.
-- **Contribution grants:** `ClubRep.grant(to, amount, reasonURI)` —
-  - callable by the **Timelock** (any amount, via proposal), and
-  - by **officers** up to `OFFICER_GRANT_CAP` per officer per epoch (e.g. 30 Rep) for small things (gave a talk, ran a workshop) without a vote. Every grant emits `RepGranted` with a reason URI so it's auditable.
-- **Streaks:** display-only (computed offchain from `check_ins`), **not** extra Rep — keeps onchain logic trivial and avoids rewarding grind over contribution.
+- **Check-in:** fixed `REP_PER_CHECKIN` raw Rep (default **10**), minted by the registry inside `mint`/`mintBatch`.
+- **Contribution grants:** `ClubRep.grant(to, amount, reasonURI)` — **Timelock only** (i.e. a passed proposal). Emits `RepGranted` with a reason URI. No officer grant path (dropped per review: Rep is earned from attendance; sessions are already the officer lever).
+- **Revoke:** `ClubRep.revoke(account, reasonURI)` — Timelock only; writes a zero checkpoint at `now` for proven sybils without rewriting history.
+- **Streaks:** display-only (computed offchain from confirmed `check_ins`), not extra Rep.
 
-**Decay — epoch-scoped Rep (lazy, no burn txs):**
-- The club defines **epochs** (= semesters). `startEpoch(label)` (officer/operator, monotonic timestamps) records a boundary in a `Checkpoints.Trace` of epoch start times. This replaces today's free-text-only `semester` concept as the onchain source of truth.
-- Rep is stored per `(account, epoch)` as checkpointed cumulative earnings, plus a global per-epoch total.
-- **Voting power at time `t`** = `earned[epoch(t)] up to t` + `earned[epoch(t) − 1] / 2`. Older epochs count zero. `getPastTotalSupply(t)` uses the same formula over the global totals, so `GovernorVotesQuorumFraction` stays correct.
-- `getVotes / getPastVotes / getPastTotalSupply` are all the Governor touches, so the token implements `IVotes` + `IERC6372` directly (custom, not OZ `ERC20Votes`), and exposes an ERC-20-style read-only `balanceOf` (= current voting power) for wallets/explorers. Transfers/approvals revert.
+**Epochs (= semesters), B2:**
+- `startEpoch(label)` — callable by officers or the Timelock; the new epoch always starts at `block.timestamp`; reverts unless `now ≥ lastEpochStart + minEpochLength` (default **90 days**, set at creation, Timelock-only to change, hard floor 60 days). Epoch starts are stored in a `Checkpoints.Trace208`.
+- The `semester` field on sessions remains a free-text display label (see Open Question 4); epochs are the onchain truth for decay.
+
+**Voting power (S4) — integers only:**
+- `power(a, t) = 2 · current(a, t) + previous(a, t)` where `current` = raw Rep earned in `epoch(t)` up to `t`, `previous` = raw Rep earned in `epoch(t) − 1` (looked up as of `t`). Older epochs count zero.
+- `totalPower(t)` uses the same formula over global per-epoch totals, so **Σ power(a, t) == totalPower(t) exactly** (invariant-tested).
+- Effect: one check-in this epoch = **20 power**; one check-in last epoch = **10 power**. All thresholds below are in power units.
+
+**Implementation rules (S5):**
+- Past-epoch values are read with `upperLookup(t)`, never "latest".
+- `mint`/`grant` only ever write the **current** epoch; Rep is credited to the epoch of the **mint**, not of the session. A session straddling an epoch boundary credits whichever epoch the mint lands in (documented, acceptable given the 24 h mint window).
+- The token implements `IVotes` + `IERC6372` directly (custom, not `ERC20Votes`) and exposes read-only `balanceOf(a) = power(a, now)` for wallets/explorers. Transfers/approvals revert.
 
 | Decay option | Verdict |
 |---|---|
-| **Epoch-scoped checkpoints (chosen)** | Zero rollover txs, deterministic, historical snapshots exact. Cost: custom IVotes code → needs a careful audit. |
-| Relay burns everyone's Rep at rollover | O(members) txs per semester, partial failures leave inconsistent power, snapshot semantics messy. Rejected. |
-| New Rep token per semester | Governor would need re-pointing every semester (governance tx), frontends juggle N tokens. Rejected. |
-| No decay | Alumni accumulate permanent control; new members can't catch up. Rejected. |
+| **Epoch-scoped checkpoints, `2·current + previous` (chosen)** | Zero rollover txs, deterministic, exact snapshots and Σ invariant. Cost: custom IVotes → fuzz/invariant tests + audit. |
+| Current epoch only | Supply drops to 0 at each boundary → quorum 0, one vote passes anything. Rejected. |
+| Relay burns everyone's Rep at rollover | O(members) txs, partial-failure states. Rejected. |
+| New Rep token per semester / continuous decay | Re-pointing the Governor each term / hard to checkpoint and audit. Rejected. |
 
-**Weighting:** linear in v1. Decay + officer grant caps already blunt grinding, and sqrt weighting breaks the quorum-fraction math (quorum is computed on linear supply). Listed as an open question.
+**Weighting:** linear. Sqrt weighting breaks the quorum-fraction math; decay + session spacing already blunt grinding.
 
 #### Governance parameters (per club, set at creation, changeable by proposal)
 
 | Param | Default | Notes |
 |---|---|---|
-| Voting delay | 1 day | Time to notice a proposal before the snapshot. |
-| Voting period | 7 days | Always spans one weekly meeting — officers can announce "vote now" with a QR. |
-| Timelock min delay | 2 days | Window to react to a malicious proposal (guardian can cancel during bootstrap). |
-| Quorum | 10% of decayed total Rep | Student turnout is low; tune after the first semester. |
-| Proposal threshold | 30 Rep (≈ 3 check-ins this epoch) | Any engaged member can propose; officers have no special proposal right. |
+| Voting delay | `86400` s (1 day) | Time to notice a proposal before the snapshot. |
+| Voting period | `604800` s (7 days) | Always spans one weekly meeting — officers can announce "vote now" with a QR. |
+| Timelock min delay | `172800` s (2 days) | Window to react; guardian can cancel during bootstrap. |
+| Quorum | `max(10% × totalPower(snapshot), minQuorum)`, `minQuorum` = **200 power** (≈ 10 current-epoch check-ins) | Floor stops one member passing proposals in a tiny or freshly-rolled club. |
+| Proposal threshold | **60 power** (≈ 3 check-ins this epoch) | Any engaged member can propose; officers have no special proposal right. |
+| `minEpochLength` | `7776000` s (90 days) | B2. |
+| `minSessionSpacing` / `mintWindow` | `43200` s (12 h) / `86400` s (24 h) | B3. |
 
-**Gasless:** members sign EIP-712 messages with their Privy wallet; the relay submits.
-- Votes → OZ `castVoteBySig` (built in).
-- Proposals → custom `proposeBySig` on `ClubGovernor` (OZ has none): EIP-712 over `(targets, values, calldatas, descriptionHash, nonce, deadline)`; threshold checked against the **signer**, not `msg.sender`.
+**Gasless governance (S7, S8):** members sign EIP-712 messages with their Privy wallet; the relay submits (batched via `Multicall`).
+- **Votes** → OZ `castVoteBySig`.
+- **Proposals** → custom `proposeBySig(targets, values, calldatas, description, proposer, deadline, signature)`:
+  - signs over `(proposer, keccak256(abi.encode(targets, values, calldatas, keccak256(bytes(description)))), nonce, deadline)`;
+  - verified with `SignatureChecker` (EOA + ERC-1271);
+  - threshold checked against the **signer** at `clock() − 1`;
+  - calls internal `_propose(..., proposer)` so cancel rights belong to the signer.
+- **Nonces:** `proposeBySig` and `castVoteBySig` share OZ `Nonces`. The backend assigns `onchainNonce + pendingCount` per member, submits strictly in order, and asks the member to re-sign if an earlier tx fails.
+- **Censorship resistance:** the signed payload is returned to the member; the indexer flags any signed-but-unlanded vote 24 h before the deadline; members with ETH can self-submit. The relay is **trusted for liveness, not authority** — it cannot forge votes.
 - Backend rate-limits relayed proposals per member per epoch (spam = relay gas).
+- **UI note:** `quorum(snapshot)` reverts while a proposal is Pending (future lookup) — show "quorum TBD" until Active.
 
-#### Officer elections
+#### Officer elections (S1, S2)
 
-OZ Governor is binary (for/against/abstain), which can't express "pick 3 of 7 candidates", so elections get a dedicated module:
+OZ Governor is binary and can't express "pick 3 of 7", so `ClubElections` is a separate, slim module:
 
-1. **Open election** — by proposal, or automatically scheduled each epoch: `ClubElections.open(seats, nominationEnd, votingEnd)`.
-2. **Nominate** — any member self-nominates (gasless, relayed signature) until `nominationEnd`.
-3. **Vote** — Rep-weighted **approval voting** (approve any subset of candidates) via signed ballots, power snapshot at nomination close (`ClubRep.getPastVotes`).
-4. **Finalize** — anyone calls `finalize()` after `votingEnd`: top `seats` by approved Rep win; contract revokes `ADMIN_ROLE` from the outgoing term and grants it to winners (Elections holds a role on the registry granted by the Timelock). Ties → earlier nomination wins (documented, deterministic).
-5. **Term** = one epoch (semester). Governance can always remove an officer mid-term with a normal proposal calling `revokeRole(ADMIN_ROLE, officer)` through the Timelock.
+1. **Open** — `open(seats)` is **permissionless once per epoch** after `epochStart + electionOpenAfter` (default 14 days), so incumbents can't skip elections. The Timelock can also open a special election.
+2. **Nominate** — members self-nominate (gasless, relayed sig) until `nominationEnd`. **Cap 16 candidates.**
+3. **Vote** — Rep-weighted **approval voting**: a ballot is a `uint16` bitmap of approved candidates, power snapshot at `nominationEnd` (`ClubRep.getPastVotes`). Ballot sigs bind `(electionId, voter, bitmap, nonce, deadline)`; Elections keeps its own nonces.
+4. **Finalize** — anyone calls `finalize()` after `votingEnd` (bounded gas: ≤ 16 candidates). Winners = top `seats` by approved power **among candidates with ≥ `minApproval`** (default `max(10% × totalPower(snapshot), minQuorum)`). Ties → earlier nomination.
+5. **Holdover** — unfilled seats are kept by incumbents (highest approval first, then longest-serving) until the next election. The officer set is **never empty**; if no candidate qualifies, the whole term holds over.
+6. **Officer set** — Elections owns and exposes the set (`officers()`); the registry uses `AccessControlEnumerable` as a cross-check. Mid-term removal/appointment goes through `ClubElections.removeOfficer` / `appointOfficer` (Timelock-only), so the set never drifts.
+7. **Term** = one epoch.
 
-#### Bootstrap → handoff
+#### Bootstrap → handoff (B1)
 
-A new club has 0 Rep, so governance can't reach quorum on day one.
-- At `createClub`: Timelock already holds `DEFAULT_ADMIN_ROLE`; **founding officers** get `ADMIN_ROLE`; a **guardian** (founder wallet or Safe) gets Timelock `PROPOSER` + `CANCELLER` so it can act before members exist.
-- **Handoff:** `endBootstrap()` revokes the guardian's Timelock roles — callable by the guardian anytime, and by anyone once the first election has finalized **and** epoch Rep supply ≥ `BOOTSTRAP_MIN_REP`. Irreversible. Frontend shows a "Bootstrap — run by founders" banner until then.
-- After handoff the backend must hold **no** `DEFAULT_ADMIN` key (today `DEFAULT_ADMIN_PRIVATE_KEY` signs `grantRole`; that path moves to proposals/elections).
+A new club has 0 Rep, so governance can't reach quorum on day one — and doesn't need to: parameters are set in `createClub` and founding officers can already run meetings.
+- At `createClub`: Timelock holds `DEFAULT_ADMIN_ROLE` on registry + Rep; Elections + Timelock hold `OFFICER_MANAGER_ROLE`; **founding officers** get `ADMIN_ROLE`; the **guardian** gets Timelock `CANCELLER` only (a veto) and the one-shot `importRep` right (migration only).
+- **Handoff:** `ClubTimelock.endBootstrap()` revokes the guardian's `CANCELLER` and disables `importRep` — callable by the guardian anytime, or by anyone once the first election has finalized **and** `totalPower ≥ minQuorum`. Irreversible. Frontend shows a "Bootstrap — founders can veto" banner until then.
+- **Test:** after `endBootstrap`, no address except the Timelock holds `DEFAULT_ADMIN_ROLE` / Timelock admin, proposer or canceller roles on any of the 5 contracts.
 
-#### Backend changes
-- **Prisma multi-tenancy:** new `Club` (slug, name, org, chainId, registry/rep/governor/timelock/elections addresses, requiredEmailDomain, bootstrap flag) and `ClubMember` (memberId, clubId, joinedAt). `Member` stays global (one wallet identity across clubs). `Session` gets `clubId`; `sessionIdOnchain` uniqueness becomes `@@unique([clubId, sessionIdOnchain])`. New `Epoch` table mirrors onchain epochs.
-- **Scoping:** every route under `/clubs/:slug/...`; a middleware resolves the club and attaches contract addresses; no unscoped queries remain (add a test that fails on missing `clubId` filters in services).
-- **Relay:** `MintJobData` gains the registry address; new queues for relayed votes, proposals, nominations, ballots. Signature + nonce validated before enqueueing so bad sigs never cost gas.
-- **Officer auth:** admin middleware checks `hasRole(ADMIN_ROLE)` on the **club's** registry (cached, invalidated by `RoleGranted/RoleRevoked` events) instead of a global admin list.
-- **Indexer:** a cursor-based `getLogs` worker per club; fills the unused `TokenEvent` table plus new `RepEvent`, `Proposal`, `Vote`, `Election`, `Ballot` tables. `check_ins` stays the source of truth for attendance; chain events are the source of truth for Rep/governance.
-- **Stats:** remove `tierFor` / `OFFICIAL_MEMBER_THRESHOLD`; members ranked by attendance % then Rep. Real Rep, rank and leaderboard replace `frontend/lib/mock/gamification.ts`.
+#### Backend changes (B5, S9)
+
+**Source of truth:**
+
+| Data | Source of truth |
+|---|---|
+| Roles, Rep, proposals/votes/elections, contract addresses | **Chain** (indexed into Postgres for reads) |
+| Attendance | Confirmed check-ins: `check_ins` with `mintStatus = CONFIRMED` (chain-enforced via mint window); rankings count **CONFIRMED only** |
+| Club slug, branding, email domain, pending check-ins, profiles | **Postgres** |
+
+- **Prisma multi-tenancy** (reviewed by `db-schema-reviewer`), migrated **expand → backfill → contract**: add `clubId` nullable → backfill → `NOT NULL`.
+  - New `Club` (slug, name, chainId, registry/rep/governor/timelock/elections addresses, `legacyRegistryAddress`, `requiredEmailDomain`, bootstrap flag), `ClubMember` (memberId, clubId, joinedAt, `foundingMember`) with `@@unique([clubId, memberId])`, `Epoch` mirror table.
+  - `Session` gets `clubId` + `registryAddress`; uniqueness `@@unique([registryAddress, sessionIdOnchain])`; index `@@index([clubId, date])`.
+  - New indexed tables `RepEvent`, `Proposal`, `Vote` (`@@unique([proposalId, voter])`), `Election`, `Ballot`; populate `TokenEvent`.
+  - **Drop** `AdminRole` (chain is truth; `middleware/admin.ts` already checks onchain) and global `Member.foundingMember` (moves to `ClubMember`).
+- **Scoping:** every route under `/clubs/:slug/...`; middleware resolves the club and attaches addresses; a test fails on unscoped service queries.
+- **Relay — one sender (B5):** all queues (mints, votes, proposals, nominations, ballots, session ops) feed **one** sender with a nonce manager that submits without waiting and reconciles receipts afterwards (replaces `concurrency: 1` + wait-for-receipt in `mint.job.ts`). Check-ins are coalesced into `mintBatch` per session; votes/ballots batched via `Multicall`. Signatures + nonces validated before enqueueing so bad sigs never cost gas.
+- **Officer auth:** admin middleware checks `hasRole(ADMIN_ROLE)` on the **club's** registry (cached, invalidated by `RoleGranted/RoleRevoked` events).
+- **Indexer:** **one** worker, single cursor, `getLogs` with an address array across all clubs, confirmation depth for reorgs.
+- **Stats:** remove `tierFor` / `OFFICIAL_MEMBER_THRESHOLD`; members ranked by attendance % then Rep. Real Rep/rank/leaderboard replace `frontend/lib/mock/gamification.ts`.
 
 #### Frontend changes
-- **Club creation wizard** (`/clubs/new`): name, slug, logo/colors, founding officers, guardian, governance params, optional `.edu` domain → backend calls `ClubFactory.createClub` (relay-sponsored, allowlisted early on).
-- **Per-club routes** `/c/[slug]`: home, members (ranked by attendance), meetings, vault, governance, elections. Global `/vault` and `/stats` aggregate across clubs.
-- **Governance UI:** proposal list/detail, vote buttons (Privy `signTypedData` → relay), proposal templates (grant Rep, change params, set base CID, remove officer, custom call), live tally, timelock countdown, execute button.
-- **Elections UI:** nominate, approval ballot, results, current officer roster with terms.
-- **Replace mocks:** `lib/mock/clubs.ts` + `explore.ts` → real club directory; `gamification.ts` → Rep/rank; `rewards.ts` → drop (no levels/XP system — Rep is the single score) or rebuild as purely cosmetic achievements derived from real data; `meeting.ts` → real session data. Hardcoded "Blockchain Club" strings become per-club data.
+- **Per-club routes** `/c/[slug]`: home, members (ranked by attendance), meetings, vault, governance, elections. Global `/vault` and `/stats` aggregate across clubs; the vault also shows legacy ATs via `legacyRegistryAddress`.
+- **Officer session flow:** "Start check-in" prompts a Privy `signTypedData` for `createSessionBySig` (one tap), then shows the QR as today.
+- **Governance UI:** proposal list/detail, vote buttons (Privy `signTypedData` → relay), templates (grant/revoke Rep, change params, appoint/remove officer, re-grant relay, custom call), live tally, quorum (TBD while Pending), timelock countdown, execute button, "your vote hasn't landed — submit it yourself" fallback.
+- **Elections UI:** nominate, approval ballot, results, officer roster with terms and holdover markers.
+- **Club creation wizard** (last, 5h): name, slug, logo/colors, founding officers, guardian, governance params, optional `.edu` domain → relay-sponsored `ClubFactory.createClub` (allowlisted). Club directory and per-club branding rebuilt against real data (the current placeholder club/explore pages are not reused).
+- **Replace mocks:** `gamification.ts` → Rep/rank; `rewards.ts` → drop or rebuild as cosmetic achievements from real data; `meeting.ts` → real sessions. Hardcoded club name → per-club data.
 
 #### Risks & mitigations
 
 | Risk | Mitigation |
 |---|---|
-| **Sybil** (one person, many wallets) | Per-club `requiredEmailDomain` (e.g. `.edu`) enforced at join via Privy's linked email; one Privy user = one member per club. Attendance still needs the live QR — note that one phone can check in several accounts, so pair with the 10-min expiry and officer spot checks. |
-| **Low turnout** | Low quorum, 7-day period spanning a meeting, in-meeting "vote now" QR, email nudges (ties into Phase 4 notifications). |
-| **Hostile takeover** (e.g. a crowd farms Rep then votes treasury/roles) | Decay caps how fast power accrues (only ~2 epochs count); 2-day timelock; guardian cancel during bootstrap; officer grant caps. |
-| **Custom IVotes bugs** | `contract-auditor` pass + invariant/fuzz tests (Σ power == total supply at every timepoint; no power from >1 epoch back). |
+| **Sybil** (one person, many wallets) | Per-club `requiredEmailDomain` (e.g. `.edu`) enforced at join via Privy's linked email; one Privy user = one member per club; Timelock `revoke` for proven sybils. One phone can still check in several accounts — 10-min QR expiry + officer spot checks. |
+| **Low turnout** | 7-day period spanning a meeting, in-meeting "vote now" QR, email nudges (Phase 4 notifications), quorum floor tuned after the first semester. |
+| **Hostile takeover / officer abuse** | Only ~2 epochs count; session spacing + mint window cap Rep inflation; epoch rollover rate-limited; 2-day timelock; guardian veto during bootstrap; elections can't be skipped. |
+| **Compromised backend / relay key** | No admin key in backend; relay can only mint into open sessions officers signed, within 24 h; cannot forge votes; officers can revoke it instantly. |
+| **Custom IVotes bugs** | Fuzz/invariant tests (Σ power == totalPower at every timepoint; nothing older than the previous epoch counts; past lookups immutable) + `contract-auditor` + external audit. |
 | **Relay gas abuse** | Per-member/per-club rate limits; relay balance alerts already exist. |
 
-#### Migrating the existing club
-1. Deploy factory + implementations to Base Sepolia; `createClub` for the current Blockchain Club with today's officers as founding officers.
-2. **Import** history while in bootstrap: an `importAttendance(sessions[], attendees[][])` operator-only function, permanently disabled by `finalizeImport()`, recreates historical sessions as closed and mints ATs + epoch-scoped Rep (past semesters → past epochs, so decay applies correctly).
-3. Backfill `Club`/`clubId` in Postgres for all existing rows; point the backend at the new registry; retire the legacy contract (`0x7bEf…6192`) — kept readable, no new mints.
-4. Run one full semester on Sepolia (including one election + `endBootstrap`) before mainnet. Mainnet launch = fresh factory deploy + import, gated on audit sign-off (same explicit go-ahead rule as Open Question 6).
+#### Migrating the existing club (S12)
+1. Deploy factory + implementations to Base Sepolia; `createClub` for the current club with today's officers as founding officers and the founder as guardian.
+2. **Keep legacy ATs where they are** — no re-minting (members would see duplicates). Store the old registry (`0x7bEf…6192`) as `Club.legacyRegistryAddress`; the vault reads history from the DB and shows legacy tokens alongside v2 ones.
+3. **Seed Rep only:** guardian calls `importRep(accounts[], prev[], curr[])` once, writing the previous- and current-epoch balances computed from confirmed check-ins (no retroactive epoch timestamps). Allowed only during bootstrap; permanently disabled by `finalizeImport()` (or `endBootstrap()`).
+4. Backfill `clubId` / `registryAddress` in Postgres (expand → backfill → contract); point new sessions at the v2 registry; legacy registry stays readable, no new mints.
 
-#### Sub-phases (implementation order)
+#### Sub-phases (implementation order, S11)
 
 **5a — Contracts**
-- [ ] `ClubRep`: soulbound epoch-scoped IVotes (+ ERC-6372 timestamp clock), `grant` with Timelock/officer-cap paths, epoch management
-- [ ] `AttendanceRegistry` v2: initializer, atomic Rep mint, `OPERATOR_ROLE`, `importAttendance` / `finalizeImport`
-- [ ] `ClubGovernor` (+ `proposeBySig`) and `ClubTimelock` wiring
-- [ ] `ClubElections`: nominate, approval ballots by sig, `finalize` role rotation
-- [ ] `ClubFactory`: clones + one-tx init, role wiring, bootstrap/guardian, `endBootstrap`
-- [ ] Foundry unit + fuzz/invariant tests; `contract-auditor` + `security-reviewer` pass
+- [ ] Amend `smart-contract/CLAUDE.md` to allow non-upgradeable initializer clones + ERC-6372 timestamp clock (**needs owner approval** before any 5a code)
+- [ ] `ClubRep`: soulbound epoch-scoped IVotes, `2·current + previous`, timestamp clock, rate-limited `startEpoch`, Timelock-only `grant` / `revoke`, guardian-only `importRep` + `finalizeImport`
+- [ ] `AttendanceRegistry` v2: initializer, `AccessControlEnumerable`, `OFFICER_MANAGER_ROLE` as admin of `ADMIN_ROLE`, `createSessionBySig` / `closeSessionBySig`, session spacing, mint window, `mint` + `mintBatch` with atomic Rep, per-session `metadataCid`, officer `setBaseCid`, `revokeRelay`
+- [ ] `ClubGovernor` (`proposeBySig`, quorum floor, `Multicall`) + `ClubTimelock` (`endBootstrap`)
+- [ ] `ClubElections`: permissionless `open`, 16-candidate cap, bitmap ballots by sig, min approval, holdover, `finalize`, Timelock `appointOfficer` / `removeOfficer`, `Multicall`
+- [ ] `ClubFactory`: `Clones.clone`, one-tx init, `_disableInitializers` on implementations, param validation, allowlist, factory owner has no power over existing clubs
+- [ ] Tests: unit + fuzz/invariant (Σ power, past-lookup immutability), handoff role assertion, epoch/session rate limits; `forge build --sizes` check on `ClubGovernor` (< 24 KB)
+- [ ] `contract-auditor` + `security-reviewer` pass
 - [ ] Deploy factory to Base Sepolia; `addresses.json` + ABI sync
 
 **5b — Backend multi-tenancy**
-- [ ] Prisma: `Club`, `ClubMember`, `Epoch`, `clubId` on `Session`, composite uniques (reviewed by `db-schema-reviewer`)
-- [ ] `/clubs/:slug` route scoping + club-resolving middleware
-- [ ] Per-club relay (registry address in jobs), officer auth from chain roles
+- [ ] Prisma expand migration (`Club`, `ClubMember`, `Epoch`, nullable `clubId` / `registryAddress`, indexes) — `db-schema-reviewer`
+- [ ] `/clubs/:slug` scoping + club-resolving middleware + unscoped-query test
+- [ ] Single relay sender with nonce manager; `mintBatch` coalescing; officer auth from chain roles
 - [ ] Remove General/Official tier logic
 
 **5c — Indexer + real Rep**
-- [ ] Event indexer worker (Rep, Governor, Elections, roles); populate `TokenEvent`
-- [ ] Rep / rank / leaderboard APIs; replace `lib/mock/gamification.ts`, `clubs.ts`, `explore.ts`, `meeting.ts`
+- [ ] Single indexer worker (address-array `getLogs`, confirmation depth); populate `TokenEvent`, `RepEvent`, role events
+- [ ] Rep / rank / leaderboard APIs (CONFIRMED-only); replace `lib/mock/gamification.ts`, `meeting.ts`
 
-**5d — Governance (gasless)**
-- [ ] Relay endpoints for `castVoteBySig` / `proposeBySig` with sig + nonce pre-validation and rate limits
-- [ ] Proposal list/detail/create (templates), voting, queue/execute UI
+**5d — Migrate our club on Sepolia (dogfood v2)**
+- [ ] `createClub` for the existing club; `importRep`; backfill + contract migration (`clubId NOT NULL`); drop `AdminRole`, `Member.foundingMember`
+- [ ] Officer-signed session flow live; real meetings run on v2 check-ins
 
-**5e — Elections**
-- [ ] Election scheduling per epoch, nomination + ballot relay endpoints
-- [ ] Elections UI, officer roster, term display
+**5e — Governance (gasless)**
+- [ ] Relay endpoints for `castVoteBySig` / `proposeBySig` with nonce sequencing, pre-validation, rate limits, `Multicall` batching
+- [ ] Proposal list/detail/create (templates), voting, queue/execute UI, unlanded-vote flagging + self-submit, Pending-quorum handling
 
-**5f — Open to other clubs**
-- [ ] Club creation wizard + allowlisted factory sponsorship
-- [ ] Per-club `.edu` gating at join, club directory, per-club branding
+**5f — Elections**
+- [ ] Nomination + ballot relay endpoints, permissionless open trigger in UI
+- [ ] Elections UI, officer roster, terms, holdover display
 
-**5g — Migration & mainnet**
-- [ ] Import existing Blockchain Club history; backfill `clubId`; retire legacy registry
-- [ ] Full Sepolia semester incl. one election and `endBootstrap`
-- [ ] Mainnet factory deploy + import (explicit owner go-ahead)
+**5g — Pilot semester + audit**
+- [ ] Full Sepolia semester incl. one election, an epoch rollover and `endBootstrap`
+- [ ] External audit; fix findings
 
-#### Open design questions for architect review
-1. **Session ops key:** keep a backend `OPERATOR_ROLE` that sends `createSession/closeSession` for officers (today's UX, backend key is a trust point), or have officers sign those txs themselves via relayed signatures?
-2. **Decay formula:** "current epoch + ½ previous" vs. current-epoch-only vs. continuous exponential decay — and is custom IVotes worth it versus a simpler (but tx-heavy) burn-on-rollover?
-3. **Elections module vs. Governor-only:** is a separate `ClubElections` contract justified, or should elections be N binary slate proposals?
-4. **Officer grant cap:** keep officer-issued Rep at all (convenient, but a centralization lever), and at what cap?
-5. **Clones vs. full deploys:** confirm clones (non-upgradeable) and the v2 migration story; any reason to want upgradeable proxies instead?
-6. **One shared relay vs. per-club relays** — blast radius if the relay key leaks across N clubs.
-7. **Factory permissioning:** open `createClub` from day one, or allowlisted until the first audit?
+**5h — Mainnet + open to other clubs**
+- [ ] Mainnet factory deploy + migrate our club (explicit owner go-ahead, as Open Question 6)
+- [ ] Club creation wizard + allowlisted sponsorship, per-club `.edu` gating, club directory, per-club branding
+- [ ] Open `createClub` onchain after audit; relay sponsorship stays backend-allowlisted
+
+#### Design decisions (resolved by architect review)
+1. **Session ops key** — ✅ No backend `OPERATOR_ROLE`. Officers sign `createSessionBySig` / `closeSessionBySig`, relay submits. *Same one-tap UX; a compromised backend can't fabricate sessions or Rep.*
+2. **Decay formula** — ✅ "current + ½ previous", implemented as `2·current + previous` with custom IVotes. *Current-only zeroes quorum at each boundary; burns are O(members) txs; continuous decay is hard to checkpoint/audit.*
+3. **Elections module vs Governor-only** — ✅ Separate, slim `ClubElections`. *N binary slate proposals can't enforce exactly k seats and each waits in the timelock.*
+4. **Officer grant cap** — ✅ Dropped. Grants are Timelock-only. *Rep is earned from attendance; sessions are already the officer lever; removes a cross-contract role check.*
+5. **Clones vs full deploys** — ✅ Non-upgradeable clones; v2 = new factory + opt-in migration. *Upgradeable proxies add an upgrade-admin key that contradicts governance.*
+6. **Shared vs per-club relay** — ✅ One shared gas wallet, per-club `RELAY_ROLE`, officer emergency revoke. *Blast radius bounded onchain by mint window + spacing; can't forge votes.*
+7. **Factory permissioning** — ✅ Onchain allowlist until audit, then open; relay sponsorship of creation stays backend-allowlisted. *Gas cost lives in sponsorship; factory owner has no power over existing clubs.*
+
+#### Still open (decide during 5a)
+- **Summer / short terms vs `minEpochLength` = 90 days:** a ~10-week summer term can't be its own epoch; it folds into the adjacent one. Acceptable, or lower the default toward the 60-day floor?
+- **Relay re-grant latency:** after an officer revokes the relay, restoring check-ins needs a full proposal (~10 days: 1 d delay + 7 d vote + 2 d timelock). Is that acceptable, or should re-granting to the *same* relay address be an officer action?
+- **Single-officer DoS:** any one officer can revoke the relay and halt minting for the club. Require 2 officers, or accept (mitigated by removal via proposal)?
+- **Exact defaults** (`minQuorum` 200, threshold 60, `minApproval`) — tune after the pilot semester.
 
 ---
 
@@ -442,15 +530,16 @@ The backend holds three keys. Only the relay key is mint-only:
 
 ### Phase 5 target
 
-Governance makes these keys matter more, because Rep = voting power. Target model (details and open issues in Phase 5 and its architect review):
+Governance makes these keys matter more, because Rep = voting power. Target model (full design in Phase 5):
 
-- **No backend admin key after bootstrap:** each club's Timelock holds `DEFAULT_ADMIN_ROLE`; the backend's `DEFAULT_ADMIN_PRIVATE_KEY` path is retired, officer rotation goes through Elections/Timelock, and metadata updates move to `ADMIN_ROLE` (officers) so they don't need a 10-day proposal.
-- **Relay is trusted for liveness, not authority:** it submits members' signed votes/proposals (`castVoteBySig` / `proposeBySig`) but cannot forge them; members can self-submit if the relay censors.
-- **Bound the relay's minting power on-chain:** per-session mint deadline and minimum session spacing, so a leaked relay key or a rogue officer can't inflate Rep.
-- **Officer-signed session creation** (`createSessionBySig`) instead of a backend-held `ADMIN_ROLE`, so a compromised backend can only mint into sessions officers actually created.
-- **Guardian during bootstrap is a canceller (veto) only**, and `endBootstrap()` leaves the Timelock as the sole admin on every club contract (asserted in tests).
-- **Sybil resistance:** require a verified `.edu` email via Privy before a wallet can earn Rep.
-- Run `contract-auditor` + `security-reviewer` after 5a; external audit before mainnet.
+- **No backend admin key on v2 clubs:** each club's Timelock is the only `DEFAULT_ADMIN_ROLE` holder; officers rotate via `ClubElections` (`OFFICER_MANAGER_ROLE`); metadata is set by officers (`ADMIN_ROLE`), not a proposal. The backend's only role is the shared relay's per-club `RELAY_ROLE`.
+- **Officer-signed session ops** (`createSessionBySig` / `closeSessionBySig`) — no backend `OPERATOR_ROLE`, so a compromised backend can only mint into sessions officers actually created.
+- **Relay minting bounded on-chain:** per-session 24 h mint window, 12 h minimum session spacing, epoch rollover rate-limited to ≥ 90 days — a leaked relay key or rogue officer can't inflate Rep or reset voting power. Officers can revoke the relay instantly; re-granting needs a proposal.
+- **Relay is trusted for liveness, not authority:** it submits members' signed votes/proposals/ballots but cannot forge them; members get their signed payload back and can self-submit; unlanded votes are flagged before the deadline.
+- **Bootstrap guardian is a canceller (veto) only** plus a one-shot `importRep`; `ClubTimelock.endBootstrap()` removes both and tests assert the Timelock is the sole admin on all 5 contracts afterwards.
+- **Clone safety:** `_disableInitializers()` on implementations, one-tx init via `Clones.clone`, validated params; factory owner has no power over existing clubs.
+- **Sybil resistance:** per-club `.edu` email domain via Privy before a wallet can join/earn Rep; Timelock-only `revoke` for proven sybils.
+- Run `contract-auditor` + `security-reviewer` after 5a; external audit before mainnet (5g).
 
 ---
 
@@ -459,10 +548,10 @@ Governance makes these keys matter more, because Rep = voting power. Target mode
 1. **QR expiry window** — 10 minutes default. Adjust based on how meetings run.
 2. **Token art** — ✅ **Resolved:** Generic club logo per semester for MVP (Phase 3). Unique per-meeting art is a post-launch stretch goal, revisit for semester 2.
 3. **Attendance % denominator** — ✅ **Resolved:** All confirmed sessions to date (club-wide), so every member is measured against the same meeting count and the vault / stats / admin views never disagree. Chosen over membership-period to keep a single shared definition; revisit if it unfairly penalizes mid-semester joiners.
-4. **What constitutes a "semester"** — ✅ **Resolved:** Admin-defined free-text label set per session (the `semester` field); the "current" semester is the most recent session's label. Not calendar-derived, so summer/irregular terms just work.
+4. **What constitutes a "semester"** — ✅ **Resolved (revised for Phase 5):** The per-session `semester` field stays an admin-defined free-text **display label** (summer/irregular terms just work). From Phase 5, onchain **epochs** (`ClubRep.startEpoch`, ≥ 90 days apart) are the source of truth for Rep decay; the label defaults to the current epoch's label but is not used in any onchain logic.
 5. **Public vs private stats** — ✅ **Resolved:** A member's vault and stats are public by wallet address but carry no PII — email / linked social is never exposed on public endpoints (stripped from `GET /members`; served only behind the admin gate). On-chain attendance is already public, so this adds no disclosure.
 6. **Mainnet timing** — ✅ **Decided (pending owner sign-off):** Stay on Base Sepolia for the pilot; migrate to Base Mainnet after semester 1, once check-in volume and relay-gas costs are validated. Requires an explicit go-ahead before the mainnet deploy.
-7. **DAO pivot (Phase 5)** — ✅ **Decided:** On-chain governance (Rep-weighted voting, officer elections) is in scope; the old "no DAO governance" non-goal is removed. Design details still go through the architect review in Phase 5 before 5a starts.
+7. **DAO pivot (Phase 5)** — ✅ **Decided:** On-chain governance (Rep-weighted voting, officer elections) is in scope; the old "no DAO governance" non-goal is removed. Architect review applied (Phase 5, Revision 2); remaining items are listed under "Still open" in Phase 5 and should be settled during 5a.
 
 ---
 
