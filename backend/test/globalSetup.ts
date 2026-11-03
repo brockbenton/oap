@@ -8,7 +8,7 @@ export default function setup(): void {
   const env = { ...process.env, ...TEST_ENV };
 
   try {
-    execSync('createdb onchain_attendance_test', { stdio: 'ignore' });
+    execSync('createdb ocp_test', { stdio: 'ignore' });
   } catch {
     // already exists — fine
   }

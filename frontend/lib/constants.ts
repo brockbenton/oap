@@ -12,6 +12,6 @@ export const ATTENDANCE_GOOD_PCT = 75;
 export const ATTENDANCE_OK_PCT = 50;
 
 // External links surfaced across the marketing surface.
-export const GITHUB_URL = 'https://github.com/brockbenton/onchain-attendance';
+export const GITHUB_URL = 'https://github.com/brockbenton/ocp';
 // Base Sepolia block explorer (chain 84532). Append `/address/<addr>` or `/tx/<hash>`.
 export const BASESCAN_URL = 'https://sepolia.basescan.org';

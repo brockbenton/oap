@@ -144,7 +144,7 @@ interface TokenFact {
 }
 
 const TOKEN_FACTS: TokenFact[] = [
-  { label: 'Standard', value: 'ERC-721, soulbound' },
+  { label: 'Standard', value: 'ERC-1155, soulbound' },
   { label: 'Metadata', value: 'Topic · date · edition · club' },
   { label: 'Gas', value: 'Sponsored — $0 to member' },
 ];
