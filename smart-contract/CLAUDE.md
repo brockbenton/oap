@@ -34,20 +34,28 @@ smart-contract/
 
 ### Roles (AccessControl) — Phase 5 v1
 ```
-DEFAULT_ADMIN_ROLE  — ClubTimelock ONLY (registry + Rep). All role changes, params,
-                      Rep grants/revokes go through passed Governor proposals.
-                      The deployer renounces after handoff; the backend never holds it.
+DEFAULT_ADMIN_ROLE  — ClubTimelock ONLY (registry + Rep), set in the constructors.
+                      Locked: `_grantRole` to anyone else and `_revokeRole` of the
+                      Timelock revert. All role changes, params, Rep grants/revokes go
+                      through passed Governor proposals. The backend never holds it.
 ADMIN_ROLE          — officers (their own Privy wallets): createSession, closeSession
-                      (+ attendee sign-off), setBaseCid / setSessionMetadata, pause.
-                      Can never drop to zero holders.
+                      (with attendee list → Pending), confirmSessionRep (must be a
+                      DIFFERENT officer than the closer), rejectSessionRep,
+                      setBaseCid / setSessionMetadata, pause. Minimum 2 holders,
+                      enforced in `_revokeRole` (covers revoke + renounce).
 RELAY_ROLE          — backend relay wallet: mint / mintBatch ATs only. Cannot create Rep.
-MINTER_ROLE (Rep)   — the registry contract only.
+MINTER_ROLE (Rep)   — the registry contract only (set once via `setRegistry`).
 ```
-Timelock: PROPOSER = Governor; CANCELLER = Governor + guardian Safe (bootstrap only,
-auto-expires via `expireGuardian()`); EXECUTOR = `address(0)`; constructor admin = `address(0)`.
+Timelock: PROPOSER = Governor only; CANCELLER = Governor + guardian Safe (guardian granted
+CANCELLER only, in the `ClubTimelock` constructor; bootstrap only, auto-expires via
+`expireGuardian()`); EXECUTOR = `address(0)`. OZ only grants PROPOSER/CANCELLER to
+`proposers[]` at construction, so the **deployer is a temporary Timelock admin** that grants
+the Governor its roles and renounces as the last deploy step (after `finalizeImport`).
+Never put the guardian in `proposers[]` (that would also grant PROPOSER).
 
-The legacy `AttendanceRegistry` keeps its original roles until the Phase 5 import, then
-`RELAY_ROLE` / `ADMIN_ROLE` are revoked and `DEFAULT_ADMIN_ROLE` renounced.
+The legacy `AttendanceRegistry` is frozen **before** the Phase 5 import: close every session,
+revoke `RELAY_ROLE` / `ADMIN_ROLE`, renounce `DEFAULT_ADMIN_ROLE`. `importLegacy` only accepts
+closed legacy sessions.
 
 ### Soulbound Enforcement
 Override `_update` (OZ v5) to revert on any transfer where `from != address(0)`:
@@ -63,12 +71,18 @@ function _update(address from, address to, uint256[] memory ids, uint256[] memor
 - Sessions are created with a unique `uint256 sessionId` (timestamp-based or sequential)
 - Sessions can be `active` or `closed` — mint only allowed on active sessions
 - Each address can only hold 1 token per sessionId (enforced in mint)
-- **Phase 5 (`AttendanceRegistry2`):** `createSession` takes `maxAttendees` (≤ `MAX_ATTENDEES`);
-  sessions are ≥ `minSessionSpacing` apart; minting stops after `openedAt + mintWindow`, after
-  close, at the attendee cap, or while paused. `mintBatch` skips duplicates (never reverts the
-  batch) and mints via `_update` without the receiver hook. Rep is credited **only** by
-  `closeSession(id, attendees)` (officer sign-off, once per session, holders of that session's AT,
-  strictly increasing addresses).
+- **Phase 5 (`AttendanceRegistry2`):** **no time limits** on creating sessions (owner decision).
+  `createSession` takes `maxAttendees` (≤ `MAX_ATTENDEES`); minting stops after close, at the
+  attendee cap, or while paused. `mintBatch` skips duplicates (never reverts the batch) and mints
+  via `_update` without the receiver hook. ATs carry no Rep.
+- **Two-officer Rep sign-off:** `closeSession(id, attendees)` stores only the list hash + count
+  (list emitted in the event; strictly increasing; each holds the AT) → Pending;
+  `confirmSessionRep(id)` by a different officer (or the Timelock) fixes
+  `perAttendee = min(REP_PER_CHECKIN, sessionCap / count)` with
+  `sessionCap = max(repFloor, capBps × totalSupply / 10_000)` and checks the weekly budget;
+  `creditSessionRep(id, attendees, from, to)` (anyone) credits in sequential pages;
+  `rejectSessionRep(id)` (any officer, while Pending) voids the session's Rep. Pending Rep never
+  expires and has no voting power.
 
 ### Metadata
 - `uri()` returns IPFS URL: `ipfs://{BASE_CID}/{sessionId}.json`
@@ -95,6 +109,9 @@ function _update(address from, address to, uint256[] memory ids, uint256[] memor
 - Deploy via `forge script` with `--verify` flag (Basescan verification)
 - Plain constructor deploys (no initializers, no clones) in Phase 5 v1
 - Optimizer on (`optimizer_runs = 200`); check `forge build --sizes` — every contract < 24,576 bytes
+- Gas: every officer/relay tx (incl. close/confirm/credit for 300 attendees) must stay < 10M gas — cover with a gas test
+- Deploy order (`DeployClub.s.sol` / `ImportLegacy.s.sol`): freeze legacy → deploy → grant Governor
+  Timelock roles → import → `finalizeImport` → deployer renounces; a test asserts this order
 - Constructor args documented in `Deploy.s.sol`
 - Deployed addresses committed to `addresses.json` at repo root
 - Never deploy from a personal wallet in production — use a dedicated deployer
@@ -106,12 +123,17 @@ function _update(address from, address to, uint256[] memory ids, uint256[] memor
   then `finalizeImport()`; `ClubGovernor.propose` reverts until finalized.
 - **Clock**: ERC-6372 timestamp mode (`clock() = uint48(block.timestamp)`,
   `CLOCK_MODE() = "mode=timestamp"`). All governance durations are in **seconds**.
-- **Parameters** (constructor; v1 changes them only by deploying a new Governor):
-  voting delay 86400 · voting period 604800 · timelock min delay 172800 ·
-  proposal threshold 30 Rep · quorum `max(10% × supply, min(minQuorum, 50% × supply))`
+- **Governance parameters** (constructor defaults; governance may change them only within bounds
+  enforced in overrides of `_setVotingDelay`, `_setVotingPeriod`, `_setProposalThreshold`,
+  `_updateQuorumNumerator` and `ClubTimelock.updateDelay`):
+  voting delay 86400 ∈ [1 h, 7 d] · voting period 604800 ∈ [3 d, 14 d] ·
+  timelock min delay 172800 ∈ [1 d, 7 d] · proposal threshold 30 Rep ∈ [10, 1,000] ·
+  quorum numerator 10% ∈ [5%, 30%]; quorum = `max(numerator × supply, min(minQuorum, 50% × supply))`
   with immutable `minQuorum = 100` Rep.
-- **Registry params** (Timelock-changeable, bounded): `minSessionSpacing` 72 h ∈ [1 h, 14 d],
-  `mintWindow` 12 h ∈ [1 h, 48 h]; `MAX_ATTENDEES = 300`; `mintBatch` ≤ 200.
+- **Registry params** (Timelock-only, bounded): `repFloor` 500 Rep ∈ [100, 5,000],
+  `capBps` 2,000 ∈ [500, 5,000], `weeklyFloor` 1,000 Rep ∈ [500, 20,000],
+  `weeklyBps` 2,500 ∈ [500, 5,000]. Constants: `MAX_ATTENDEES = 300`, `mintBatch` ≤ 200,
+  credit pages ~100, officer floor 2.
 - **Pause**: any officer, 14 days, once per officer per 30 days; unpause needs 2 distinct
   officers or the Timelock. Blocks AT minting only.
 - Every Timelock-changeable parameter must have on-chain bounds.
@@ -124,9 +146,10 @@ function _update(address from, address to, uint256[] memory ids, uint256[] memor
 ## FORBIDDEN
 - Upgradeable proxies — KISS, the contracts are simple enough to redeploy if needed (Phase 6 may use non-upgradeable clones; that needs its own amendment)
 - `tx.origin` for auth — always use `msg.sender`
-- `block.timestamp` for access control (who may call what). It **is** allowed for time windows and
-  durations: mint deadline, session spacing, pause expiry, guardian expiry, and the ERC-6372
-  governance clock (validators can skew it by seconds, which is irrelevant at hour/day scales)
+- `block.timestamp` for access control (who may call what). It **is** allowed for durations and
+  windows: pause expiry, guardian expiry, the weekly Rep budget bucket, and the ERC-6372
+  governance clock (validators can skew it by seconds, which is irrelevant at hour/day scales).
+  Do not add time limits on creating sessions (owner decision).
 - Storing off-chain data on-chain (token metadata belongs on IPFS)
 - `selfdestruct`
 
