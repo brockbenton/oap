@@ -14,7 +14,6 @@ import { Avatar, Badge, CopyChip } from '@/components/ui';
 import type { IconProps } from '@/components/ui/icons';
 import {
   ChevronRight,
-  ExternalLinkIcon,
   GearIcon,
   SignOutIcon,
   WalletIcon,
@@ -43,7 +42,6 @@ interface MenuLink {
 const MENU_LINKS: MenuLink[] = [
   { label: 'Wallet & keys', href: '/wallet', Icon: WalletIcon },
   { label: 'Settings', href: '/settings', Icon: GearIcon },
-  { label: 'Help & docs', href: '/docs', Icon: ExternalLinkIcon },
 ];
 
 const MENU_ROW = 'flex w-full items-center gap-3 px-4 py-3.5 text-sm font-medium';

@@ -14,7 +14,6 @@ import { Avatar, Badge, Button, CopyChip } from '@/components/ui';
 import type { IconProps } from '@/components/ui/icons';
 import {
   ChevronDown,
-  ExternalLinkIcon,
   GearIcon,
   GridIcon,
   SignOutIcon,
@@ -46,7 +45,6 @@ const MENU_ITEMS: MenuItem[] = [
   { label: 'Profile', href: '/settings#profile', Icon: UserIcon },
   { label: 'Wallet & keys', href: '/wallet', Icon: WalletIcon },
   { label: 'Settings', href: '/settings', Icon: GearIcon },
-  { label: 'Help & docs', href: '/docs', Icon: ExternalLinkIcon },
   { label: 'Admin dashboard', href: '/admin', Icon: GridIcon, adminOnly: true },
 ];
 
