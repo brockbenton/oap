@@ -1,0 +1,235 @@
+# Security Model — Onchain Club Protocol (OCP)
+
+A single running inventory of every security feature, known gap, and accepted risk in OCP. Keep it current: when a feature ships, changes, or a decision is made, update the row and the [decision log](#decision-log).
+
+**Status legend**
+
+| Tag | Meaning |
+|---|---|
+| ✅ **Live** | Implemented on `master` today |
+| 🟡 **v1** | Planned for Phase 5 — Club DAO v1 (our club). Issue linked. |
+| 🔵 **v2** | Deferred to Phase 6 — multi-club / v2 governance |
+| ⚠️ **Gap** | Known weakness in the live system, not yet fixed |
+| 📝 **Accepted** | Residual risk we've knowingly accepted |
+
+Design source of truth: `MASTER_PLAN.md` → Phase 5 + Security Considerations (PR #45). Review findings are tracked in issue #77.
+
+---
+
+## 1. Trust model at a glance
+
+| Party | Trusted for | Cannot do (by design) |
+|---|---|---|
+| **Members** | Their own check-ins and votes | Transfer tokens or Rep; vote with someone else's power |
+| **Officers** (`ADMIN_ROLE`) | Running sessions, setting attendance caps, confirming Rep | ✅ Nothing beyond sessions today. 🟡 v1: credit Rep alone (needs a second officer); exceed per-session / weekly Rep caps; drop below 2 officers |
+| **Backend + relay** | Verifying check-ins (attendance is attested **off-chain**), paying gas, submitting signed votes | 🟡 v1: create Rep, forge votes, change roles or parameters |
+| **Governance** (Governor + Timelock) | Roles, parameters, officer elections, Rep grants/revokes | 🟡 v1: remove its own admin role; set parameters outside on-chain bounds |
+| **Guardian** (Safe, bootstrap only) | Vetoing (cancelling) malicious proposals during bootstrap | 🟡 v1: propose or execute anything; keep the veto past 120 days |
+
+> 📝 **Core accepted risk:** whether someone was physically in the room is decided off-chain (QR + backend + officers). Everything on-chain limits *how much damage* a bad attestation can do; it can't prove presence.
+
+---
+
+## 2. Keys and roles
+
+### Live today
+
+| Key (backend env) | On-chain role | Used for | If leaked |
+|---|---|---|---|
+| `RELAY_PRIVATE_KEY` | `RELAY_ROLE` | `mint` from the check-in queue | Mint attendance tokens into any **open** session, to any address ⚠️ |
+| `ADMIN_SIGNER_PRIVATE_KEY` | `ADMIN_ROLE` | `createSession` / `closeSession` **and** signing QR payloads | Create sessions + forge valid QR codes; with the relay key, fabricate attendance ⚠️ |
+| `DEFAULT_ADMIN_PRIVATE_KEY` (optional) | `DEFAULT_ADMIN_ROLE` | Grant/revoke `ADMIN_ROLE` from the dashboard, `setBaseCid` | **Full control of the contract** ⚠️ |
+
+- ✅ All keys live only in backend env vars — never shipped to the frontend.
+- ✅ If `DEFAULT_ADMIN_PRIVATE_KEY` is unset, dashboard role management and metadata publishing are disabled.
+
+### v1 target (Phase 5)
+
+| Holder | Role | Notes |
+|---|---|---|
+| Timelock | `DEFAULT_ADMIN_ROLE` on registry + Rep | 🟡 Non-revocable / non-transferable — governance can't lock itself out |
+| Officers (min 2) | `ADMIN_ROLE` | 🟡 Send their own txs from Privy embedded wallets funded with a little Base ETH |
+| Relay | `RELAY_ROLE` | 🟡 Mints attendance tokens only; Rep is never minted by the relay |
+| QR signer | **no role** | 🟡 New key per environment, signs QR payloads only (#55) |
+| Guardian Safe | Timelock `CANCELLER` only | 🟡 Veto during bootstrap; anyone can expire it after 120 days |
+| Deployer | temporary Timelock admin | 🟡 Grants Governor roles, then renounces everything; test asserts it holds nothing (#62) |
+
+- 🟡 Retire `DEFAULT_ADMIN_PRIVATE_KEY` and its code paths (`/admin/roles`, `setBaseCidOnChain`) (#55)
+- 🟡 Freeze the legacy registry: close all sessions, revoke relay + admin roles, renounce default admin (#51, #55)
+
+---
+
+## 3. Identity and authentication
+
+| Feature | Status | Details |
+|---|---|---|
+| Social / passkey login with embedded wallet | ✅ | Privy: email, Google, passkey. Every login gets a wallet — no MetaMask needed |
+| Server-side token verification | ✅ | `authMiddleware` verifies the Privy ID token on every authed request (`backend/src/middleware/auth.ts`) |
+| Requests without a wallet rejected | ✅ | `403 NO_WALLET` |
+| Wedged-session self-heal | ✅ | `SessionRecoveryGate` recovers a stuck Privy session once per tab |
+| Identity pinned to the embedded wallet | ⚠️ → 🟡 | Today identity = `user.wallet` (first linked wallet); linking MetaMask could split a member's record. v1 pins identity to the stored embedded-wallet address (#74) |
+| Never enable Privy delegated actions / session signers | 🟡 | Hard rule — otherwise the backend *could* sign votes for members (#70) |
+| Readable signing prompts | 🟡 | Typed EIP-712 structs per action with human-readable fields; Privy confirmation UI kept on (#70) |
+| Sybil resistance | ⚠️ / 🔵 | Nothing stops one person holding several accounts. v1 relies on officer sign-off + caps; `.edu` gating (one inbox = one member) is v2 (#71) |
+
+---
+
+## 4. Check-in anti-cheat
+
+| Feature | Status | Details |
+|---|---|---|
+| Admin-signed QR payload | ✅ | `{sessionId, issuedAt, expiresAt, nonce}` signed by the QR key; verified server-side (`qr.service.ts`) |
+| QR expiry | ✅ / 🟡 | Live: `QR_TTL_MS` default 10 min. **Decided:** 5 min, auto-refreshing before expiry (#72) |
+| Member signature bound to their wallet | ✅ | Member signs `I am checking into session {id} as {addr} at {t}`; recovered address must equal the Privy wallet |
+| Stale-signature window | ✅ | Member signature must be ≤ 60 s old and ≤ 10 s in the future |
+| One check-in per member per session | ✅ | DB `@@unique([memberId, sessionId])` **and** contract `AlreadyCheckedIn` |
+| Session must be open and confirmed on-chain | ✅ | Closed or unconfirmed sessions rejected |
+| Per-user rate limit | ✅ | 30 check-in attempts/min keyed by Privy user, not IP (a whole room shares one wifi IP) |
+| QR + check-in signatures bound to chain + contract | ⚠️ → 🟡 | Today they carry no `chainId` / contract address. v1 moves both to EIP-712 with `{chainId, verifyingContract}` so they can't replay across testnet/mainnet (#56) |
+| Officer-set max attendance per session | 🟡 | Officer sets `maxAttendees` when creating the session; enforced on-chain for minting (#50) |
+| Open-session warning | 🟡 | Dashboard + officer alert for sessions still open after ~6 h (configurable). A nudge only — sessions never auto-close |
+| No time limits on creating sessions / QR codes | 🟡 decided | Officers can start a session any time; protection comes from sign-off and caps, not spacing |
+
+> ⚠️ A photo of the QR shared in a group chat works remotely until it expires (5 min once #72 ships). Mitigated by `maxAttendees`, two-officer Rep sign-off, and Rep caps.
+
+---
+
+## 5. Rep (voting power) protection — v1
+
+Attendance tokens and Rep are separate: tokens mint instantly as a record; **Rep only exists after two officers sign off.**
+
+| Feature | Status | Details |
+|---|---|---|
+| Rep is soulbound | 🟡 | Built on OZ `Votes` with no transfer/approve surface; every account is its own delegate (#68) |
+| Rep pending until a second officer confirms | 🟡 decided | Officer A closes the session → attendee list is **Pending** (zero voting power). A **different** officer B confirms → Rep credited. Any officer can reject. Pending never expires (#50) |
+| Rep only for real token holders | 🟡 | Only listed addresses that hold that session's attendance token are credited, at most `maxAttendees` |
+| Per-session Rep cap | 🟡 decided | Credited ≤ `max(500 Rep, 20% of total supply)`; over the cap → pro-rata per attendee (#50) |
+| Per-member weekly cap | 🟡 decided | Each member ≤ 100 Rep/week; excess stays pending until the window allows (#50) |
+| Club-wide weekly budget | 🟡 decided | Confirmed Rep ≤ `max(1,000, 25% of supply)`/week — stops two colluding officers compounding fake-account Rep (#50) |
+| Minimum 2 officers | 🟡 decided | Enforced in `_revokeRole` (covers revoke + renounce); election templates grant the new officer before revoking the old (#60) |
+| Relay can't create Rep | 🟡 | A leaked relay key can only mint attendance tokens, which carry no Rep |
+| Mint pause | 🟡 | Any officer can pause minting; auto-expires after 14 days; each officer may pause once per 30 days; unpause by 2 officers or the Timelock (#52) |
+| Governance Rep revoke | 🟡 | Timelock can revoke Rep from proven fake accounts |
+| Anomaly alerts | 🟡 | Backend flags sessions whose attendance far exceeds normal; review queue for the confirming officer |
+| Legacy Rep import is computed on-chain | 🟡 | `importLegacy` reads balances from the frozen legacy registry; capped at 10× each account's legacy tokens; no proposals until finalized (#51) |
+
+> 📝 **Accepted residual risk:** two colluding officers can add up to the weekly club budget per week until governance removes them and revokes the Rep (~10 days: 1 d delay + 7 d vote + 2 d timelock). Officers are elected, known club members.
+> 📝 **Accepted for v1:** Rep doesn't decay, so alumni keep voting power. Decay is v2 (#61).
+
+---
+
+## 6. Smart contracts
+
+| Feature | Status | Details |
+|---|---|---|
+| Soulbound attendance tokens | ✅ | `_update` reverts on any transfer (`from != 0`); `setApprovalForAll` reverts |
+| Role-based access control | ✅ | OpenZeppelin `AccessControl`: `DEFAULT_ADMIN_ROLE`, `ADMIN_ROLE`, `RELAY_ROLE` |
+| Re-entrancy guard on mint | ✅ | `nonReentrant` |
+| Custom errors, events for every state change | ✅ | `SessionNotActive`, `AlreadyCheckedIn`, `Soulbound`, … |
+| No upgradeable proxies, no `tx.origin`, no `selfdestruct` | ✅ | Enforced by `smart-contract/CLAUDE.md` |
+| Optimizer on + bytecode size check | 🟡 | `optimizer = true`, 200 runs; `forge build --sizes` on every contract (#54) |
+| Bounded governance parameters | 🟡 | Voting delay 1 h–7 d · voting period 3–14 d · Timelock delay 1–7 d · quorum 5–30% · proposal threshold 10–1,000 Rep (#66) |
+| Quorum always reachable | 🟡 | `max(10% of supply, min(minQuorum, 50% of supply))` |
+| Timelock roles exact | 🟡 | Governor = proposer + canceller; guardian = canceller only (bootstrap); deployer renounces (#62) |
+| `block.timestamp` only for time windows | 🟡 | Allowed for pause expiry / weekly windows, never for access control |
+| Mint without receiver hook; batch skips duplicates | 🟡 | One bad recipient can't revert a whole batch (#59) |
+| Paginated Rep crediting | 🟡 | Close stores the list hash; crediting runs in pages so every tx stays < 10M gas |
+
+---
+
+## 7. Relay and transactions
+
+| Feature | Status | Details |
+|---|---|---|
+| Gasless for members | ✅ | Backend wallet pays all mint gas |
+| Async mint queue with retries | ✅ | BullMQ, 3 attempts, exponential backoff |
+| Nonce-collision avoidance | ✅ | Single worker, `concurrency: 1` |
+| Gasless voting | 🟡 | Members sign `castVoteBySig`; relay submits; **anyone** can submit a signed vote, so the relay can't forge or block it permanently |
+| Censorship check from the frontend | 🟡 | Frontend reads `hasVoted` over public RPC, not via the backend, and warns if a signed vote hasn't landed (#58) |
+| One tx per relayed vote (no Multicall) | 🟡 | One bad vote can't revert others (#59) |
+| Nonce manager with stuck-tx replacement | 🟡 | Single sender, gas-bump / replace; `SUBMITTED` state before `CONFIRMED` after N confirmations (#59) |
+| Relay key rotation runbook | 🟡 | Pause → governance rotates `RELAY_ROLE` (#52) |
+| Sessions stay mintable while open | ⚠️ / 📝 | A leaked relay key can mint tokens into open sessions; once v1 ships those carry no Rep (cosmetic) |
+
+---
+
+## 8. Backend API
+
+| Feature | Status | Details |
+|---|---|---|
+| Zod validation on request bodies | ✅ | `validate()` middleware |
+| Uniform error format, no stack traces | ✅ | Global error handler returns `{ error: { code, message } }` |
+| Async errors reach the error handler | ✅ | `express-async-errors` |
+| Admin auth checks the chain, fails closed | ✅ | `adminMiddleware` reads on-chain `ADMIN_ROLE` on every request; RPC failure → `503`, not access (`backend/src/middleware/admin.ts`) |
+| Live officer checks stay live | 🟡 | Revocations must never wait on an indexer cache (#69) |
+| CORS | ⚠️ | `cors()` allows any origin. Low impact (Bearer tokens, not cookies), but should be restricted to the frontend origin |
+| Security headers | ⚠️ | No `helmet` / security headers on the API |
+| Structured logging | ✅ | pino; no `console.log` |
+
+---
+
+## 9. Data and privacy
+
+| Feature | Status | Details |
+|---|---|---|
+| No PII on public endpoints | ✅ | Public `GET /members` strips `linkedAccount` (email/social) and internal ids; PII only behind the admin gate (AUDIT.md H1) |
+| Wallet address as public identity | ✅ | Vault/stats are public by address, with no PII |
+| Per-club PII scoping | 🔵 | Needed once there are multiple clubs (#57) |
+| Secrets only in env vars | ✅ | Never committed; `.env.example` holds placeholders only |
+
+---
+
+## 10. Governance (v1)
+
+| Feature | Status | Details |
+|---|---|---|
+| On-chain voting with Rep | 🟡 | OZ Governor + Timelock; members vote gaslessly |
+| Officer elections via proposals | 🟡 | Proposals call `grantRole` / `revokeRole(ADMIN_ROLE)`; one semester per term by convention. Approval-voting elections contract is v2 (#53) |
+| Proposing needs gas | 🟡 | Officers (and funded members) propose directly; gasless proposals are v2 (#63) |
+| Timelock delay on every change | 🟡 | 1–7 days (bounded) so members can react to a bad proposal |
+| Guardian veto during bootstrap | 🟡 | Cancel-only; renounced after the first election or expired after 120 days |
+
+---
+
+## 11. Frontend
+
+| Feature | Status | Details |
+|---|---|---|
+| No secrets in the client | ✅ | Only `NEXT_PUBLIC_*` values (Privy app id, API URL) |
+| Fail fast without Privy config | ⚠️ | Builds without `NEXT_PUBLIC_PRIVY_APP_ID` succeed with wallet features silently broken (#49) |
+| "Rep pending" shown to members | 🟡 | Members see pending Rep awaiting officer confirmation |
+
+---
+
+## 12. Operations
+
+| Item | Status | Details |
+|---|---|---|
+| CI: contract tests, backend build+test, frontend build+typecheck | ✅ | `.github/workflows/ci.yml` |
+| Testnet first | ✅ | Base Sepolia; mainnet only after a pilot semester + audit |
+| Relay balance monitoring | 🟡 | Alert below threshold; small hot balance, top-ups from cold wallet (#73 for per-club budgets in v2) |
+| Officer wallet funding | 🟡 | Small Base ETH per officer; who funds it is an open decision |
+| Audits | 🟡 | `contract-auditor` + `security-reviewer` on the 5a code; external audit before mainnet |
+
+---
+
+## Open security decisions
+
+- Guardian Safe signers
+- Who funds officer wallets, and how much
+- Default values to tune after the pilot (proposal threshold, `minQuorum`, caps)
+
+---
+
+## Decision log
+
+| Date | Decision |
+|---|---|
+| 2026-11-02 | Pivot to a DAO: soulbound Rep from attendance, on-chain voting, officer elections; only members + officers |
+| 2026-11-03 | v1 = our club only, quickest path to a working product; multi-club, approval elections, Rep decay → v2 |
+| 2026-11-03 | Rep requires two-officer sign-off; pending Rep has no voting power |
+| 2026-11-03 | No time limits on creating sessions / QR codes |
+| 2026-11-03 | QR codes valid for 5 minutes |
+| 2026-11-03 | Officer sets max attendance per session; minimum 2 officers |
+| 2026-11-03 | Rep caps: per session `max(500, 20%)`, per member 100/week, club-wide `max(1,000, 25%)`/week |
+| 2026-11-03 | Dashboard warning for sessions left open (no auto-close) |
