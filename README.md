@@ -4,19 +4,13 @@ Onchain Club Protocol (OCP) — an onchain protocol for running clubs, starting 
 
 ## Club DAO v1 design (planned)
 
-OCP's v1 DAO uses **Colony-inspired participation reputation**: each verified eligible session attendance earns **10 nontransferable Rep**, after two different officers approve the attendee list. Rep gives voting influence and **gradually decays over time**, so continued participation maintains influence while inactivity reduces it. Rep cannot be bought, sold, transferred or delegated and is not a financial reward.
-
-The provisional decay half-life is **180 days**: without new participation, 100 Rep becomes 50 after 180 days and 25 after 360 days. The exact half-life and fixed-point implementation require validation before deployment. Attendance tokens and lifetime attendance history remain permanent. Proposal voting weights and quorum use fixed historical snapshots, so an active vote does not change as Rep decays.
-
-Rep issuance grows with verified attendance. There is **no weekly Rep budget, per-member weekly cap, pro-rata session reduction or deferred-credit queue**. Organizer-set attendee caps, duplicate prevention, two-officer sign-off and anomaly monitoring protect attendance integrity; decay does not prevent fake accounts or colluding officers. Any treasury spending has a separate budget.
-
-This is the **target design**, not a claim that the current deployed attendance registry implements DAO governance or decay. See [MASTER_PLAN.md](MASTER_PLAN.md#phase-5--club-dao-v1-our-club), particularly the implementation and security gates, and issues #50, #61, #68 and #77. Multi-club and approval-voting elections remain later work.
+OCP's v1 DAO gives members nontransferable **Rep** for verified attendance. Rep sets voting influence and gradually decays, so continued participation maintains it. This is the **target design**, not what the deployed attendance registry does today. See [MASTER_PLAN.md](MASTER_PLAN.md#phase-5--club-dao-v1-our-club) and issues #50, #61, #68 and #77.
 
 ## Structure
 
 - `smart-contract/` — Solidity + Foundry; soulbound ERC‑1155 `AttendanceRegistry` on Base.
 - `backend/` — Node/Express/TypeScript, PostgreSQL + Prisma, BullMQ mint relay, QR signing.
-- `frontend/` — Next.js 14, Privy (email/Google/passkey), wagmi/viem, Tailwind.
+- `frontend/` — Next.js 14, Privy (email/Google/passkey), viem, Tailwind.
 
 ## Quick start
 

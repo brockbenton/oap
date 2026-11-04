@@ -2,35 +2,31 @@
 
 ## Phase 5 v1 target: participation reputation
 
-Follow `../MASTER_PLAN.md` for the planned DAO. Show current decayed Rep/influence with an as-of timestamp, separate from permanent ATs and lifetime attendance. Explain 10 nominal Rep per verified eligible attendance and gradual decay (180-day half-life is provisional). Distinguish pending officer approval, approved-awaiting-credit and credited; no weekly-budget/deferred-claim UI. Proposal vote weight and quorum use the fixed historical snapshot, not the member's changing live balance. Replace mock XP/levels with real Rep/rank for v1; do not imply rewards are cash-redeemable. Officer session actions, proposals and queue/execute use funded officer/member wallets; AT minting and signed member votes use the relay. Keep Privy prompts enabled; never enable delegated/session signers. No claim that decay prevents fake attendance.
+Follow `../MASTER_PLAN.md` for the planned DAO.
 
 ## Stack
 - **Next.js 14** (App Router, `app/` directory)
 - **TypeScript** — strict mode, no `any`
-- **Tailwind CSS** + **shadcn/ui** for all UI components
+- **Tailwind CSS** — UI primitives live in `components/ui/`
 - **Privy** (`@privy-io/react-auth`) — wallet connection, social login, embedded wallets
-- **viem** + **wagmi** — type-safe contract reads/writes
+- **viem** — chain definitions and typed addresses
 - **TanStack Query** (`@tanstack/react-query`) — all async data fetching and caching
-- **zod** — runtime validation for form inputs and API responses
 
 ## Project Structure
 ```
 frontend/
   app/                    # Next.js App Router pages
-    (auth)/               # Route group: requires wallet connection
     admin/                # Admin-only pages (role-gated)
     check-in/             # QR scan + check-in flow
     vault/                # Member's token gallery
     stats/                # Personal attendance stats
   components/
-    ui/                   # shadcn/ui primitives (DO NOT modify)
+    ui/                   # Shared UI primitives
     shared/               # Reusable app-level components
     features/             # Feature-specific components (check-in/, vault/, admin/)
   lib/
-    contracts/            # ABI + contract address constants
     api/                  # Typed fetch wrappers for backend API
-    utils/                # Pure utility functions
-  hooks/                  # Custom React hooks (useAttendance, useSession, etc.)
+  hooks/                  # Custom React hooks
   types/                  # Shared TypeScript types/interfaces
 ```
 
@@ -48,9 +44,8 @@ frontend/
 - Query keys are defined as constants in `lib/api/queryKeys.ts`.
 
 ### Contract Interaction
-- ABIs live in `lib/contracts/abis/`. Never inline ABIs in components.
-- Contract addresses in `lib/contracts/addresses.ts` — use env vars, never hardcoded.
-- All contract reads via `useReadContract` (wagmi). Writes go through backend relay — do not call `useWriteContract` for minting.
+- The frontend does not read or write the contract today. Minting goes through the backend relay.
+- The contract address comes from `CONTRACT_ADDRESS` in `lib/constants.ts` (env var, never hardcoded).
 
 ### Auth / Wallet
 - Use `usePrivy()` and `useWallets()` from Privy everywhere. Never access `window.ethereum` directly.
@@ -59,7 +54,7 @@ frontend/
 
 ### Error Handling
 - All API errors are typed (never `catch (e: any)`).
-- User-facing errors display via shadcn `toast` — no raw `alert()`.
+- User-facing errors display inline — no raw `alert()`.
 - Loading states are always handled — no unhandled suspense boundaries.
 
 ## FORBIDDEN
@@ -68,13 +63,11 @@ frontend/
 - Hardcoded contract addresses or API URLs — use env vars (`NEXT_PUBLIC_*`)
 - Direct DOM manipulation outside of refs
 - `useEffect` for data fetching — use TanStack Query
-- Modifying files in `components/ui/` — these are shadcn managed
 
 ## Environment Variables
 ```
 NEXT_PUBLIC_PRIVY_APP_ID
 NEXT_PUBLIC_CONTRACT_ADDRESS
-NEXT_PUBLIC_CHAIN_ID
 NEXT_PUBLIC_API_URL
 ```
 

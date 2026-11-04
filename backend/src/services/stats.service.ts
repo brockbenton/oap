@@ -103,7 +103,7 @@ export async function buildMemberStats(includeLinkedAccount = true): Promise<{
 
   // Resolve privyUserId → display name. Skipped for the public directory, which
   // strips linkedAccount (PII) anyway — avoids a needless Privy round-trip and
-  // never fetches PII on the unauthenticated path (see AUDIT.md).
+  // never fetches PII on the unauthenticated path.
   const privyDisplayMap = new Map<string, string | null>();
   if (includeLinkedAccount) {
     try {
@@ -125,7 +125,7 @@ export async function buildMemberStats(includeLinkedAccount = true): Promise<{
   // 4. Compute per-member stats
   const data: MemberStat[] = members.map((m) => {
     // A token is "earned" only once its mint CONFIRMS on-chain — PENDING/FAILED
-    // must not be counted as a held token (see AUDIT.md). Stats stay ≤ on-chain holdings.
+    // must not be counted as a held token. Stats stay ≤ on-chain holdings.
     const earnedCheckIns = m.checkIns.filter(
       (c) => confirmedSessionIds.has(c.sessionId) && c.mintStatus === CONFIRMED_STATUS,
     );
@@ -180,7 +180,7 @@ export async function buildMemberStats(includeLinkedAccount = true): Promise<{
 
 // ── Phase 3: per-member vault & personal stats ──────────────────────────────
 // Attendance is sourced from confirmed-session check-ins (there is no on-chain
-// event indexer; check_ins is the recorded-attendance table — see AUDIT.md).
+// event indexer; check_ins is the recorded-attendance table).
 
 export interface VaultToken {
   tokenId: string;

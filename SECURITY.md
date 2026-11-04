@@ -192,7 +192,7 @@ Attendance tokens and Rep are separate: tokens mint instantly as a record; **Rep
 
 | Feature | Status | Details |
 |---|---|---|
-| No PII on public endpoints | ✅ | Public `GET /members` strips `linkedAccount` (email/social) and internal ids; PII only behind the admin gate (AUDIT.md H1) |
+| No PII on public endpoints | ✅ | Public `GET /members` strips `linkedAccount` (email/social) and internal ids; PII only behind the admin gate |
 | Wallet address as public identity | ✅ | Vault/stats are public by address, with no PII |
 | Per-club PII scoping | 🔵 | Needed once there are multiple clubs (#57) |
 | Secrets only in env vars | ✅ | Never committed; `.env.example` holds placeholders only |

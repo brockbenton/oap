@@ -5,7 +5,7 @@ Onchain Club Protocol (OCP): members check in to club meetings with signed QR co
 ## Stack
 - `smart-contract/` — Solidity ^0.8.24, Foundry, OpenZeppelin v5. Use `~/.foundry/bin/forge` (`/usr/bin/forge` is an unrelated binary).
 - `backend/` — Node.js, Express, TypeScript, PostgreSQL + Prisma, BullMQ relay, viem.
-- `frontend/` — Next.js 14 App Router, TypeScript, Tailwind, Privy, viem + wagmi, TanStack Query.
+- `frontend/` — Next.js 14 App Router, TypeScript, Tailwind, Privy, viem, TanStack Query.
 - Chain: Base Sepolia → Base Mainnet.
 
 Each package has a `CLAUDE.md` with its conventions and FORBIDDEN list — treat those as binding review rules.
@@ -24,13 +24,7 @@ Each package has a `CLAUDE.md` with its conventions and FORBIDDEN list — treat
 - Never enable Privy delegated actions / session signers.
 
 ## Club DAO v1 reputation rules
-- Full **10 nominal Rep per verified eligible attendance**, after two distinct officers approve the final AT-holder list; replay-safe permissionless paged credit with a common recognition timestamp.
-- Gradual decay is **required in v1**. Half-life **180 days is provisional** for 5a validation. Lifetime attendance/ATs never decay; no semester or officer-controlled epoch rollover.
-- No supply-based session reduction, weekly Rep caps/budgets, deferred balances or claim jobs. Gas and treasury budgets are separate.
-- Use decay-aware IVotes with consistent historical account/total power, fixed proposal snapshots, fixed-point units and bounded reads. Ordinary OZ Votes does not decay automatically. New credits must not rejuvenate old Rep or rewrite past snapshots.
-- Passive decay emits no events; indexers/UI need timestamped current-power reads/reconstruction and separate lifetime history.
-- Decay does not prevent fake accounts or colluding officers. No aggregate issuance-rate bound is claimed. Review that threat model and resolve below-threshold/zero-supply governance recovery before deployment (#50, #52, #61, #68).
-- For the complete v1 design, align this security inventory with PR #45 Revision 3.3; do not implement older no-decay or epoch-budget requirements from historical issue context.
+Review Phase 5 work against `MASTER_PLAN.md` (Phase 5), `SECURITY.md` and `smart-contract/CLAUDE.md`. Do not implement older no-decay or epoch-budget requirements from historical issue context.
 
 ## Commands
 ```bash
