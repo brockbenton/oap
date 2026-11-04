@@ -30,7 +30,6 @@ interface ClusterToken {
   title: string;
   meta?: string;
   color: string;
-  transform: string;
   positionClass: string;
   headerHeightClass: string;
   editionSizeClass: string;
@@ -43,9 +42,8 @@ const CLUSTER_TOKENS: ClusterToken[] = [
     topic: 'ZK',
     edition: '#087',
     title: 'ZK Proofs 101',
-    meta: 'SEP 16 · 1 minted',
+    meta: 'SEP 16',
     color: TOKEN_COLORS.purple,
-    transform: 'rotate(-6deg)',
     positionClass: 'top-6 left-10 w-[230px]',
     headerHeightClass: 'h-[150px]',
     editionSizeClass: 'text-[46px]',
@@ -56,9 +54,8 @@ const CLUSTER_TOKENS: ClusterToken[] = [
     topic: 'SOL',
     edition: '#128',
     title: 'Intro to Solidity',
-    meta: 'APR 04 · 240 minted',
+    meta: 'APR 04',
     color: TOKEN_COLORS.blue,
-    transform: 'rotate(7deg)',
     positionClass: 'top-[120px] right-6 z-[2] w-[230px]',
     headerHeightClass: 'h-[150px]',
     editionSizeClass: 'text-[46px]',
@@ -70,7 +67,6 @@ const CLUSTER_TOKENS: ClusterToken[] = [
     title: 'DeFi Lending',
     meta: 'OCT 08',
     color: TOKEN_COLORS.green,
-    transform: 'rotate(-3deg)',
     positionClass: 'bottom-2 left-16 w-[210px]',
     headerHeightClass: 'h-[130px]',
     editionSizeClass: 'text-[42px]',
@@ -126,7 +122,7 @@ const WHY_OCP: ValueProp[] = [
   },
   {
     title: 'Motivation built in',
-    body: 'Streaks, levels, and club leaderboards turn showing up into something members actually want to keep doing.',
+    body: 'Streaks and club leaderboards turn showing up into something members actually want to keep doing.',
     dotClass: 'bg-amber',
   },
   {
@@ -150,7 +146,6 @@ const TOKEN_FACTS: TokenFact[] = [
 const TOKEN_SAMPLE = {
   symbol: 'SOL',
   edition: 128,
-  editionOf: 240,
   topic: 'Intro to Solidity',
   date: 'APR 04, 2026',
   week: 'Week 6',
@@ -158,26 +153,25 @@ const TOKEN_SAMPLE = {
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-canvas">
       <MarketingNav />
 
       <section>
         <PageContainer className="grid gap-10 pb-14 pt-12 md:grid-cols-[1.05fr_0.95fr] md:pt-16">
           <div className="self-center">
-            <div className="mb-[22px] inline-flex items-center gap-2 rounded-full bg-status-info-bg px-3 py-1.5 text-xs font-semibold leading-none text-cyan">
+            <div className="mb-[22px] inline-flex items-center gap-2 rounded border border-line-strong px-3 py-1.5 font-mono text-xs leading-none text-content-secondary">
               <span className="h-[7px] w-[7px] rounded-full bg-green" />
               {APP_NAME}
             </div>
-            <h2 className="mb-5 text-[44px] font-semibold leading-[46px] sm:text-[60px] sm:leading-[60px] sm:">
+            <h2 className="mb-5 text-[44px] font-semibold leading-[46px] sm:text-[60px] sm:leading-[60px]">
               Proof you
               <br />
               showed up.
               <br />
-              <span className="text-cyan">Onchain.</span>
+              <span className="text-green">Onchain.</span>
             </h2>
             <p className="mb-8 max-w-[38ch] text-[19px] leading-[29px] text-content-secondary [text-wrap:pretty]">
-              Scan the QR at your club meeting and mint a permanent attendance token. Build streaks,
-              level up, and climb the leaderboard.
+              Scan the QR at your club meeting and mint a permanent attendance token. Build streaks and climb the leaderboard.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/check-in">
@@ -209,7 +203,6 @@ export default function Landing() {
                   'absolute overflow-hidden rounded-lg border border-line bg-surface',
                   token.positionClass,
                 )}
-                style={{ transform: token.transform }}
               >
                 <div
                   className={cn(
@@ -313,7 +306,7 @@ export default function Landing() {
               <div className="my-[14px] h-px bg-line" />
               <div className="flex items-center justify-between font-mono text-[11px] font-medium text-content-secondary">
                 <span>
-                  Edition {TOKEN_SAMPLE.edition} / {TOKEN_SAMPLE.editionOf}
+                  Edition {TOKEN_SAMPLE.edition}
                 </span>
                 <a
                   href={CONTRACT_BASESCAN_HREF}
