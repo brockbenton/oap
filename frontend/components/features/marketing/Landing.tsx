@@ -6,14 +6,11 @@ import { Button, CopyChip, Eyebrow } from '@/components/ui';
 import { ArrowRight } from '@/components/ui/icons';
 import { TOKEN_COLORS } from '@/lib/tokenArt';
 import { cn } from '@/lib/cn';
-import { APP_NAME, APP_SHORT_NAME, BASESCAN_URL } from '@/lib/constants';
+import { APP_NAME, APP_SHORT_NAME, CONTRACT_ADDRESS, CONTRACT_EXPLORER_URL } from '@/lib/constants';
+import { shortenAddress } from '@/lib/address';
 
 const PROTOCOL_ANCHOR = 'protocol';
 const MKT_EYEBROW = 'tracking-[0.12em] text-status-neutral';
-const DEPLOYED_CONTRACT = '0x7bEf8C32157C0A40A51b9bebeb7B36f236316192';
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ?? DEPLOYED_CONTRACT;
-const CONTRACT_DISPLAY = `${CONTRACT_ADDRESS.slice(0, 6)}…${CONTRACT_ADDRESS.slice(-4)}`;
-const CONTRACT_BASESCAN_HREF = `${BASESCAN_URL}/address/${CONTRACT_ADDRESS}`;
 
 interface HeroStat {
   value: string;
@@ -309,7 +306,7 @@ export default function Landing() {
                   Edition {TOKEN_SAMPLE.edition}
                 </span>
                 <a
-                  href={CONTRACT_BASESCAN_HREF}
+                  href={CONTRACT_EXPLORER_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-cyan transition hover:text-content"
@@ -335,10 +332,12 @@ export default function Landing() {
                 </div>
               ))}
             </div>
-            <div className="mt-6 inline-flex items-center gap-3">
-              <span className="font-mono text-[13px] font-medium text-content">Contract</span>
-              <CopyChip value={CONTRACT_ADDRESS} display={CONTRACT_DISPLAY} />
-            </div>
+            {CONTRACT_ADDRESS && (
+              <div className="mt-6 inline-flex items-center gap-3">
+                <span className="font-mono text-[13px] font-medium text-content">Contract</span>
+                <CopyChip value={CONTRACT_ADDRESS} display={shortenAddress(CONTRACT_ADDRESS)} />
+              </div>
+            )}
           </div>
         </PageContainer>
       </section>

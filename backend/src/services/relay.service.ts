@@ -6,6 +6,25 @@ import logger from '../lib/logger';
 
 const contractAddress = process.env.CONTRACT_ADDRESS as `0x${string}`;
 
+/** Logs a submitted tx and waits for its receipt. */
+async function confirmTx(
+  action: string,
+  hash: `0x${string}`,
+  context: Record<string, unknown>,
+): Promise<`0x${string}`> {
+  logger.info({ msg: `${action} tx submitted`, hash, ...context });
+  await publicClient.waitForTransactionReceipt({ hash, timeout: 120_000 });
+  logger.info({ msg: `${action} confirmed`, hash, ...context });
+  return hash;
+}
+
+function requireDefaultAdmin() {
+  if (!defaultAdminWalletClient || !defaultAdminAccount) {
+    throw new Error('DEFAULT_ADMIN_PRIVATE_KEY not configured');
+  }
+  return { client: defaultAdminWalletClient, account: defaultAdminAccount };
+}
+
 export async function createSessionOnChain(
   sessionIdOnchain: string,
   date: Date,
@@ -21,10 +40,7 @@ export async function createSessionOnChain(
     chain,
   });
 
-  logger.info({ msg: 'createSession tx submitted', hash, sessionIdOnchain });
-  await publicClient.waitForTransactionReceipt({ hash, timeout: 120_000 });
-  logger.info({ msg: 'createSession confirmed', hash, sessionIdOnchain });
-  return hash;
+  return confirmTx('createSession', hash, { sessionIdOnchain });
 }
 
 export async function closeSessionOnChain(sessionIdOnchain: string): Promise<`0x${string}`> {
@@ -37,10 +53,7 @@ export async function closeSessionOnChain(sessionIdOnchain: string): Promise<`0x
     chain,
   });
 
-  logger.info({ msg: 'closeSession tx submitted', hash, sessionIdOnchain });
-  await publicClient.waitForTransactionReceipt({ hash, timeout: 120_000 });
-  logger.info({ msg: 'closeSession confirmed', hash, sessionIdOnchain });
-  return hash;
+  return confirmTx('closeSession', hash, { sessionIdOnchain });
 }
 
 export async function mintOnChain(
@@ -56,10 +69,7 @@ export async function mintOnChain(
     chain,
   });
 
-  logger.info({ msg: 'mint tx submitted', hash, to, sessionIdOnchain });
-  await publicClient.waitForTransactionReceipt({ hash, timeout: 120_000 });
-  logger.info({ msg: 'mint confirmed', hash, to, sessionIdOnchain });
-  return hash;
+  return confirmTx('mint', hash, { to, sessionIdOnchain });
 }
 
 export const relayAddress = relayAccount.address;
@@ -70,57 +80,42 @@ export async function getRelayBalanceWei(): Promise<bigint> {
 }
 
 export async function setBaseCidOnChain(baseCid: string): Promise<`0x${string}`> {
-  if (!defaultAdminWalletClient || !defaultAdminAccount) {
-    throw new Error('DEFAULT_ADMIN_PRIVATE_KEY not configured');
-  }
-  const hash = await defaultAdminWalletClient.writeContract({
+  const { client, account } = requireDefaultAdmin();
+  const hash = await client.writeContract({
     address: contractAddress,
     abi: ATTENDANCE_ABI,
     functionName: 'setBaseCid',
     args: [baseCid],
-    account: defaultAdminAccount,
+    account,
     chain,
   });
-  logger.info({ msg: 'setBaseCid tx submitted', hash, baseCid });
-  await publicClient.waitForTransactionReceipt({ hash, timeout: 120_000 });
-  logger.info({ msg: 'setBaseCid confirmed', hash, baseCid });
-  return hash;
+  return confirmTx('setBaseCid', hash, { baseCid });
 }
 
 export async function grantAdminRoleOnChain(wallet: `0x${string}`): Promise<`0x${string}`> {
-  if (!defaultAdminWalletClient || !defaultAdminAccount) {
-    throw new Error('DEFAULT_ADMIN_PRIVATE_KEY not configured');
-  }
+  const { client, account } = requireDefaultAdmin();
   const checksummed = getAddress(wallet);
-  const hash = await defaultAdminWalletClient.writeContract({
+  const hash = await client.writeContract({
     address: contractAddress,
     abi: ATTENDANCE_ABI,
     functionName: 'grantRole',
     args: [ADMIN_ROLE, checksummed],
-    account: defaultAdminAccount,
+    account,
     chain,
   });
-  logger.info({ msg: 'grantRole(ADMIN_ROLE) tx submitted', hash, wallet });
-  await publicClient.waitForTransactionReceipt({ hash, timeout: 120_000 });
-  logger.info({ msg: 'grantRole(ADMIN_ROLE) confirmed', hash, wallet });
-  return hash;
+  return confirmTx('grantRole(ADMIN_ROLE)', hash, { wallet });
 }
 
 export async function revokeAdminRoleOnChain(wallet: `0x${string}`): Promise<`0x${string}`> {
-  if (!defaultAdminWalletClient || !defaultAdminAccount) {
-    throw new Error('DEFAULT_ADMIN_PRIVATE_KEY not configured');
-  }
+  const { client, account } = requireDefaultAdmin();
   const checksummed = getAddress(wallet);
-  const hash = await defaultAdminWalletClient.writeContract({
+  const hash = await client.writeContract({
     address: contractAddress,
     abi: ATTENDANCE_ABI,
     functionName: 'revokeRole',
     args: [ADMIN_ROLE, checksummed],
-    account: defaultAdminAccount,
+    account,
     chain,
   });
-  logger.info({ msg: 'revokeRole(ADMIN_ROLE) tx submitted', hash, wallet });
-  await publicClient.waitForTransactionReceipt({ hash, timeout: 120_000 });
-  logger.info({ msg: 'revokeRole(ADMIN_ROLE) confirmed', hash, wallet });
-  return hash;
+  return confirmTx('revokeRole(ADMIN_ROLE)', hash, { wallet });
 }

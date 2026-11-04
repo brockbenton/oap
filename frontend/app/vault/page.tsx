@@ -20,6 +20,7 @@ import { colorNameForTopic } from '@/lib/tokenArt';
 import { cn } from '@/lib/cn';
 import { VaultToken } from '@/types';
 import { CLUB_NAME } from '@/lib/constants';
+import FullPageSpinner from '@/components/shared/FullPageSpinner';
 
 const ALL_SEMESTERS = 'All semesters';
 const ALL_LABEL = 'All';
@@ -195,16 +196,7 @@ export default function VaultPage() {
           ) : (
             <div className="fade-in grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
               {shown.map((token) => (
-                <div key={token.tokenId} className="relative">
-                  <TokenCard
-                    editionNumber={token.meetingNumber}
-                    topic={token.name}
-                    date={formatCardDate(token.date)}
-                    color={colorNameForTopic(token.name)}
-                    onClick={() => setSelected(token)}
-                  />
-                  {token.mintStatus !== 'CONFIRMED' && <MintStatusBadge status={token.mintStatus} />}
-                </div>
+                <VaultTile key={token.tokenId} token={token} onSelect={setSelected} />
               ))}
               {overflow > 0 && (
                 <button type="button" onClick={() => setShowAll(true)} className={MORE_TILE_CLASSES}>
@@ -249,16 +241,7 @@ export default function VaultPage() {
         ) : (
           <div className="fade-in grid grid-cols-2 gap-3">
             {mobileTokens.map((token) => (
-              <div key={token.tokenId} className="relative">
-                <TokenCard
-                  editionNumber={token.meetingNumber}
-                  topic={token.name}
-                  date={formatCardDate(token.date)}
-                  color={colorNameForTopic(token.name)}
-                  onClick={() => setSelected(token)}
-                />
-                {token.mintStatus !== 'CONFIRMED' && <MintStatusBadge status={token.mintStatus} />}
-              </div>
+              <VaultTile key={token.tokenId} token={token} onSelect={setSelected} />
             ))}
           </div>
         )}
@@ -271,6 +254,26 @@ export default function VaultPage() {
       />
 
       <MobileTabBar active="vault" />
+    </div>
+  );
+}
+
+interface VaultTileProps {
+  token: VaultToken;
+  onSelect: (token: VaultToken) => void;
+}
+
+function VaultTile({ token, onSelect }: VaultTileProps) {
+  return (
+    <div className="relative">
+      <TokenCard
+        editionNumber={token.meetingNumber}
+        topic={token.name}
+        date={formatCardDate(token.date)}
+        color={colorNameForTopic(token.name)}
+        onClick={() => onSelect(token)}
+      />
+      {token.mintStatus !== 'CONFIRMED' && <MintStatusBadge status={token.mintStatus} />}
     </div>
   );
 }
@@ -356,14 +359,6 @@ function GridSkeleton() {
           </div>
         </div>
       ))}
-    </div>
-  );
-}
-
-function FullPageSpinner() {
-  return (
-    <div className="grid min-h-screen place-items-center bg-canvas">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-green border-t-transparent" />
     </div>
   );
 }

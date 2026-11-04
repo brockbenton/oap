@@ -3,11 +3,11 @@
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
-import { usePrivy, getIdentityToken } from '@privy-io/react-auth';
+import { usePrivy } from '@privy-io/react-auth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/api/queryKeys';
 import { listAdminRoles, grantAdminRole, revokeAdminRole } from '@/lib/api/admin';
-import { ApiRequestError } from '@/lib/api/client';
+import { requireIdentityToken, ApiRequestError } from '@/lib/api/client';
 import { AdminRole } from '@/types';
 
 function truncateWallet(addr: string): string {
@@ -32,16 +32,14 @@ export default function AdminRolesPage() {
   const { data: roles, isLoading, error } = useQuery({
     queryKey: queryKeys.adminRoles(),
     queryFn: async () => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       return listAdminRoles(token);
     },
   });
 
   const grantMutation = useMutation({
     mutationFn: async (walletAddress: string) => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       return grantAdminRole(walletAddress, token);
     },
     onSuccess: (newRole: AdminRole) => {
@@ -72,8 +70,7 @@ export default function AdminRolesPage() {
 
   const revokeMutation = useMutation({
     mutationFn: async (walletAddress: string) => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       return revokeAdminRole(walletAddress, token);
     },
     onSuccess: (_data, walletAddress) => {

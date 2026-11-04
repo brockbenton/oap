@@ -15,3 +15,10 @@ export const ATTENDANCE_OK_PCT = 50;
 export const GITHUB_URL = 'https://github.com/brockbenton/ocp';
 // Base Sepolia block explorer (chain 84532). Append `/address/<addr>` or `/tx/<hash>`.
 export const BASESCAN_URL = 'https://sepolia.basescan.org';
+
+// Deployed registry, from env. Deep-links to Basescan when configured; falls back
+// to the explorer home so the link is never dead.
+export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
+export const CONTRACT_EXPLORER_URL = CONTRACT_ADDRESS
+  ? `${BASESCAN_URL}/address/${CONTRACT_ADDRESS}`
+  : BASESCAN_URL;

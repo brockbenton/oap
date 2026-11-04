@@ -13,6 +13,7 @@ import { ExternalLinkIcon, PlusIcon } from '@/components/ui/icons';
 import { useProfile, useEmbeddedAddress, useDisplayName } from '@/hooks/useProfile';
 import { shortenAddress } from '@/lib/address';
 import { BASESCAN_URL } from '@/lib/constants';
+import FullPageSpinner from '@/components/shared/FullPageSpinner';
 
 const PAGE_TITLE = 'Wallet & keys';
 
@@ -153,14 +154,6 @@ export default function WalletPage() {
         </div>
       </PageContainer>
       <MobileTabBar />
-    </div>
-  );
-}
-
-function FullPageSpinner() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-canvas">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-green border-t-transparent" />
     </div>
   );
 }

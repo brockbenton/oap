@@ -3,13 +3,13 @@
 export const dynamic = 'force-dynamic';
 
 import { Fragment, useState } from 'react';
-import { usePrivy, getIdentityToken } from '@privy-io/react-auth';
+import { usePrivy } from '@privy-io/react-auth';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
 import { listAdminSessions, getSessionAttendees, downloadSessionCSV } from '@/lib/api/admin';
 
 import { queryKeys } from '@/lib/api/queryKeys';
-import { retryUnlessForbidden } from '@/lib/api/client';
+import { requireIdentityToken, retryUnlessForbidden } from '@/lib/api/client';
 import { SessionWithCount, Attendee } from '@/types';
 import CreateSessionForm from '@/components/features/admin/CreateSessionForm';
 
@@ -22,8 +22,7 @@ export default function AdminSessionsPage() {
   const { mutate: exportSessionCSV } = useMutation({
     mutationFn: async (sessionId: string) => {
       setDownloadingSessionId(sessionId);
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       await downloadSessionCSV(sessionId, token);
     },
     onSettled: () => setDownloadingSessionId(null),
@@ -36,8 +35,7 @@ export default function AdminSessionsPage() {
   } = useQuery({
     queryKey: queryKeys.adminSessions(),
     queryFn: async () => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       return listAdminSessions(token);
     },
     enabled: authenticated,
@@ -47,8 +45,7 @@ export default function AdminSessionsPage() {
   const { data: attendees, isLoading: loadingAttendees } = useQuery({
     queryKey: queryKeys.sessionAttendees(expandedSessionId ?? ''),
     queryFn: async () => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       return getSessionAttendees(expandedSessionId!, token);
     },
     enabled: !!expandedSessionId,
