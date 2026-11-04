@@ -46,9 +46,9 @@ export default function AdminMembersPage() {
     <div className="max-w-7xl mx-auto w-full space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Members</h1>
+          <h1 className="text-2xl font-bold text-content">Members</h1>
           {data?.currentSemester && (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-content-secondary">
               Current semester: {data.currentSemester} &middot; {data.totalSessions} session
               {data.totalSessions !== 1 ? 's' : ''} total
             </p>
@@ -58,7 +58,7 @@ export default function AdminMembersPage() {
           <button
             onClick={() => exportCSV()}
             disabled={exporting}
-            className="text-sm text-blue-600 hover:text-blue-800 font-medium disabled:opacity-50"
+            className="text-sm text-cyan hover:text-content font-medium disabled:opacity-50"
           >
             {exporting ? 'Exporting…' : 'Export CSV'}
           </button>
@@ -68,18 +68,18 @@ export default function AdminMembersPage() {
       <div>
         {isLoading ? (
           <div className="flex justify-center py-16">
-            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-green border-t-transparent rounded-full animate-spin" />
           </div>
         ) : error ? (
-          <p className="text-red-600 text-sm text-center py-16">
+          <p className="text-status-neg text-sm text-center py-16">
             {error instanceof Error ? error.message : 'Failed to load members.'}
           </p>
         ) : !data?.members.length ? (
-          <p className="text-gray-500 text-sm text-center py-16">No members yet.</p>
+          <p className="text-content-secondary text-sm text-center py-16">No members yet.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm border border-gray-200 rounded-xl overflow-hidden">
-              <thead className="bg-gray-50 text-gray-500 text-left">
+            <table className="w-full text-sm border border-line rounded-xl overflow-hidden">
+              <thead className="bg-raised text-content-secondary text-left">
                 <tr>
                   <th className="px-4 py-3 font-medium">#</th>
                   <th className="px-4 py-3 font-medium">Wallet</th>
@@ -92,7 +92,7 @@ export default function AdminMembersPage() {
                   <th className="px-4 py-3 font-medium">Founding</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
+              <tbody className="divide-y divide-line bg-surface">
                 {data.members.map((member, i) => (
                   <MemberRow
                     key={member.id}
@@ -124,17 +124,17 @@ interface MemberRowProps {
 
 function MemberRow({ member, rank, toggling, onToggleFounding }: MemberRowProps) {
   return (
-    <tr className="hover:bg-gray-50">
-      <td className="px-4 py-3 text-gray-400 tabular-nums">{rank}</td>
+    <tr className="hover:bg-raised">
+      <td className="px-4 py-3 text-content-muted tabular-nums">{rank}</td>
       <td className="px-4 py-3">
-        <span className="font-mono text-gray-800 text-xs" title={member.walletAddress}>
+        <span className="font-mono text-content text-xs" title={member.walletAddress}>
           {truncateAddress(member.walletAddress)}
         </span>
       </td>
-      <td className="px-4 py-3 text-gray-600 max-w-[180px] truncate">
-        {member.linkedAccount ?? <span className="text-gray-400">—</span>}
+      <td className="px-4 py-3 text-content-secondary max-w-[180px] truncate">
+        {member.linkedAccount ?? <span className="text-content-muted">—</span>}
       </td>
-      <td className="px-4 py-3 text-right tabular-nums text-gray-700">{member.tokensEarned}</td>
+      <td className="px-4 py-3 text-right tabular-nums text-content">{member.tokensEarned}</td>
       <td className="px-4 py-3 text-right">
         <AttendancePct pct={member.allTimeAttendancePct} />
       </td>
@@ -144,11 +144,11 @@ function MemberRow({ member, rank, toggling, onToggleFounding }: MemberRowProps)
       <td className="px-4 py-3">
         <TierBadge tier={member.statusTier} foundingMember={member.foundingMember} />
       </td>
-      <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">
+      <td className="px-4 py-3 text-content-secondary whitespace-nowrap text-xs">
         {member.lastSeen ? (
           formatRelativeDate(member.lastSeen)
         ) : (
-          <span className="text-gray-400">—</span>
+          <span className="text-content-muted">—</span>
         )}
       </td>
       <td className="px-4 py-3">
@@ -158,8 +158,8 @@ function MemberRow({ member, rank, toggling, onToggleFounding }: MemberRowProps)
           title={member.foundingMember ? 'Revoke Founding Member' : 'Grant Founding Member'}
           className={`text-xs font-medium px-2 py-0.5 rounded transition-colors disabled:opacity-50 ${
             member.foundingMember
-              ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-              : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              ? 'bg-status-warn-bg text-status-warn hover:bg-status-warn-bg'
+              : 'bg-raised text-content-secondary hover:bg-raised'
           }`}
         >
           {member.foundingMember ? 'Founding' : 'Grant'}
@@ -176,10 +176,10 @@ function truncateAddress(addr: string): string {
 function AttendancePct({ pct }: { pct: number }) {
   const color =
     pct >= ATTENDANCE_GOOD_PCT
-      ? 'text-green-700'
+      ? 'text-status-pos'
       : pct >= ATTENDANCE_OK_PCT
-        ? 'text-amber-600'
-        : 'text-gray-600';
+        ? 'text-status-warn'
+        : 'text-content-secondary';
   return <span className={`tabular-nums font-medium ${color}`}>{pct}%</span>;
 }
 
@@ -191,20 +191,20 @@ interface TierBadgeProps {
 function TierBadge({ tier, foundingMember }: TierBadgeProps) {
   if (foundingMember) {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-status-warn-bg text-status-warn">
         Founding
       </span>
     );
   }
   if (tier === 'Official Member') {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-status-info-bg text-cyan">
         Official
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-raised text-content-secondary">
       General
     </span>
   );

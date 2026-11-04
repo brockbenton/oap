@@ -29,8 +29,8 @@ export default function AppProviders({ children }: AppProvidersProps) {
           defaultChain: baseSepolia,
           supportedChains: [baseSepolia],
           appearance: {
-            theme: 'light',
-            accentColor: '#3b82f6',
+            theme: 'dark',
+            accentColor: '#3DDC84',
           },
           embeddedWallets: {
             ethereum: {

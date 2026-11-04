@@ -4,7 +4,7 @@ import { cn } from '@/lib/cn';
 export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement>;
 
 const BASE_CLASSES =
-  'min-h-[80px] w-full rounded-md border border-[var(--input-border)] bg-white px-4 py-3.5 text-[15px] outline-none focus:border-ink placeholder:text-[var(--input-placeholder)]';
+  'min-h-[80px] w-full rounded-md border border-line-strong bg-surface px-4 py-3.5 text-[15px] outline-none focus:border-green placeholder:text-content-muted';
 
 const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
   { className, ...props },

@@ -30,12 +30,12 @@ const NAV_ITEMS: MemberNavItem[] = [
 ];
 
 const NAV_ITEM_BASE = 'rounded-md px-3.5 py-2 text-sm transition';
-const NAV_ITEM_ACTIVE = 'bg-[rgba(1,3,4,0.06)] font-semibold text-ink';
-const NAV_ITEM_INACTIVE = 'text-content-secondary hover:text-ink';
+const NAV_ITEM_ACTIVE = 'bg-raised font-semibold text-content';
+const NAV_ITEM_INACTIVE = 'text-content-secondary hover:text-content';
 
 export default function MemberTopNav({ active }: MemberTopNavProps) {
   return (
-    <header className="border-b border-line bg-white">
+    <header className="border-b border-line bg-surface">
       <div className="mx-auto flex h-16 max-w-[1180px] items-center px-6">
         <Brand href={ROUTES.home} />
         <nav className="ml-8 hidden items-center gap-1 md:flex">

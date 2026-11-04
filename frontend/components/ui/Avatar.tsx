@@ -21,7 +21,7 @@ export default function Avatar({ seed, label, size = DEFAULT_SIZE, colorIndex, c
   return (
     <div
       className={cn(
-        'inline-flex items-center justify-center rounded-full text-white font-semibold',
+        'inline-flex items-center justify-center rounded-full text-content font-semibold',
         className,
       )}
       style={{

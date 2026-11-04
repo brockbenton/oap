@@ -88,16 +88,16 @@ export default function AdminSessionQRPage() {
 
   if (!ready || !authenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <div className="w-8 h-8 border-4 border-green border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <header className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-        <Link href="/admin/sessions" className="text-gray-500 hover:text-gray-800">
+    <div className="min-h-screen flex flex-col bg-surface">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-line">
+        <Link href="/admin/sessions" className="text-content-secondary hover:text-content">
           <svg
             className="w-5 h-5"
             fill="none"
@@ -116,13 +116,13 @@ export default function AdminSessionQRPage() {
         <div className="text-center">
           {session ? (
             <>
-              <p className="text-base font-semibold text-gray-900">{session.name}</p>
-              <p className="text-xs text-gray-500">
+              <p className="text-base font-semibold text-content">{session.name}</p>
+              <p className="text-xs text-content-secondary">
                 {formatDate(session.date)} &middot; {session.semester}
               </p>
             </>
           ) : (
-            <p className="text-base font-semibold text-gray-900">Check-In QR</p>
+            <p className="text-base font-semibold text-content">Check-In QR</p>
           )}
         </div>
 
@@ -132,12 +132,12 @@ export default function AdminSessionQRPage() {
 
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-10 space-y-6">
         {loadingQR ? (
-          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-green border-t-transparent rounded-full animate-spin" />
         ) : qrError ? (
           <QRErrorState error={qrError} onRetry={() => void refetch()} />
         ) : qrPayload ? (
           <>
-            <div className="p-5 bg-white border-2 border-gray-200 rounded-2xl shadow-sm">
+            <div className="p-5 bg-white border-2 border-line rounded-2xl">
               <QRCode value={qrPayload} size={320} />
             </div>
 
@@ -145,7 +145,7 @@ export default function AdminSessionQRPage() {
               <CountdownLine secondsLeft={secondsLeft} />
               <button
                 onClick={() => void refetch()}
-                className="text-xs text-gray-400 hover:text-gray-600 underline"
+                className="text-xs text-content-muted hover:text-content-secondary underline"
               >
                 Refresh now
               </button>
@@ -177,18 +177,18 @@ function CountdownLine({ secondsLeft }: { secondsLeft: number | null }) {
   if (secondsLeft === null) return null;
   if (secondsLeft > 90) {
     return (
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-content-secondary">
         Auto-refreshes in {formatCountdown(secondsLeft)}
       </p>
     );
   }
   if (secondsLeft > 0) {
     return (
-      <p className="text-sm text-amber-600 font-medium">Refreshing soon&hellip;</p>
+      <p className="text-sm text-status-warn font-medium">Refreshing soon&hellip;</p>
     );
   }
   return (
-    <p className="text-sm text-red-600 font-medium">QR expired — refreshing&hellip;</p>
+    <p className="text-sm text-status-neg font-medium">QR expired — refreshing&hellip;</p>
   );
 }
 
@@ -205,13 +205,13 @@ function QRErrorState({ error, onRetry }: QRErrorStateProps) {
 
   return (
     <div className="text-center space-y-3">
-      <p className="text-gray-900 font-medium">
+      <p className="text-content font-medium">
         {isClosed
           ? 'This session is closed or not yet confirmed on-chain.'
           : 'Failed to load QR code.'}
       </p>
       {!isClosed && (
-        <button onClick={onRetry} className="text-blue-600 text-sm hover:underline">
+        <button onClick={onRetry} className="text-cyan text-sm hover:underline">
           Try again
         </button>
       )}

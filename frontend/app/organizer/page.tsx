@@ -14,7 +14,7 @@ import { PlusIcon } from '@/components/ui/icons';
 import { getAdminMe, getAdminOverview, listAdminSessions } from '@/lib/api/admin';
 import { queryKeys } from '@/lib/api/queryKeys';
 import { retryUnlessForbidden, ApiRequestError } from '@/lib/api/client';
-import { TOKEN_GRADIENTS } from '@/lib/tokenArt';
+import { TOKEN_COLORS } from '@/lib/tokenArt';
 import { cn } from '@/lib/cn';
 import type { AdminOverview, SessionWithCount } from '@/types';
 import { CLUB_NAME } from '@/lib/constants';
@@ -24,7 +24,7 @@ import { CLUB_NAME } from '@/lib/constants';
 const CLUB = {
   name: CLUB_NAME,
   logo: '◆',
-  gradient: TOKEN_GRADIENTS.blue,
+  color: TOKEN_COLORS.blue,
 } as const;
 
 const MEETINGS_HINT = 'All time';
@@ -40,7 +40,7 @@ const RECENT_MEETINGS_LIMIT = 3;
 const STAT_GRID = 'grid grid-cols-2 gap-4 md:grid-cols-4';
 const BODY_GRID = 'grid grid-cols-1 gap-5 lg:grid-cols-[1.5fr_1fr]';
 const PANEL_PADDING = 'p-[22px]';
-const PANEL_TITLE = 'text-[16px] font-semibold leading-none text-ink';
+const PANEL_TITLE = 'text-[16px] font-semibold leading-none text-content';
 const TABLE_GRID = 'grid grid-cols-[1fr_auto_auto] gap-3';
 const TABLE_HEAD = 'font-mono text-[11px] uppercase tracking-[0.06em] text-content-secondary';
 const RATE_COL = 'w-[70px]';
@@ -108,7 +108,7 @@ export default function OrganizerDashboardPage() {
   const failed = overviewQuery.isError || sessionsQuery.isError;
 
   return (
-    <div className="min-h-screen bg-[#fbfbfc]">
+    <div className="min-h-screen bg-canvas">
       <OrganizerTopNav active="overview" />
       <PageContainer className="py-8">
         <ClubHeader />
@@ -135,14 +135,14 @@ function ClubHeader() {
     <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div className="flex items-center gap-4">
         <div
-          className="grid h-14 w-14 flex-none place-items-center rounded-card text-[22px] font-bold text-white"
-          style={{ background: CLUB.gradient }}
+          className="grid h-14 w-14 flex-none place-items-center rounded-card text-[22px] font-bold text-content"
+          style={{ background: CLUB.color }}
           aria-hidden="true"
         >
           {CLUB.logo}
         </div>
         <div>
-          <h1 className="text-[26px] font-semibold leading-[30px] tracking-[-0.8px] text-ink">
+          <h1 className="text-[26px] font-semibold leading-[30px] text-content">
             {CLUB.name}
           </h1>
         </div>
@@ -225,17 +225,17 @@ function DashboardBody({ overview, sessions }: { overview: AdminOverview; sessio
                 )}
               >
                 <div>
-                  <div className="text-[14px] font-semibold leading-[1.2] text-ink">{session.name}</div>
+                  <div className="text-[14px] font-semibold leading-[1.2] text-content">{session.name}</div>
                   <div className="mt-1 font-mono text-[11px] font-medium leading-none text-content-secondary">
                     {formatMeetingDate(session.date)}
                   </div>
                 </div>
-                <span className="text-right font-mono text-[14px] font-semibold leading-none text-ink">
+                <span className="text-right font-mono text-[14px] font-semibold leading-none text-content">
                   {session.attendeeCount}
                 </span>
                 <span
                   className={cn(
-                    'text-right font-mono text-[13px] font-semibold leading-none text-green-600',
+                    'text-right font-mono text-[13px] font-semibold leading-none text-status-pos',
                     RATE_COL,
                   )}
                 >
@@ -263,11 +263,11 @@ function DashboardBody({ overview, sessions }: { overview: AdminOverview; sessio
 // ── gate + loading states ──────────────────────────────────────────────────────
 
 function GateShell({ children }: { children: ReactNode }) {
-  return <div className="grid min-h-screen place-items-center bg-[#fbfbfc] px-6">{children}</div>;
+  return <div className="grid min-h-screen place-items-center bg-canvas px-6">{children}</div>;
 }
 
 function Spinner() {
-  return <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink/20 border-t-ink" />;
+  return <div className="h-8 w-8 animate-spin rounded-full border-4 border-line border-t-ink" />;
 }
 
 function SignInGate() {
@@ -275,7 +275,7 @@ function SignInGate() {
   return (
     <GateShell>
       <Card className="w-full max-w-sm p-8 text-center">
-        <h1 className="mb-2 text-lg font-semibold text-ink">Organizer console</h1>
+        <h1 className="mb-2 text-lg font-semibold text-content">Organizer console</h1>
         <p className="mb-6 text-sm text-content-secondary">
           Sign in with an organizer account to manage your club.
         </p>
@@ -291,7 +291,7 @@ function AccessGate({ forbidden }: { forbidden: boolean }) {
   return (
     <GateShell>
       <Card className="w-full max-w-sm p-8 text-center">
-        <h1 className="mb-2 text-lg font-semibold text-ink">Organizer access required</h1>
+        <h1 className="mb-2 text-lg font-semibold text-content">Organizer access required</h1>
         <p className="mb-6 text-sm text-content-secondary">
           {forbidden
             ? "This account doesn't have organizer access to this club."
@@ -312,12 +312,12 @@ function DashboardSkeleton() {
     <div className="space-y-6">
       <div className={STAT_GRID}>
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-28 animate-pulse rounded-tile border border-line bg-white" />
+          <div key={i} className="h-28 animate-pulse rounded-tile border border-line bg-surface" />
         ))}
       </div>
       <div className={BODY_GRID}>
-        <div className="h-64 animate-pulse rounded-lg border border-line bg-white" />
-        <div className="h-64 animate-pulse rounded-lg border border-line bg-white" />
+        <div className="h-64 animate-pulse rounded-lg border border-line bg-surface" />
+        <div className="h-64 animate-pulse rounded-lg border border-line bg-surface" />
       </div>
     </div>
   );

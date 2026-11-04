@@ -19,7 +19,7 @@ const NAV_ITEMS: MarketingNavItem[] = [
   { label: 'Protocol', href: '/#protocol' },
 ];
 
-const NAV_ITEM_CLASSES = 'px-3.5 py-2 text-sm text-content-secondary transition hover:text-ink';
+const NAV_ITEM_CLASSES = 'px-3.5 py-2 text-sm text-content-secondary transition hover:text-content';
 
 export default function MarketingNav() {
   const router = useRouter();
@@ -33,7 +33,7 @@ export default function MarketingNav() {
   };
 
   return (
-    <header className="border-b border-line bg-white">
+    <header className="border-b border-line bg-surface">
       <div className="mx-auto flex h-16 max-w-[1180px] items-center px-6">
         <Brand href={HOME_ROUTE} />
         <nav className="ml-11 flex items-center gap-1.5">

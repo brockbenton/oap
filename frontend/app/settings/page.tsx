@@ -34,7 +34,7 @@ const SECTION_NAV: ReadonlyArray<{ id: string; label: string }> = [
   { id: SECTION_ACCOUNT, label: 'Account' },
 ];
 
-const SECTION_CARD = 'scroll-mt-20 rounded-lg border border-line bg-white p-6';
+const SECTION_CARD = 'scroll-mt-20 rounded-lg border border-line bg-surface p-6';
 const SECTION_HEADING = 'text-[17px] font-semibold';
 const SECTION_CAPTION = 'mt-1 text-sm text-content-secondary';
 
@@ -108,10 +108,10 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fbfbfc]">
+    <div className="min-h-screen bg-canvas">
       <MemberTopNav />
       <PageContainer className="py-8">
-        <h1 className="mb-6 text-[30px] font-semibold leading-9 tracking-[-1px]">Settings</h1>
+        <h1 className="mb-6 text-[30px] font-semibold leading-9">Settings</h1>
 
         <div className="lg:flex lg:gap-10">
           <nav className="hidden lg:block lg:w-44 lg:shrink-0">
@@ -120,7 +120,7 @@ export default function SettingsPage() {
                 <a
                   key={id}
                   href={`#${id}`}
-                  className="block rounded-md px-3 py-1.5 text-sm font-medium text-content-secondary transition-colors hover:bg-card-filled hover:text-ink"
+                  className="block rounded-md px-3 py-1.5 text-sm font-medium text-content-secondary transition-colors hover:bg-raised hover:text-content"
                 >
                   {label}
                 </a>
@@ -177,7 +177,7 @@ export default function SettingsPage() {
                         onClick={() => setAvatarColor(i)}
                         className={cn(
                           'h-9 w-9 rounded-full ring-2 ring-offset-2 transition',
-                          avatarColor === i ? 'ring-ink' : 'ring-transparent hover:ring-line',
+                          avatarColor === i ? 'ring-green' : 'ring-transparent hover:ring-line',
                         )}
                         style={{ background: avatarGradientByIndex(i) }}
                       />
@@ -376,7 +376,7 @@ function AccountSection() {
         </Button>
       </div>
 
-      <div className="mt-6 rounded-md border border-line bg-card-filled p-4">
+      <div className="mt-6 rounded-md border border-line bg-raised p-4">
         <div className="text-[13px] font-semibold text-status-neg">Danger zone</div>
         <p className="mt-1 text-xs text-content-secondary">
           Disconnecting or deleting your account isn&apos;t available yet. When it ships it&apos;ll permanently
@@ -405,12 +405,12 @@ function ToggleSwitch({ checked, disabled, onChange, label }: ToggleSwitchProps)
       onClick={onChange}
       className={cn(
         'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50',
-        checked ? 'bg-ink' : 'bg-line',
+        checked ? 'bg-raised' : 'bg-line',
       )}
     >
       <span
         className={cn(
-          'inline-block h-5 w-5 rounded-full bg-white shadow transition-transform',
+          'inline-block h-5 w-5 rounded-full bg-surface transition-transform',
           checked ? 'translate-x-[1.375rem]' : 'translate-x-0.5',
         )}
       />
@@ -420,8 +420,8 @@ function ToggleSwitch({ checked, disabled, onChange, label }: ToggleSwitchProps)
 
 function FullPageSpinner() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#fbfbfc]">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink border-t-transparent" />
+    <div className="flex min-h-screen items-center justify-center bg-canvas">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-green border-t-transparent" />
     </div>
   );
 }

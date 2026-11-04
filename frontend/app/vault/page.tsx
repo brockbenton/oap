@@ -16,7 +16,7 @@ import PageContainer from '@/components/shared/PageContainer';
 import TokenCard from '@/components/shared/TokenCard';
 import TokenDetailModal, { type TokenDetailData } from '@/components/shared/TokenDetailModal';
 import { IconButton } from '@/components/ui';
-import { gradientNameForTopic } from '@/lib/tokenArt';
+import { colorNameForTopic } from '@/lib/tokenArt';
 import { cn } from '@/lib/cn';
 import { VaultToken } from '@/types';
 import { CLUB_NAME } from '@/lib/constants';
@@ -67,12 +67,12 @@ const MINT_TRAIT_VALUES: Record<VaultToken['mintStatus'], string> = {
 };
 
 const CHIP_BASE = 'rounded-full px-3.5 py-2 text-xs transition';
-const CHIP_ACTIVE = 'bg-ink font-semibold text-white';
-const CHIP_INACTIVE = 'border border-line font-medium text-content-secondary hover:text-ink';
+const CHIP_ACTIVE = 'bg-raised font-semibold text-content';
+const CHIP_INACTIVE = 'border border-line font-medium text-content-secondary hover:text-content';
 const MINT_BADGE_BASE =
   'pointer-events-none absolute right-2.5 top-2.5 z-10 rounded-full px-2 py-0.5 text-[10px] font-semibold';
 const MORE_TILE_CLASSES =
-  'flex h-full min-h-[172px] flex-col items-center justify-center gap-2 rounded-tile border border-dashed border-line-strong bg-card-filled text-content-secondary transition hover:border-content-secondary';
+  'flex h-full min-h-[172px] flex-col items-center justify-center gap-2 rounded-tile border border-dashed border-line-strong bg-raised text-content-secondary transition hover:border-content-secondary';
 
 export default function VaultPage() {
   const { ready, authenticated, user } = usePrivy();
@@ -154,19 +154,19 @@ export default function VaultPage() {
   if (!ready || !authenticated) return <FullPageSpinner />;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#fbfbfc]">
+    <div className="flex min-h-screen flex-col bg-canvas">
       <MemberTopNav active="vault" />
 
       <main className="hidden flex-1 py-8 md:block">
         <PageContainer>
           <div className="mb-[22px] flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="text-[30px] font-semibold leading-9 tracking-[-1px]">My Vault</h1>
+              <h1 className="text-[30px] font-semibold leading-9">My Vault</h1>
               {data && (
                 <div className="mt-2 flex flex-wrap gap-5">
                   {headerStats.map((stat) => (
                     <span key={stat.label} className="text-[13px] font-medium text-content-secondary">
-                      <b className="font-mono text-ink tabular-nums">{stat.value}</b> {stat.label}
+                      <b className="font-mono text-content tabular-nums">{stat.value}</b> {stat.label}
                     </span>
                   ))}
                 </div>
@@ -210,7 +210,7 @@ export default function VaultPage() {
                     editionNumber={token.meetingNumber}
                     topic={token.name}
                     date={formatCardDate(token.date)}
-                    gradient={gradientNameForTopic(token.name)}
+                    color={colorNameForTopic(token.name)}
                     rarity={null}
                     onClick={() => setSelected(token)}
                   />
@@ -219,7 +219,7 @@ export default function VaultPage() {
               ))}
               {overflow > 0 && (
                 <button type="button" onClick={() => setShowAll(true)} className={MORE_TILE_CLASSES}>
-                  <span className="font-mono text-[22px] font-bold text-content-disabled">+{overflow}</span>
+                  <span className="font-mono text-[22px] font-bold text-content-muted">+{overflow}</span>
                   <span className="text-xs font-medium">{MORE_TOKENS_LABEL}</span>
                 </button>
               )}
@@ -229,7 +229,7 @@ export default function VaultPage() {
       </main>
 
       <main className="flex-1 px-5 pb-24 pt-1 md:hidden">
-        <h1 className="text-[22px] font-semibold leading-7 tracking-[-0.5px]">My Vault</h1>
+        <h1 className="text-[22px] font-semibold leading-7">My Vault</h1>
         {data && (
           <p className="mt-1.5 font-mono text-xs font-medium tabular-nums text-content-secondary">
             {tokenCount} {TOKENS_LABEL} · {RARE_TOKEN_COUNT} {RARE_LABEL}
@@ -265,7 +265,7 @@ export default function VaultPage() {
                   editionNumber={token.meetingNumber}
                   topic={token.name}
                   date={formatCardDate(token.date)}
-                  gradient={gradientNameForTopic(token.name)}
+                  color={colorNameForTopic(token.name)}
                   rarity={null}
                   onClick={() => setSelected(token)}
                 />
@@ -300,7 +300,7 @@ function toDetail(token: VaultToken): TokenDetailData {
     mintedAt: formatMintedAt(token.date),
     chain: CHAIN_NAME,
     standard: TOKEN_STANDARD,
-    gradient: gradientNameForTopic(token.name),
+    color: colorNameForTopic(token.name),
     rarity: null,
     traits: [
       { label: SEASON_TRAIT_LABEL, value: token.semester, tone: TONE_NEUTRAL },
@@ -333,8 +333,8 @@ function EmptyVault({ hasAny }: { hasAny: boolean }) {
   }
   return (
     <div className="fade-in flex flex-col items-center justify-center py-20 text-center">
-      <div className="mb-4 grid h-16 w-16 place-items-center rounded-tile bg-card-filled">
-        <svg className="h-8 w-8 text-cyan" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+      <div className="mb-4 grid h-16 w-16 place-items-center rounded-tile bg-raised">
+        <svg className="h-8 w-8 text-green" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -343,13 +343,13 @@ function EmptyVault({ hasAny }: { hasAny: boolean }) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 12l2.25 2.25 4.5-4.5" />
         </svg>
       </div>
-      <p className="font-semibold text-ink">No attendance tokens yet</p>
+      <p className="font-semibold text-content">No attendance tokens yet</p>
       <p className="mt-1 max-w-xs text-sm text-content-secondary">
         Check in at a meeting to earn your first attendance token.
       </p>
       <Link
         href="/check-in"
-        className="mt-5 inline-block rounded-md bg-cyan px-5 py-2.5 text-sm font-semibold text-ink transition hover:opacity-90"
+        className="mt-5 inline-block rounded-md bg-green px-5 py-2.5 text-sm font-semibold text-canvas transition hover:opacity-90"
       >
         Scan QR Code
       </Link>
@@ -361,11 +361,11 @@ function GridSkeleton() {
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
       {Array.from({ length: 10 }).map((_, i) => (
-        <div key={i} className="overflow-hidden rounded-tile border border-line bg-white">
-          <div className="aspect-square animate-pulse bg-card-filled" />
+        <div key={i} className="overflow-hidden rounded-tile border border-line bg-surface">
+          <div className="aspect-square animate-pulse bg-raised" />
           <div className="space-y-2 px-3.5 py-3">
-            <div className="h-3 animate-pulse rounded bg-card-filled" />
-            <div className="h-3 w-1/2 animate-pulse rounded bg-card-filled" />
+            <div className="h-3 animate-pulse rounded bg-raised" />
+            <div className="h-3 w-1/2 animate-pulse rounded bg-raised" />
           </div>
         </div>
       ))}
@@ -375,8 +375,8 @@ function GridSkeleton() {
 
 function FullPageSpinner() {
   return (
-    <div className="grid min-h-screen place-items-center bg-[#fbfbfc]">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-cyan border-t-transparent" />
+    <div className="grid min-h-screen place-items-center bg-canvas">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-green border-t-transparent" />
     </div>
   );
 }

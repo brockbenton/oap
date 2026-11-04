@@ -65,9 +65,9 @@ export default function SessionRecoveryGate() {
   if (!autoHealed) return <Spinner label={HEALING_LABEL} />;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-paper px-6">
-      <div className="w-full max-w-sm animate-fade-in rounded-lg border border-line bg-white p-8 text-center">
-        <h1 className="text-lg font-semibold tracking-[-0.3px]">{FAILED_TITLE}</h1>
+    <div className="flex min-h-screen items-center justify-center bg-canvas px-6">
+      <div className="w-full max-w-sm animate-fade-in rounded-lg border border-line bg-surface p-8 text-center">
+        <h1 className="text-lg font-semibold">{FAILED_TITLE}</h1>
         <p className="mt-2 text-sm leading-5 text-content-secondary">{FAILED_BODY}</p>
         <Button variant="primary" className="mt-6 w-full" onClick={() => resetSession(logout)}>
           {RESET_LABEL}
@@ -79,8 +79,8 @@ export default function SessionRecoveryGate() {
 
 function Spinner({ label }: { label?: string }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-paper">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink border-t-transparent" />
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-canvas">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-green border-t-transparent" />
       {label && <p className="text-sm text-content-secondary">{label}</p>}
     </div>
   );

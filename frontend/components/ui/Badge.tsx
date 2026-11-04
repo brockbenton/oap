@@ -17,7 +17,7 @@ const TONE_CLASSES: Record<BadgeTone, string> = {
   pos: 'text-status-pos bg-status-pos-bg',
   warn: 'text-status-warn bg-status-warn-bg',
   neg: 'text-status-neg bg-status-neg-bg',
-  rew: 'text-status-rew bg-status-rew-bg',
+  rew: 'text-status-warn bg-status-warn-bg',
   neutral: 'text-status-neutral bg-status-neutral-bg',
 };
 

@@ -20,10 +20,10 @@ const SIZE_CLASSES: Record<ButtonSize, string> = {
 };
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: 'bg-ink text-white hover:bg-ink/90',
-  cyan: 'bg-cyan text-ink hover:brightness-95',
-  outline: 'bg-white text-ink border border-line hover:bg-card-filled',
-  ghost: 'bg-[rgba(1,3,4,0.06)] text-ink hover:bg-[rgba(1,3,4,0.1)]',
+  primary: 'bg-raised text-content hover:bg-line',
+  cyan: 'bg-green text-canvas hover:brightness-95',
+  outline: 'bg-surface text-content border border-line hover:bg-raised',
+  ghost: 'bg-raised text-content hover:bg-raised',
   destructive: 'bg-transparent text-status-neg hover:bg-status-neg-bg',
 };
 

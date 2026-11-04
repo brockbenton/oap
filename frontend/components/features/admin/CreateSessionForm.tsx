@@ -51,53 +51,53 @@ export default function CreateSessionForm({ onSuccess }: CreateSessionFormProps)
 
   return (
     <section>
-      <h2 className="text-base font-semibold text-gray-900 mb-4">Create Session</h2>
+      <h2 className="text-base font-semibold text-content mb-4">Create Session</h2>
       <form
         onSubmit={handleSubmit}
-        className="bg-white border border-gray-200 rounded-xl p-6 space-y-4"
+        className="bg-surface border border-line rounded-xl p-6 space-y-4"
       >
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">Meeting Name</label>
+            <label className="block text-sm font-medium text-content">Meeting Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Spring Kickoff"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green"
               required
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">Date &amp; Time</label>
+            <label className="block text-sm font-medium text-content">Date &amp; Time</label>
             <input
               type="datetime-local"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green"
               required
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">Semester</label>
+            <label className="block text-sm font-medium text-content">Semester</label>
             <input
               type="text"
               value={semester}
               onChange={(e) => setSemester(e.target.value)}
               placeholder="e.g. Spring 2026"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green"
               required
             />
           </div>
         </div>
 
-        {errorMessage && <p className="text-red-600 text-sm">{errorMessage}</p>}
+        {errorMessage && <p className="text-status-neg text-sm">{errorMessage}</p>}
 
         <div className="flex justify-end">
           <button
             type="submit"
             disabled={isPending}
-            className="py-2 px-5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            className="py-2 px-5 rounded-lg bg-green text-canvas text-sm font-semibold hover:bg-green-dim disabled:opacity-50 transition-colors"
           >
             {isPending ? 'Creating...' : 'Create Session'}
           </button>

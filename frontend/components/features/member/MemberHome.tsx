@@ -10,7 +10,7 @@ import LoadError from '@/components/shared/LoadError';
 import { Avatar, Button, MonoNum, StatTile } from '@/components/ui';
 import { QrIcon } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
-import { gradientNameForTopic } from '@/lib/tokenArt';
+import { colorNameForTopic } from '@/lib/tokenArt';
 import { getLeaderboard, getMemberVault, getPersonalStats } from '@/lib/api/members';
 import { queryKeys } from '@/lib/api/queryKeys';
 import { useDisplayName, useEmbeddedAddress } from '@/hooks/useProfile';
@@ -47,10 +47,7 @@ const EMPTY_VAULT_TITLE = 'Your vault is empty';
 const EMPTY_VAULT_SUB = 'Tokens you earn will show up here.';
 const EMPTY_ATTENDANCE_HINT = 'Your attendance rate shows up here.';
 
-const GLOW_CYAN = 'radial-gradient(circle, rgba(38,221,249,0.35), transparent 70%)';
-const GLOW_CYAN_SOFT = 'radial-gradient(circle, rgba(38,221,249,0.3), transparent 70%)';
-const GLOW_PURPLE_SOFT = 'radial-gradient(circle, rgba(104,51,255,0.3), transparent 70%)';
-const SUBTLE_LIGHT = 'text-[rgba(218,229,247,0.7)]';
+const SUBTLE_LIGHT = 'text-content-secondary';
 
 const CHECK_IN_EYEBROW = '● Check in';
 const MOBILE_SCAN_LABEL = 'Scan to check in';
@@ -90,7 +87,7 @@ export default function MemberHome() {
 
   if (vaultQuery.error || statsQuery.error) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-surface">
         <MemberTopNav active="home" />
         <PageContainer className="py-8">
           <LoadError
@@ -140,7 +137,7 @@ function GreetingHeader({
         <div className="mb-2 font-mono text-[13px] uppercase tracking-[0.06em] text-status-neutral">
           {semester ? `${CLUB_NAME} · ${semester}` : CLUB_NAME}
         </div>
-        <h1 className="text-[32px] font-semibold leading-[38px] tracking-[-1px]">{title}</h1>
+        <h1 className="text-[32px] font-semibold leading-[38px]">{title}</h1>
       </div>
       {note && <div className="font-mono text-[13px] text-content-secondary">{note}</div>}
     </div>
@@ -165,7 +162,7 @@ function PopulatedHome({ displayName, vault, stats, dataLoading }: PopulatedHome
   const loading = dataLoading || isLoading || !vault || !stats;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-surface">
       <MemberTopNav active="home" />
       <div className="hidden md:block">
         <PageContainer className="py-8">
@@ -208,14 +205,14 @@ function MobileHome({
 
   return (
     <div className="px-5 pb-24 pt-1.5 md:hidden md:pb-0">
-      <h1 className="mb-4 text-[22px] font-semibold leading-[28px] tracking-[-0.5px]">
+      <h1 className="mb-4 text-[22px] font-semibold leading-[28px]">
         Hey, {displayName} 👋
       </h1>
       <MobileCheckInCard />
       <MobileStatRow attendancePct={stats?.currentSemesterAttendancePct} rank={rank} streak={stats?.currentStreak} />
       <div className="mb-3 flex items-center justify-between">
         <div className="text-sm font-semibold leading-none">{RECENT_TOKENS_TITLE}</div>
-        <Link href={VAULT_HREF} className="text-xs font-semibold leading-none text-blue-500">
+        <Link href={VAULT_HREF} className="text-xs font-semibold leading-none text-cyan">
           All {vault?.tokenCount ?? 0} →
         </Link>
       </div>
@@ -235,19 +232,15 @@ function VaultTokenCard({ token }: { token: VaultToken }) {
       editionNumber={token.meetingNumber}
       topic={token.name}
       date={formatTokenDate(token.date)}
-      gradient={gradientNameForTopic(token.name)}
+      color={colorNameForTopic(token.name)}
     />
   );
 }
 
 function MobileCheckInCard() {
   return (
-    <div className="relative mb-4 overflow-hidden rounded-lg bg-ink p-5 text-white">
-      <div
-        className="pointer-events-none absolute -right-[30px] -top-[30px] h-[140px] w-[140px] rounded-full"
-        style={{ background: GLOW_CYAN }}
-      />
-      <div className="relative mb-2 font-mono text-[11px] font-medium uppercase leading-none tracking-[0.06em] text-cyan">
+    <div className="relative mb-4 overflow-hidden rounded-lg bg-raised p-5 text-content">
+      <div className="relative mb-2 font-mono text-[11px] font-medium uppercase leading-none tracking-[0.06em] text-green">
         {CHECK_IN_EYEBROW}
       </div>
       <div className="relative mb-1 text-[17px] font-semibold leading-[1.3]">{CHECK_IN_TITLE}</div>
@@ -256,7 +249,7 @@ function MobileCheckInCard() {
       </div>
       <Link
         href={CHECK_IN_HREF}
-        className="relative flex h-[46px] w-full items-center justify-center rounded-full bg-cyan text-[15px] font-semibold leading-none text-ink transition active:scale-[0.98]"
+        className="relative flex h-[46px] w-full items-center justify-center rounded-full bg-green text-[15px] font-semibold leading-none text-canvas transition active:scale-[0.98]"
       >
         {MOBILE_SCAN_LABEL}
       </Link>
@@ -284,10 +277,10 @@ function MobileStatRow({
       {MOBILE_STATS.map((stat) => (
         <div
           key={stat.key}
-          className="rounded-[14px] border border-line bg-white p-3.5 text-center"
+          className="rounded border border-line bg-surface p-3.5 text-center"
         >
           <MonoNum
-            className={cn('text-[22px] font-bold leading-none', stat.accent && 'text-yellow-700')}
+            className={cn('text-[22px] font-bold leading-none', stat.accent && 'text-status-warn')}
           >
             {values[stat.key]}
           </MonoNum>
@@ -302,13 +295,9 @@ function MobileStatRow({
 
 function CheckInCard() {
   return (
-    <div className="relative flex flex-col gap-6 overflow-hidden rounded-lg bg-ink p-7 text-white sm:flex-row sm:items-center">
-      <div
-        className="pointer-events-none absolute -right-10 -top-10 h-[220px] w-[220px] rounded-full"
-        style={{ background: GLOW_CYAN }}
-      />
-      <div className="relative grid h-[76px] w-[76px] flex-none place-items-center rounded-tile bg-white/10">
-        <QrIcon size={34} className="text-cyan" />
+    <div className="relative flex flex-col gap-6 overflow-hidden rounded-lg bg-raised p-7 text-content sm:flex-row sm:items-center">
+      <div className="relative grid h-[76px] w-[76px] flex-none place-items-center rounded-tile bg-raised">
+        <QrIcon size={34} className="text-green" />
       </div>
       <div className="relative flex-1">
         <div className="mb-1 text-xl font-semibold leading-[1.3]">{CHECK_IN_TITLE}</div>
@@ -337,7 +326,7 @@ function StatRow({
       <StatTile label="Attendance" value={`${attendancePct}%`} hint={ATTENDANCE_HINT} />
       <StatTile
         label="Streak"
-        value={<span className="text-yellow-700">{streak}</span>}
+        value={<span className="text-status-warn">{streak}</span>}
         hint={STREAK_HINT}
       />
       <StatTile label="Rank" value={rank ? `#${rank}` : STAT_PLACEHOLDER} hint={RANK_HINT} />
@@ -349,12 +338,12 @@ function VaultPreview({ vault }: { vault: MemberVault }) {
   const preview = vault.tokens.slice(0, VAULT_PREVIEW_COUNT);
 
   return (
-    <div className="rounded-lg border border-line bg-white p-[22px]">
+    <div className="rounded-lg border border-line bg-surface p-[22px]">
       <div className="mb-[18px] flex items-center justify-between">
         <div className="text-base font-semibold">
           My Vault · {vault.tokenCount} {vault.tokenCount === 1 ? 'token' : 'tokens'}
         </div>
-        <Link href={VAULT_HREF} className="text-[13px] font-semibold text-blue-500">
+        <Link href={VAULT_HREF} className="text-[13px] font-semibold text-cyan">
           {VIEW_ALL}
         </Link>
       </div>
@@ -372,7 +361,7 @@ function LeaderboardPreview({ entries }: { entries: LeaderboardEntry[] }) {
   const you = entries.find((entry) => entry.isYou && entry.rank > LEADERBOARD_PREVIEW_COUNT);
 
   return (
-    <div className="self-start rounded-lg border border-line bg-white p-[22px]">
+    <div className="self-start rounded-lg border border-line bg-surface p-[22px]">
       <div className="mb-1.5 flex items-center justify-between">
         <div className="text-base font-semibold">{LEADERBOARD_TITLE}</div>
         <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-content-secondary">
@@ -400,9 +389,9 @@ function LeaderboardRow({
   highlighted?: boolean;
 }) {
   const rankColor = highlighted
-    ? 'text-blue-600'
+    ? 'text-cyan'
     : entry.rank === 1
-      ? 'text-yellow-600'
+      ? 'text-status-warn'
       : 'text-content-secondary';
 
   return (
@@ -410,7 +399,7 @@ function LeaderboardRow({
       className={cn(
         'grid grid-cols-[24px_32px_1fr_auto] items-center gap-3',
         highlighted
-          ? '-mx-3 mt-2 rounded-[12px] bg-status-info-bg px-3 py-3'
+          ? '-mx-3 mt-2 rounded bg-status-info-bg px-3 py-3'
           : 'border-b border-line py-[11px]',
       )}
     >
@@ -420,7 +409,7 @@ function LeaderboardRow({
         <div
           className={cn(
             'truncate text-[13px] font-semibold leading-tight',
-            highlighted && 'text-blue-700',
+            highlighted && 'text-cyan',
           )}
         >
           {entry.handle}
@@ -429,13 +418,13 @@ function LeaderboardRow({
         <div
           className={cn(
             'mt-[3px] font-mono text-[11px]',
-            highlighted ? 'text-blue-600' : 'text-content-secondary',
+            highlighted ? 'text-cyan' : 'text-content-secondary',
           )}
         >
           {entry.streak} streak
         </div>
       </div>
-      <MonoNum className={cn('text-[13px] font-bold', highlighted && 'text-blue-700')}>
+      <MonoNum className={cn('text-[13px] font-bold', highlighted && 'text-cyan')}>
         {fmt(entry.tokens)}
       </MonoNum>
     </div>
@@ -444,25 +433,17 @@ function LeaderboardRow({
 
 function EmptyHome({ displayName, semester }: { displayName: string; semester: string | null }) {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-surface">
       <MemberTopNav active="home" />
       <PageContainer className="py-8">
         <GreetingHeader title={`Welcome to ${APP_SHORT_NAME}, ${displayName} 👋`} semester={semester} />
 
-        <div className="relative mb-5 overflow-hidden rounded-lg bg-ink p-9 text-center text-white">
-          <div
-            className="pointer-events-none absolute -right-10 -top-10 h-[240px] w-[240px] rounded-full"
-            style={{ background: GLOW_CYAN_SOFT }}
-          />
-          <div
-            className="pointer-events-none absolute -bottom-16 -left-10 h-[240px] w-[240px] rounded-full"
-            style={{ background: GLOW_PURPLE_SOFT }}
-          />
+        <div className="relative mb-5 overflow-hidden rounded-lg bg-raised p-9 text-center text-content">
           <div className="relative">
-            <div className="mx-auto mb-[18px] grid h-[72px] w-[72px] place-items-center rounded-lg bg-white/10">
-              <QrIcon size={34} className="text-cyan" />
+            <div className="mx-auto mb-[18px] grid h-[72px] w-[72px] place-items-center rounded-lg bg-raised">
+              <QrIcon size={34} className="text-green" />
             </div>
-            <h2 className="mb-2 text-2xl font-semibold leading-[30px] tracking-[-0.5px]">
+            <h2 className="mb-2 text-2xl font-semibold leading-[30px]">
               {MINT_TITLE}
             </h2>
             <p className={cn('mx-auto mb-6 max-w-[44ch] text-[15px] leading-[22px]', SUBTLE_LIGHT)}>
@@ -479,16 +460,16 @@ function EmptyHome({ displayName, semester }: { displayName: string; semester: s
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <StatTile
             label="Attendance"
-            value={<span className="text-content-disabled">0%</span>}
+            value={<span className="text-content-muted">0%</span>}
             hint={EMPTY_ATTENDANCE_HINT}
           />
           <StatTile
             label="Streak"
-            value={<span className="text-content-disabled">0</span>}
+            value={<span className="text-content-muted">0</span>}
             hint={EMPTY_STREAK_HINT}
           />
-          <div className="flex flex-col items-center justify-center gap-1.5 rounded-tile border border-dashed border-line-strong bg-card-filled p-5 text-center">
-            <div className="text-[13px] font-semibold leading-tight text-ink">
+          <div className="flex flex-col items-center justify-center gap-1.5 rounded-tile border border-dashed border-line-strong bg-raised p-5 text-center">
+            <div className="text-[13px] font-semibold leading-tight text-content">
               {EMPTY_VAULT_TITLE}
             </div>
             <div className="text-xs leading-[17px] text-content-secondary">{EMPTY_VAULT_SUB}</div>
@@ -503,15 +484,15 @@ function HomeSkeleton() {
   return (
     <div className="grid animate-pulse grid-cols-1 gap-5 lg:grid-cols-[1.55fr_1fr]">
       <div className="flex flex-col gap-5">
-        <div className="h-[132px] rounded-lg border border-line bg-card-filled" />
+        <div className="h-[132px] rounded-lg border border-line bg-raised" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="h-[120px] rounded-tile border border-line bg-card-filled" />
-          <div className="h-[120px] rounded-tile border border-line bg-card-filled" />
-          <div className="h-[120px] rounded-tile border border-line bg-card-filled" />
+          <div className="h-[120px] rounded-tile border border-line bg-raised" />
+          <div className="h-[120px] rounded-tile border border-line bg-raised" />
+          <div className="h-[120px] rounded-tile border border-line bg-raised" />
         </div>
-        <div className="h-[220px] rounded-lg border border-line bg-card-filled" />
+        <div className="h-[220px] rounded-lg border border-line bg-raised" />
       </div>
-      <div className="h-[440px] rounded-lg border border-line bg-card-filled" />
+      <div className="h-[440px] rounded-lg border border-line bg-raised" />
     </div>
   );
 }

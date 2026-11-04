@@ -38,8 +38,8 @@ function columnsFor(rangeLabel: string): Column[] {
 const ROW_GRID = 'grid grid-cols-[1.4fr_90px_90px_240px_90px] items-center gap-4 px-5';
 const HEADER_LABEL = 'font-mono text-[11px] font-medium uppercase tracking-[0.06em] text-content-secondary';
 const CELL_PRESENT =
-  'grid h-[22px] w-[22px] place-items-center rounded-[6px] bg-status-pos-bg font-mono text-[11px] font-bold text-green-600';
-const CELL_ABSENT = 'h-[22px] w-[22px] rounded-[6px] bg-card-filled';
+  'grid h-[22px] w-[22px] place-items-center rounded bg-status-pos-bg font-mono text-[11px] font-bold text-status-pos';
+const CELL_ABSENT = 'h-[22px] w-[22px] rounded bg-raised';
 
 const MONTH_YEAR_FORMAT: Intl.DateTimeFormatOptions = { month: 'short', year: '2-digit' };
 const DAY_MONTH_FORMAT: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
@@ -124,14 +124,14 @@ export default function OrganizerMembersPage() {
   const gate = renderGate();
 
   return (
-    <div className="min-h-screen bg-[#fbfbfc]">
+    <div className="min-h-screen bg-canvas">
       <OrganizerTopNav active="members" />
       <PageContainer className="py-8">
         {gate ?? (
           <>
             <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="mb-1.5 text-[26px] font-semibold leading-[30px] tracking-[-0.8px]">Members</h1>
+                <h1 className="mb-1.5 text-[26px] font-semibold leading-[30px]">Members</h1>
                 <p className="text-[14px] leading-[20px] text-content-secondary">
                   {members.length} total
                   {recentSessions.length > 0 &&
@@ -142,13 +142,13 @@ export default function OrganizerMembersPage() {
                 </p>
               </div>
               <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:items-center">
-                <label className="flex h-10 w-full items-center gap-2 rounded-full border border-[var(--input-border)] bg-white px-3.5 sm:w-60">
+                <label className="flex h-10 w-full items-center gap-2 rounded-full border border-line-strong bg-surface px-3.5 sm:w-60">
                   <SearchIcon size={15} className="shrink-0 text-content-secondary" />
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search members"
-                    className="w-full bg-transparent text-[13px] outline-none placeholder:text-[var(--input-placeholder)]"
+                    className="w-full bg-transparent text-[13px] outline-none placeholder:text-content-muted"
                   />
                 </label>
                 <Button
@@ -173,7 +173,7 @@ export default function OrganizerMembersPage() {
     if (!ready || (authenticated && meLoading)) {
       return (
         <CenteredState>
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-green border-t-transparent" />
         </CenteredState>
       );
     }
@@ -202,7 +202,7 @@ export default function OrganizerMembersPage() {
     if (isLoading) {
       return (
         <CenteredState>
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-green border-t-transparent" />
         </CenteredState>
       );
     }
@@ -224,8 +224,8 @@ export default function OrganizerMembersPage() {
     }
     return (
       <div className="overflow-x-auto">
-        <Card className="min-w-[760px] overflow-hidden rounded-card shadow-none">
-          <div className={cn(ROW_GRID, 'bg-card-filled py-3')}>
+        <Card className="min-w-[760px] overflow-hidden rounded-card">
+          <div className={cn(ROW_GRID, 'bg-raised py-3')}>
             {columnsFor(rangeLabelFor(recentSessions)).map((col) => (
               <span key={col.key} className={cn(HEADER_LABEL, col.align)}>
                 {col.label}
@@ -259,7 +259,7 @@ function MemberRow({ member, sessions }: { member: MemberStats; sessions: Recent
       <span className="text-right font-mono text-[14px] font-semibold tabular-nums">
         {member.tokensEarned}
       </span>
-      <span className="text-right font-mono text-[14px] font-semibold tabular-nums text-yellow-700">
+      <span className="text-right font-mono text-[14px] font-semibold tabular-nums text-status-warn">
         {member.currentStreak}
       </span>
       <div className="flex justify-center gap-[6px]">
@@ -281,7 +281,7 @@ function MemberRow({ member, sessions }: { member: MemberStats; sessions: Recent
       <span
         className={cn(
           'text-right font-mono text-[13px] font-bold tabular-nums',
-          rateGood ? 'text-green-600' : 'text-ink',
+          rateGood ? 'text-status-pos' : 'text-content',
         )}
       >
         {member.allTimeAttendancePct}%

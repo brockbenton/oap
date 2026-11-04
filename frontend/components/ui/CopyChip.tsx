@@ -29,7 +29,7 @@ export default function CopyChip({ value, display, className }: CopyChipProps) {
   return (
     <div
       className={cn(
-        'flex items-center justify-between rounded-md bg-card-filled px-3 py-2 font-mono text-xs text-content-secondary',
+        'flex items-center justify-between rounded-md bg-raised px-3 py-2 font-mono text-xs text-content-secondary',
         className,
       )}
     >
@@ -37,7 +37,7 @@ export default function CopyChip({ value, display, className }: CopyChipProps) {
       <button
         type="button"
         onClick={handleCopy}
-        className="ml-3 shrink-0 rounded-sm bg-ink text-white text-[10px] uppercase px-2.5 py-1"
+        className="ml-3 shrink-0 rounded-sm bg-raised text-content text-[10px] uppercase px-2.5 py-1"
       >
         {copied ? COPIED_LABEL : IDLE_LABEL}
       </button>

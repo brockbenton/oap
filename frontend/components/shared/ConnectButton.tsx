@@ -9,7 +9,7 @@ export default function ConnectButton() {
     return (
       <button
         disabled
-        className="px-4 py-2 rounded-lg bg-blue-500 text-white opacity-50 cursor-not-allowed text-sm font-medium"
+        className="px-4 py-2 rounded-lg bg-green text-canvas opacity-50 cursor-not-allowed text-sm font-medium"
       >
         Loading...
       </button>
@@ -20,10 +20,10 @@ export default function ConnectButton() {
     const email = user?.email?.address ?? user?.google?.email ?? 'Account';
     return (
       <div className="flex items-center gap-3">
-        <span className="text-sm text-gray-600 truncate max-w-[160px]">{email}</span>
+        <span className="text-sm text-content-secondary truncate max-w-[160px]">{email}</span>
         <button
           onClick={logout}
-          className="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 text-sm font-medium transition-colors"
+          className="px-3 py-1.5 rounded-lg border border-line text-content hover:bg-raised text-sm font-medium transition-colors"
         >
           Sign out
         </button>
@@ -34,7 +34,7 @@ export default function ConnectButton() {
   return (
     <button
       onClick={login}
-      className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium transition-colors"
+      className="px-4 py-2 rounded-lg bg-green text-canvas hover:bg-green-dim text-sm font-medium transition-colors"
     >
       Sign in
     </button>

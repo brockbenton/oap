@@ -56,11 +56,11 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#fbfbfc] px-6 py-12">
-      <div className="w-full max-w-md animate-fade-in rounded-lg border border-line bg-white p-8">
+    <div className="flex min-h-screen items-center justify-center bg-canvas px-6 py-12">
+      <div className="w-full max-w-md animate-fade-in rounded-lg border border-line bg-surface p-8">
         <div className="flex flex-col items-center text-center">
           <Avatar seed={seed} label={previewName} colorIndex={avatarColor} size={AVATAR_SIZE} />
-          <h1 className="mt-5 text-[26px] font-semibold leading-8 tracking-[-0.5px]">{HEADING}</h1>
+          <h1 className="mt-5 text-[26px] font-semibold leading-8">{HEADING}</h1>
           <p className="mt-2 text-sm leading-5 text-content-secondary">{SUBHEADING}</p>
         </div>
 
@@ -97,7 +97,7 @@ export default function Onboarding() {
                   onClick={() => setAvatarColor(i)}
                   className={cn(
                     'h-9 w-9 rounded-full ring-2 ring-offset-2 transition',
-                    avatarColor === i ? 'ring-ink' : 'ring-transparent hover:ring-line',
+                    avatarColor === i ? 'ring-green' : 'ring-transparent hover:ring-line',
                   )}
                   style={{ background: avatarGradientByIndex(i) }}
                 />

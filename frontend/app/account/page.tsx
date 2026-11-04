@@ -72,7 +72,7 @@ export default function AccountPage() {
   ];
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#fbfbfc]">
+    <div className="flex min-h-screen flex-col bg-canvas">
       <MemberTopNav />
 
       <main className="flex-1 px-5 pb-24 pt-6 sm:pb-10">
@@ -83,10 +83,10 @@ export default function AccountPage() {
               label={displayName}
               colorIndex={avatarColor}
               size={AVATAR_SIZE}
-              className="mb-3.5 shadow-[0_8px_24px_rgba(104,51,255,0.35)]"
+              className="mb-3.5"
             />
             <div className="mb-1.5 flex items-center gap-2">
-              <span className="text-[20px] font-semibold leading-none tracking-[-0.3px]">{displayName}</span>
+              <span className="text-[20px] font-semibold leading-none">{displayName}</span>
               {stats && <Badge tone="rew">{stats.statusTier}</Badge>}
             </div>
             <div className="font-mono text-xs font-medium text-content-secondary">
@@ -96,11 +96,11 @@ export default function AccountPage() {
 
           <div className="mb-4 grid grid-cols-3 gap-2.5">
             {profileStats.map((stat) => (
-              <div key={stat.label} className="rounded-[14px] border border-line bg-white p-3.5 text-center">
+              <div key={stat.label} className="rounded border border-line bg-surface p-3.5 text-center">
                 <div
                   className={cn(
                     'font-mono text-[20px] font-bold leading-none tabular-nums',
-                    stat.accent && 'text-yellow-700',
+                    stat.accent && 'text-status-warn',
                   )}
                 >
                   {stat.value}
@@ -114,16 +114,16 @@ export default function AccountPage() {
             <CopyChip
               value={address}
               display={shortenAddress(address)}
-              className="mb-4 rounded-[12px] px-3.5 py-3"
+              className="mb-4 rounded px-3.5 py-3"
             />
           )}
 
-          <div className="divide-y divide-line overflow-hidden rounded-[14px] border border-line bg-white">
+          <div className="divide-y divide-line overflow-hidden rounded border border-line bg-surface">
             {MENU_LINKS.map(({ label, href, Icon }) => (
-              <Link key={label} href={href} className={cn(MENU_ROW, 'text-ink')}>
+              <Link key={label} href={href} className={cn(MENU_ROW, 'text-content')}>
                 <Icon size={MENU_ICON_SIZE} />
                 {label}
-                <ChevronRight size={CHEVRON_SIZE} className="ml-auto text-content-disabled" />
+                <ChevronRight size={CHEVRON_SIZE} className="ml-auto text-content-muted" />
               </Link>
             ))}
             <button type="button" onClick={() => logout()} className={cn(MENU_ROW, 'font-semibold text-status-neg')}>

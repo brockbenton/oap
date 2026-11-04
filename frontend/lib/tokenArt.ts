@@ -1,15 +1,16 @@
-export type GradientName = 'blue' | 'purple' | 'green' | 'orange' | 'red' | 'teal';
+export type TokenColor = 'blue' | 'purple' | 'green' | 'orange' | 'red' | 'teal';
 
-export const TOKEN_GRADIENTS: Record<GradientName, string> = {
-  blue:   'linear-gradient(135deg, #005cf0, #26ddf9)',
-  purple: 'linear-gradient(135deg, #6833ff, #a485ff)',
-  green:  'linear-gradient(135deg, #0e8535, #c8f028)',
-  orange: 'linear-gradient(135deg, #fb6832, #f7b133)',
-  red:    'linear-gradient(135deg, #fc4848, #f59e00)',
-  teal:   'linear-gradient(135deg, #00a6a6, #26ddf9)',
+// Flat, dark tints: token art sits on the canvas without gradients or glow.
+export const TOKEN_COLORS: Record<TokenColor, string> = {
+  blue: '#17303F',
+  purple: '#2A2440',
+  green: '#17352A',
+  orange: '#3A2A16',
+  red: '#3A1E20',
+  teal: '#143533',
 };
 
-export const GRADIENT_NAMES: GradientName[] = Object.keys(TOKEN_GRADIENTS) as GradientName[];
+export const TOKEN_COLOR_NAMES = Object.keys(TOKEN_COLORS) as TokenColor[];
 
 const GRADIENT_ANGLE = '135deg';
 
@@ -31,13 +32,13 @@ function charSum(input: string): number {
   return sum;
 }
 
-/** The typed gradient name a topic maps to — for props that take a name, not CSS. */
-export function gradientNameForTopic(topic: string): GradientName {
-  return GRADIENT_NAMES[charSum(topic) % GRADIENT_NAMES.length];
+/** The token color a topic maps to, for props that take a name rather than CSS. */
+export function colorNameForTopic(topic: string): TokenColor {
+  return TOKEN_COLOR_NAMES[charSum(topic) % TOKEN_COLOR_NAMES.length];
 }
 
-export function gradientForTopic(topic: string): string {
-  return TOKEN_GRADIENTS[gradientNameForTopic(topic)];
+export function colorForTopic(topic: string): string {
+  return TOKEN_COLORS[colorNameForTopic(topic)];
 }
 
 export function avatarGradient(seed: string): string {

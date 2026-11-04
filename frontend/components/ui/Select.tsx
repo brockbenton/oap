@@ -4,7 +4,7 @@ import { cn } from '@/lib/cn';
 export type SelectProps = SelectHTMLAttributes<HTMLSelectElement>;
 
 const BASE_CLASSES =
-  'h-12 w-full rounded-md border border-[var(--input-border)] bg-white px-4 text-[15px] outline-none focus:border-ink';
+  'h-12 w-full rounded-md border border-line-strong bg-surface px-4 text-[15px] outline-none focus:border-green';
 
 const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
   { className, children, ...props },

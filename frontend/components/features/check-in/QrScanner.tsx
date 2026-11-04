@@ -53,9 +53,9 @@ export default function QrScanner({ onScan, onError }: QrScannerProps) {
     <div className="w-full max-w-sm mx-auto">
       <div
         ref={containerRef}
-        className="rounded-xl overflow-hidden bg-black aspect-square"
+        className="rounded-xl overflow-hidden bg-canvas aspect-square"
       />
-      <p className="text-center text-sm text-gray-500 mt-3">
+      <p className="text-center text-sm text-content-secondary mt-3">
         Point your camera at the QR code on the screen.
       </p>
     </div>

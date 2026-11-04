@@ -43,7 +43,7 @@ const CONNECTED_CAPTION =
   "Supports EVM wallets like MetaMask. Solana wallets (e.g. Phantom) aren't supported yet.";
 
 const EXTERNAL_LINK_CLASSES =
-  'inline-flex items-center gap-1.5 text-sm font-medium text-ink transition hover:text-content-secondary';
+  'inline-flex items-center gap-1.5 text-sm font-medium text-content transition hover:text-content-secondary';
 
 export default function WalletPage() {
   const { ready, authenticated, unlinkWallet } = usePrivy();
@@ -68,10 +68,10 @@ export default function WalletPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fbfbfc]">
+    <div className="min-h-screen bg-canvas">
       <MemberTopNav />
       <PageContainer className="pt-8 pb-24 md:pb-8">
-        <h1 className="mb-6 text-[30px] font-semibold leading-9 tracking-[-1px]">{PAGE_TITLE}</h1>
+        <h1 className="mb-6 text-[30px] font-semibold leading-9">{PAGE_TITLE}</h1>
 
         <div className="mb-6 flex items-center gap-4">
           <Avatar
@@ -159,8 +159,8 @@ export default function WalletPage() {
 
 function FullPageSpinner() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#fbfbfc]">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink border-t-transparent" />
+    <div className="flex min-h-screen items-center justify-center bg-canvas">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-green border-t-transparent" />
     </div>
   );
 }

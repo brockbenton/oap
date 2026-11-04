@@ -2,39 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Semantic tokens, consumed through tailwind.config.ts. */
+/* Calm terminal tokens, as RGB channels so Tailwind opacity modifiers work. */
 :root {
-  --content-default: #010304;
-  --content-secondary: rgba(6, 16, 24, 0.6);
-  --content-disabled: rgba(6, 16, 24, 0.3);
-  --content-highlight: #0093f5;
+  color-scheme: dark;
 
-  --border-default: rgba(1, 3, 4, 0.1);
-  --border-strong: rgba(1, 3, 4, 0.2);
+  --canvas: 10 15 12;
+  --surface: 17 24 20;
+  --raised: 24 33 27;
+  --line: 38 53 44;
+  --line-strong: 58 77 65;
 
-  --card-bg: #ffffff;
-  --card-filled: rgba(102, 121, 149, 0.08);
-  --card-border: rgba(102, 121, 149, 0.2);
+  --content: 230 237 232;
+  --content-secondary: 163 179 168;
+  --content-muted: 125 148 134;
 
-  --input-border: rgba(72, 94, 125, 0.3);
-  --input-placeholder: rgba(102, 111, 126, 0.6);
-
-  --status-info-content: #005cf0;
-  --status-pos-content: #0e8535;
-  --status-warn-content: #935f00;
-  --status-neg-content: #ca3a3a;
-  --status-rew-content: #5329cc;
-  --status-neutral-content: #5c697d;
-  --status-info-bg: rgba(0, 92, 240, 0.08);
-  --status-pos-bg: rgba(14, 133, 53, 0.08);
-  --status-warn-bg: rgba(247, 177, 51, 0.08);
-  --status-neg-bg: rgba(202, 58, 58, 0.08);
-  --status-rew-bg: rgba(83, 41, 204, 0.08);
-  --status-neutral-bg: rgba(102, 121, 149, 0.12);
+  --green: 61 220 132;
+  --green-dim: 47 191 111;
+  --amber: 245 184 75;
+  --red: 255 107 107;
+  --cyan: 124 199 255;
 }
 
 @layer base {
-  body { font-family: var(--font-geist-sans), system-ui, sans-serif; color: var(--content-default); background: #ffffff; -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: var(--font-plex-sans), system-ui, sans-serif;
+    color: rgb(var(--content));
+    background: rgb(var(--canvas));
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-weight: 500;
+  }
+
+  :focus-visible {
+    outline: 1px solid rgb(var(--green));
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }
 
-@layer utilities { .num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; } }
+@layer utilities {
+  .font-mono { font-feature-settings: "tnum" 1, "zero" 1; }
+}

@@ -40,12 +40,12 @@ const FOOTER_COLUMNS: FooterColumn[] = [
   },
 ];
 
-const LINK_CLASSES = 'text-sm text-ink transition hover:text-content-secondary';
+const LINK_CLASSES = 'text-sm text-content transition hover:text-content-secondary';
 const HEADING_CLASSES = 'mb-3 font-mono text-xs uppercase tracking-[0.06em] text-content-secondary';
 
 export default function Footer() {
   return (
-    <footer className="border-t border-line bg-white">
+    <footer className="border-t border-line bg-surface">
       <PageContainer className="py-12">
         <div className="flex flex-col gap-10 md:flex-row md:justify-between">
           <div className="max-w-[280px]">

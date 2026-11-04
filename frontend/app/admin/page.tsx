@@ -24,8 +24,8 @@ export default function AdminOverviewPage() {
   return (
     <div className="max-w-5xl mx-auto w-full space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Overview</h1>
-        <p className="text-sm text-slate-500">
+        <h1 className="text-2xl font-bold text-content">Overview</h1>
+        <p className="text-sm text-content-secondary">
           {data?.currentSemester ? `Current semester: ${data.currentSemester}` : 'Club attendance at a glance'}
         </p>
       </div>
@@ -33,9 +33,9 @@ export default function AdminOverviewPage() {
       {isLoading ? (
         <OverviewSkeleton />
       ) : error ? (
-        <p className="text-red-600 text-sm py-16 text-center">Couldn&apos;t load the overview. Please try again.</p>
+        <p className="text-status-neg text-sm py-16 text-center">Couldn&apos;t load the overview. Please try again.</p>
       ) : !data || data.totalSessions === 0 ? (
-        <p className="text-slate-500 text-sm py-16 text-center">No sessions yet — create one to see attendance trends.</p>
+        <p className="text-content-secondary text-sm py-16 text-center">No sessions yet — create one to see attendance trends.</p>
       ) : (
         <OverviewBody data={data} />
       )}
@@ -59,11 +59,11 @@ function OverviewBody({ data }: { data: AdminOverview }) {
         />
       </div>
 
-      <section className="rounded-2xl bg-white border border-gray-200 p-5 sm:p-6 shadow-sm">
+      <section className="rounded-2xl bg-surface border border-line p-5 sm:p-6">
         <div className="flex items-baseline justify-between mb-4">
-          <h2 className="text-sm font-semibold text-slate-700">Attendance rate over time</h2>
+          <h2 className="text-sm font-semibold text-content">Attendance rate over time</h2>
           {data.latest && (
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-content-secondary">
               Latest {data.latest.attendanceRate}%
               {data.wow && <DeltaText delta={data.wow.attendanceRateDelta} suffix="pts" />}
             </span>
@@ -72,8 +72,8 @@ function OverviewBody({ data }: { data: AdminOverview }) {
         <AttendanceChart series={data.series} />
       </section>
 
-      <section className="rounded-2xl bg-white border border-gray-200 p-5 sm:p-6 shadow-sm">
-        <h2 className="text-sm font-semibold text-slate-700 mb-4">Per-session headcount</h2>
+      <section className="rounded-2xl bg-surface border border-line p-5 sm:p-6">
+        <h2 className="text-sm font-semibold text-content mb-4">Per-session headcount</h2>
         <HeadcountBars series={data.series} />
       </section>
     </div>
@@ -82,12 +82,12 @@ function OverviewBody({ data }: { data: AdminOverview }) {
 
 function Tile({ label, value, delta }: { label: string; value: number; delta?: number | null }) {
   return (
-    <div className="rounded-2xl bg-white border border-gray-200 p-4 shadow-sm">
+    <div className="rounded-2xl bg-surface border border-line p-4">
       <div className="flex items-baseline gap-2">
-        <p className="text-3xl font-bold tabular-nums text-slate-900">{value}</p>
+        <p className="text-3xl font-bold tabular-nums text-content">{value}</p>
         {delta != null && delta !== 0 && <DeltaBadge delta={delta} />}
       </div>
-      <p className="mt-1 text-xs text-slate-500">{label}</p>
+      <p className="mt-1 text-xs text-content-secondary">{label}</p>
     </div>
   );
 }
@@ -97,7 +97,7 @@ function DeltaBadge({ delta }: { delta: number }) {
   return (
     <span
       className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full ${
-        up ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+        up ? 'bg-status-pos-bg text-status-pos' : 'bg-status-neg-bg text-status-neg'
       }`}
     >
       {up ? '▲' : '▼'} {Math.abs(delta)}
@@ -106,10 +106,10 @@ function DeltaBadge({ delta }: { delta: number }) {
 }
 
 function DeltaText({ delta, suffix }: { delta: number; suffix: string }) {
-  if (delta === 0) return <span className="text-slate-400"> · flat</span>;
+  if (delta === 0) return <span className="text-content-muted"> · flat</span>;
   const up = delta > 0;
   return (
-    <span className={up ? 'text-emerald-600' : 'text-red-600'}>
+    <span className={up ? 'text-status-pos' : 'text-status-neg'}>
       {' '}
       {up ? '▲' : '▼'} {Math.abs(delta)} {suffix}
     </span>
@@ -148,22 +148,22 @@ function AttendanceChart({ series }: { series: OverviewSessionPoint[] }) {
           const y = yFor(g);
           return (
             <g key={g}>
-              <line x1={PAD_L} y1={y} x2={CHART_W - PAD_R} y2={y} stroke="#eef2f7" strokeWidth={1} />
-              <text x={PAD_L - 6} y={y + 3} textAnchor="end" fontSize={10} fill="#94a3b8">
+              <line x1={PAD_L} y1={y} x2={CHART_W - PAD_R} y2={y} stroke="rgb(var(--line))" strokeWidth={1} />
+              <text x={PAD_L - 6} y={y + 3} textAnchor="end" fontSize={10} fill="rgb(var(--content-muted))">
                 {g}
               </text>
             </g>
           );
         })}
 
-        {areaPath && <path d={areaPath} fill="#3b82f6" fillOpacity={0.1} />}
-        {linePath && <path d={linePath} fill="none" stroke="#3b82f6" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />}
+        {areaPath && <path d={areaPath} fill="rgb(var(--green))" fillOpacity={0.1} />}
+        {linePath && <path d={linePath} fill="none" stroke="rgb(var(--green))" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />}
 
         {points.map((pt, i) => (
           <g key={pt.p.sessionIdOnchain}>
-            <circle cx={pt.x} cy={pt.y} r={i === points.length - 1 ? 4 : 3} fill="#3b82f6" />
+            <circle cx={pt.x} cy={pt.y} r={i === points.length - 1 ? 4 : 3} fill="rgb(var(--green))" />
             {i % labelEvery === 0 || i === points.length - 1 ? (
-              <text x={pt.x} y={CHART_H - 10} textAnchor="middle" fontSize={10} fill="#94a3b8">
+              <text x={pt.x} y={CHART_H - 10} textAnchor="middle" fontSize={10} fill="rgb(var(--content-muted))">
                 {shortDate(pt.p.date)}
               </text>
             ) : null}
@@ -181,16 +181,16 @@ function HeadcountBars({ series }: { series: OverviewSessionPoint[] }) {
     <div className="space-y-2.5">
       {ordered.map((s) => (
         <div key={s.sessionIdOnchain} className="flex items-center gap-3 text-sm">
-          <div className="w-40 shrink-0 truncate text-slate-600" title={s.name}>
+          <div className="w-40 shrink-0 truncate text-content-secondary" title={s.name}>
             {s.name}
           </div>
-          <div className="flex-1 h-5 rounded bg-gray-100 overflow-hidden">
+          <div className="flex-1 h-5 rounded bg-raised overflow-hidden">
             <div
-              className="h-full rounded bg-blue-500/80"
+              className="h-full rounded bg-green/80"
               style={{ width: `${Math.round((s.headcount / max) * 100)}%` }}
             />
           </div>
-          <div className="w-24 shrink-0 text-right tabular-nums text-slate-500 text-xs">
+          <div className="w-24 shrink-0 text-right tabular-nums text-content-secondary text-xs">
             {s.headcount} · {s.attendanceRate}%
           </div>
         </div>
@@ -204,11 +204,11 @@ function OverviewSkeleton() {
     <div className="space-y-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-2xl bg-white border border-gray-200 h-24 animate-pulse" />
+          <div key={i} className="rounded-2xl bg-surface border border-line h-24 animate-pulse" />
         ))}
       </div>
-      <div className="rounded-2xl bg-white border border-gray-200 h-64 animate-pulse" />
-      <div className="rounded-2xl bg-white border border-gray-200 h-48 animate-pulse" />
+      <div className="rounded-2xl bg-surface border border-line h-64 animate-pulse" />
+      <div className="rounded-2xl bg-surface border border-line h-48 animate-pulse" />
     </div>
   );
 }

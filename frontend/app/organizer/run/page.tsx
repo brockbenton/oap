@@ -179,10 +179,10 @@ export default function OrganizerRunMeetingPage() {
   const roster = [...(attendees ?? [])].reverse();
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-surface">
       <header className="flex h-14 items-center gap-3 border-b border-line px-4 sm:px-7">
-        <div className="inline-flex items-center gap-2 text-[13px] font-semibold text-green-600">
-          <span className="h-2 w-2 rounded-full bg-green-500" />
+        <div className="inline-flex items-center gap-2 text-[13px] font-semibold text-status-pos">
+          <span className="h-2 w-2 rounded-full bg-green" />
           <span>
             {LIVE_LABEL} · <MonoNum>{clockValue}</MonoNum>
           </span>
@@ -193,7 +193,7 @@ export default function OrganizerRunMeetingPage() {
           </Button>
           <button
             type="button"
-            className="inline-flex h-[38px] items-center justify-center rounded-full bg-red-500 px-[18px] text-[13px] font-semibold text-white transition duration-200 hover:bg-red-600 active:scale-[0.98]"
+            className="inline-flex h-[38px] items-center justify-center rounded-full bg-red px-[18px] text-[13px] font-semibold text-canvas transition duration-200 hover:bg-red/90 active:scale-[0.98]"
           >
             {END_LABEL}
           </button>
@@ -203,12 +203,11 @@ export default function OrganizerRunMeetingPage() {
       <div className="grid flex-1 grid-cols-1 lg:grid-cols-[1.35fr_1fr]">
         <section
           className="flex flex-col items-center justify-center border-b border-line px-6 py-12 text-center sm:px-10 lg:border-b-0 lg:border-r"
-          style={{ background: 'radial-gradient(120% 100% at 50% 0%, #f2f7fe, #fff 60%)' }}
         >
           <div className="mb-3 font-mono text-[12px] font-medium uppercase tracking-[0.1em] text-status-neutral">
             {activeSession.semester} · {CLUB_NAME}
           </div>
-          <h1 className="mb-2 text-[34px] font-semibold leading-[40px] tracking-[-1px] text-ink">
+          <h1 className="mb-2 text-[34px] font-semibold leading-[40px] text-content">
             {activeSession.name}
           </h1>
           <p className="mb-7 max-w-md text-[16px] leading-[24px] text-content-secondary">
@@ -216,7 +215,7 @@ export default function OrganizerRunMeetingPage() {
           </p>
 
           <div
-            className="rounded-context border border-line bg-white p-6 shadow-elev-md"
+            className="rounded-context border border-line bg-white p-6"
             style={{ width: QR_PANEL_SIZE, height: QR_PANEL_SIZE }}
           >
             {qrPayload ? (
@@ -238,17 +237,17 @@ export default function OrganizerRunMeetingPage() {
         </section>
 
         <section className="flex flex-col px-7 py-8">
-          <div className="mb-5 rounded-card bg-ink p-5 text-center text-white">
-            <MonoNum className="block text-[56px] font-bold leading-none tracking-[-2px] text-cyan">
+          <div className="mb-5 rounded-card bg-raised p-5 text-center text-content">
+            <MonoNum className="block text-[56px] font-bold leading-none text-green">
               {attendees?.length ?? activeSession.attendeeCount}
             </MonoNum>
-            <div className="mt-2 text-[13px] font-medium text-[rgba(218,229,247,0.7)]">
+            <div className="mt-2 text-[13px] font-medium text-content-secondary">
               {overview ? `checked in of ${overview.totalMembers} members` : 'checked in'}
             </div>
           </div>
 
-          <div className="mb-3 flex items-center gap-2 text-[14px] font-semibold text-ink">
-            <span className="h-[7px] w-[7px] rounded-full bg-green-500" />
+          <div className="mb-3 flex items-center gap-2 text-[14px] font-semibold text-content">
+            <span className="h-[7px] w-[7px] rounded-full bg-green" />
             {ROSTER_HEADER}
           </div>
 
@@ -270,9 +269,9 @@ function RosterRow({ attendee, now }: { attendee: Attendee; now: number }) {
   return (
     <div className="flex items-center gap-3 border-b border-line py-2.5 last:border-0">
       <Avatar seed={attendee.walletAddress} label={handle} size={ROSTER_AVATAR_SIZE} />
-      <span className="flex-1 truncate text-[14px] font-semibold text-ink">{handle}</span>
+      <span className="flex-1 truncate text-[14px] font-semibold text-content">{handle}</span>
       <MonoNum
-        className={`text-[11px] font-medium ${isNow ? 'text-green-600' : 'text-content-secondary'}`}
+        className={`text-[11px] font-medium ${isNow ? 'text-status-pos' : 'text-content-secondary'}`}
       >
         {formatAgo(secondsAgo)}
       </MonoNum>
@@ -281,12 +280,12 @@ function RosterRow({ attendee, now }: { attendee: Attendee; now: number }) {
 }
 
 function Spinner() {
-  return <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink border-t-transparent" />;
+  return <div className="h-8 w-8 animate-spin rounded-full border-4 border-green border-t-transparent" />;
 }
 
 function FullScreenSpinner() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white">
+    <div className="flex min-h-screen items-center justify-center bg-surface">
       <Spinner />
     </div>
   );
@@ -294,11 +293,11 @@ function FullScreenSpinner() {
 
 function NoMeeting() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white px-6">
+    <div className="flex min-h-screen items-center justify-center bg-surface px-6">
       <Card className="w-full max-w-sm space-y-4 p-8 text-center">
-        <h1 className="text-lg font-semibold text-ink">{NO_MEETING_TITLE}</h1>
+        <h1 className="text-lg font-semibold text-content">{NO_MEETING_TITLE}</h1>
         <p className="text-sm text-content-secondary">{NO_MEETING_BODY}</p>
-        <Link href={SESSIONS_ROUTE} className="inline-block text-sm font-medium text-blue-500 hover:underline">
+        <Link href={SESSIONS_ROUTE} className="inline-block text-sm font-medium text-cyan hover:underline">
           Go to sessions
         </Link>
       </Card>
@@ -308,11 +307,11 @@ function NoMeeting() {
 
 function AccessGate() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white px-6">
+    <div className="flex min-h-screen items-center justify-center bg-surface px-6">
       <Card className="w-full max-w-sm space-y-4 p-8 text-center">
-        <h1 className="text-lg font-semibold text-ink">{ACCESS_TITLE}</h1>
+        <h1 className="text-lg font-semibold text-content">{ACCESS_TITLE}</h1>
         <p className="text-sm text-content-secondary">{ACCESS_BODY}</p>
-        <Link href="/" className="inline-block text-sm font-medium text-blue-500 hover:underline">
+        <Link href="/" className="inline-block text-sm font-medium text-cyan hover:underline">
           Back to app
         </Link>
       </Card>
