@@ -45,14 +45,6 @@ export function ChevronDown(props: IconProps) {
   );
 }
 
-export function ChevronRight(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M9 6l6 6-6 6" />
-    </Svg>
-  );
-}
-
 export function ArrowRight(props: IconProps) {
   return (
     <Svg {...props}>
@@ -65,15 +57,6 @@ export function ArrowLeft(props: IconProps) {
   return (
     <Svg {...props}>
       <path d="M5 12h14M11 5l-7 7 7 7" />
-    </Svg>
-  );
-}
-
-export function SearchIcon(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <circle cx="11" cy="11" r="7" />
-      <path d="M21 21l-4-4" />
     </Svg>
   );
 }
@@ -177,14 +160,6 @@ export function ExternalLinkIcon(props: IconProps) {
   return (
     <Svg {...props}>
       <path d="M7 17L17 7M8 7h9v9" />
-    </Svg>
-  );
-}
-
-export function FlameIcon(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
     </Svg>
   );
 }
