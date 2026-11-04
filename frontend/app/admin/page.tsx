@@ -96,7 +96,7 @@ function DeltaBadge({ delta }: { delta: number }) {
   const up = delta > 0;
   return (
     <span
-      className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full ${
+      className={`text-[11px] font-semibold px-1.5 py-0.5 rounded ${
         up ? 'bg-status-pos-bg text-status-pos' : 'bg-status-neg-bg text-status-neg'
       }`}
     >
@@ -186,7 +186,7 @@ function HeadcountBars({ series }: { series: OverviewSessionPoint[] }) {
           </div>
           <div className="flex-1 h-5 rounded bg-raised overflow-hidden">
             <div
-              className="h-full rounded bg-green/80"
+              className="h-full rounded bg-line-strong"
               style={{ width: `${Math.round((s.headcount / max) * 100)}%` }}
             />
           </div>

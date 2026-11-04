@@ -88,14 +88,14 @@ export default function AdminSessionQRPage() {
 
   if (!ready || !authenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface">
+      <div className="min-h-screen flex items-center justify-center bg-canvas">
         <div className="w-8 h-8 border-4 border-green border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface">
+    <div className="min-h-screen flex flex-col bg-canvas">
       <header className="flex items-center justify-between px-6 py-4 border-b border-line">
         <Link href="/admin/sessions" className="text-content-secondary hover:text-content">
           <svg

@@ -61,10 +61,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const account = user?.email?.address ?? user?.google?.email ?? me.walletAddress;
 
   return (
-    <div className="min-h-screen bg-raised flex">
+    <div className="min-h-screen bg-canvas flex">
       <aside className="hidden md:flex md:w-60 shrink-0 flex-col bg-surface text-content-muted">
         <div className="px-5 h-16 flex items-center gap-2 border-b border-line">
-          <span className="w-7 h-7 rounded-lg bg-green flex items-center justify-center text-canvas text-sm font-bold">
+          <span className="w-7 h-7 rounded-lg border border-line-strong flex items-center justify-center text-green text-sm font-bold">
             A
           </span>
           <div className="leading-tight">
@@ -102,7 +102,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <span className="hidden sm:inline text-xs text-content-secondary truncate max-w-[180px]">{account}</span>
-            <span className="inline-flex items-center rounded-full bg-status-pos-bg text-status-pos text-[11px] font-semibold px-2.5 py-1">
+            <span className="inline-flex items-center rounded bg-status-pos-bg text-status-pos text-[11px] font-semibold px-2.5 py-1">
               Admin
             </span>
           </div>
@@ -121,7 +121,7 @@ function NavLink({ item, pathname }: { item: (typeof NAV)[number]; pathname: str
     <Link
       href={item.href}
       className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-        active ? 'bg-green text-canvas' : 'text-content-muted hover:bg-raised hover:text-content'
+        active ? 'bg-raised text-green' : 'text-content-muted hover:bg-raised hover:text-content'
       }`}
     >
       {item.label}
@@ -134,8 +134,8 @@ function NavPill({ item, pathname }: { item: (typeof NAV)[number]; pathname: str
   return (
     <Link
       href={item.href}
-      className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium ${
-        active ? 'bg-green text-canvas' : 'text-content-secondary hover:bg-raised'
+      className={`whitespace-nowrap px-3 py-1.5 rounded text-xs font-medium ${
+        active ? 'bg-raised text-green' : 'text-content-secondary hover:bg-raised'
       }`}
     >
       {item.label}

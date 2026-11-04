@@ -179,7 +179,7 @@ export default function OrganizerRunMeetingPage() {
   const roster = [...(attendees ?? [])].reverse();
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface">
+    <div className="min-h-screen flex flex-col bg-canvas">
       <header className="flex h-14 items-center gap-3 border-b border-line px-4 sm:px-7">
         <div className="inline-flex items-center gap-2 text-[13px] font-semibold text-status-pos">
           <span className="h-2 w-2 rounded-full bg-green" />
@@ -193,7 +193,7 @@ export default function OrganizerRunMeetingPage() {
           </Button>
           <button
             type="button"
-            className="inline-flex h-[38px] items-center justify-center rounded-full bg-red px-[18px] text-[13px] font-semibold text-canvas transition duration-200 hover:bg-red/90 active:scale-[0.98]"
+            className="inline-flex h-[38px] items-center justify-center rounded bg-red px-[18px] text-[13px] font-semibold text-canvas transition duration-200 hover:bg-red/90"
           >
             {END_LABEL}
           </button>
@@ -285,7 +285,7 @@ function Spinner() {
 
 function FullScreenSpinner() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface">
+    <div className="flex min-h-screen items-center justify-center bg-canvas">
       <Spinner />
     </div>
   );
@@ -293,7 +293,7 @@ function FullScreenSpinner() {
 
 function NoMeeting() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface px-6">
+    <div className="flex min-h-screen items-center justify-center bg-canvas px-6">
       <Card className="w-full max-w-sm space-y-4 p-8 text-center">
         <h1 className="text-lg font-semibold text-content">{NO_MEETING_TITLE}</h1>
         <p className="text-sm text-content-secondary">{NO_MEETING_BODY}</p>
@@ -307,7 +307,7 @@ function NoMeeting() {
 
 function AccessGate() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface px-6">
+    <div className="flex min-h-screen items-center justify-center bg-canvas px-6">
       <Card className="w-full max-w-sm space-y-4 p-8 text-center">
         <h1 className="text-lg font-semibold text-content">{ACCESS_TITLE}</h1>
         <p className="text-sm text-content-secondary">{ACCESS_BODY}</p>
