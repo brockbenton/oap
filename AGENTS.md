@@ -1,6 +1,6 @@
 # AGENTS.md — Review & contribution guidelines
 
-Onchain Club Protocol (OCP): members check in to club meetings with signed QR codes and receive soulbound ERC-1155 attendance tokens; Phase 5 adds soulbound Rep and on-chain governance (Governor + Timelock) for our club. Plan of record: `MASTER_PLAN.md`. Security inventory and review checklist: `SECURITY.md`.
+Onchain Club Protocol (OCP): members check in to club meetings with signed QR codes and receive soulbound ERC-1155 attendance tokens; Phase 5 adds participation-earned, gradually decaying soulbound Rep and on-chain governance (Governor + Timelock) for our club. Plan of record: `MASTER_PLAN.md`. Security inventory and review checklist: `SECURITY.md`.
 
 ## Stack
 - `smart-contract/` — Solidity ^0.8.24, Foundry, OpenZeppelin v5. Use `~/.foundry/bin/forge` (`/usr/bin/forge` is an unrelated binary).
@@ -23,9 +23,19 @@ Each package has a `CLAUDE.md` with its conventions and FORBIDDEN list — treat
 - Frontend: no secrets, no hardcoded contract addresses or API URLs (`NEXT_PUBLIC_*` env vars), no `useEffect` data fetching (use TanStack Query).
 - Never enable Privy delegated actions / session signers.
 
+## Club DAO v1 reputation rules
+- Full **10 nominal Rep per verified eligible attendance**, after two distinct officers approve the final AT-holder list; replay-safe permissionless paged credit with a common recognition timestamp.
+- Gradual decay is **required in v1**. Half-life **180 days is provisional** for 5a validation. Lifetime attendance/ATs never decay; no semester or officer-controlled epoch rollover.
+- No supply-based session reduction, weekly Rep caps/budgets, deferred balances or claim jobs. Gas and treasury budgets are separate.
+- Use decay-aware IVotes with consistent historical account/total power, fixed proposal snapshots, fixed-point units and bounded reads. Ordinary OZ Votes does not decay automatically. New credits must not rejuvenate old Rep or rewrite past snapshots.
+- Passive decay emits no events; indexers/UI need timestamped current-power reads/reconstruction and separate lifetime history.
+- Decay does not prevent fake accounts or colluding officers. No aggregate issuance-rate bound is claimed. Review that threat model and resolve below-threshold/zero-supply governance recovery before deployment (#50, #52, #61, #68).
+- For the complete v1 design, align this security inventory with PR #45 Revision 3.3; do not implement older no-decay or epoch-budget requirements from historical issue context.
+
 ## Commands
 ```bash
 cd smart-contract && ~/.foundry/bin/forge test
 cd backend && npm run typecheck && npm test      # tests need a local Postgres
 cd frontend && npm run typecheck && npm run lint && npm run build
 ```
+
