@@ -216,7 +216,7 @@ Attendance tokens and Rep are separate: tokens mint instantly as a record; **Rep
 | Feature | Status | Details |
 |---|---|---|
 | No secrets in the client | ✅ | Only `NEXT_PUBLIC_*` values (Privy app id, API URL) |
-| Fail fast without Privy config | ⚠️ | Builds without `NEXT_PUBLIC_PRIVY_APP_ID` succeed with wallet features silently broken (#49) |
+| Fail fast without Privy config | ✅ | `next.config.mjs` fails dev and build when `NEXT_PUBLIC_PRIVY_APP_ID` is missing (#49) |
 | Current influence and permanent history | 🟡 | Show pending officer approval, approved-awaiting-credit and credited influence with an as-of time. Current Rep decays without new events; timestamp/refresh caches. Lifetime AT/history is separate. No weekly-deferred-credit UI (#61, #68) |
 
 ---
