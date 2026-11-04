@@ -142,13 +142,13 @@ export default function OrganizerMembersPage() {
                 </p>
               </div>
               <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:items-center">
-                <label className="flex h-10 w-full items-center gap-2 rounded-full border border-[var(--l-input-border)] bg-white px-3.5 sm:w-60">
+                <label className="flex h-10 w-full items-center gap-2 rounded-full border border-[var(--input-border)] bg-white px-3.5 sm:w-60">
                   <SearchIcon size={15} className="shrink-0 text-content-secondary" />
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search members"
-                    className="w-full bg-transparent text-[13px] outline-none placeholder:text-[var(--l-input-placeholder)]"
+                    className="w-full bg-transparent text-[13px] outline-none placeholder:text-[var(--input-placeholder)]"
                   />
                 </label>
                 <Button

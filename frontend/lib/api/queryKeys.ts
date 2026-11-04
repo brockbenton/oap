@@ -11,9 +11,5 @@ export const queryKeys = {
   memberVault: (address: string) => ['member', address, 'vault'] as const,
   memberStats: (address: string) => ['member', address, 'stats'] as const,
   myProfile: (userId?: string) => ['member', 'me', 'profile', userId ?? 'anon'] as const,
-  level: () => ['level'] as const,
-  leaderboard: (tf: string) => ['leaderboard', tf] as const,
-  rank: () => ['rank'] as const,
-  rewards: () => ['rewards'] as const,
-  liveMeeting: (id?: string) => ['liveMeeting', id ?? 'current'] as const,
+  leaderboard: (viewer?: string) => ['leaderboard', viewer ?? 'anon'] as const,
 } as const;

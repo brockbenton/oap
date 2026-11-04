@@ -11,17 +11,10 @@ import { Avatar, Button, MonoNum, StatTile } from '@/components/ui';
 import { QrIcon } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
 import { gradientNameForTopic } from '@/lib/tokenArt';
-import { getMemberVault, getPersonalStats } from '@/lib/api/members';
+import { getLeaderboard, getMemberVault, getPersonalStats } from '@/lib/api/members';
 import { queryKeys } from '@/lib/api/queryKeys';
 import { useDisplayName, useEmbeddedAddress } from '@/hooks/useProfile';
-import {
-  useLeaderboard,
-  useLevel,
-  useRank,
-  type LeaderboardTimeframe,
-  type RankSummary,
-} from '@/lib/mock/gamification';
-import type { Level, LeaderboardEntry, MemberVault, PersonalStats, VaultToken } from '@/types';
+import type { LeaderboardEntry, MemberVault, PersonalStats, VaultToken } from '@/types';
 import { APP_SHORT_NAME, CLUB_NAME } from '@/lib/constants';
 
 const CHECK_IN_HREF = '/check-in';
@@ -34,19 +27,17 @@ const CHECK_IN_SUBTITLE = 'Scan the QR on the projector to mint your attendance 
 const SCAN_LABEL = 'Scan QR code';
 
 const STREAK_HINT = 'Consecutive meetings attended.';
-const RANK_DELTA_SUFFIX = 'this week';
+const ATTENDANCE_HINT = 'This semester.';
+const RANK_HINT = 'By tokens earned.';
 
 const VIEW_ALL = 'View all →';
 const VAULT_PREVIEW_COUNT = 4;
 
 const LEADERBOARD_TITLE = 'Leaderboard';
-const LEADERBOARD_TIMEFRAME: LeaderboardTimeframe = 'semester';
-const LEADERBOARD_TIMEFRAME_LABEL = 'This semester';
-const LEADERBOARD_SUBTITLE = 'Ranked by attendance streak & XP.';
+const LEADERBOARD_TIMEFRAME_LABEL = 'All time';
+const LEADERBOARD_SUBTITLE = 'Ranked by tokens earned, then streak.';
 const LEADERBOARD_PREVIEW_COUNT = 3;
 const LEADERBOARD_AVATAR_SIZE = 32;
-
-const NEXT_REWARD = { level: 7, title: 'Club hoodie raffle entry', xpToGo: 720 };
 
 const MINT_TITLE = 'Mint your first token';
 const MINT_BODY =
@@ -54,7 +45,7 @@ const MINT_BODY =
 const EMPTY_STREAK_HINT = 'Check in at a meeting to start one.';
 const EMPTY_VAULT_TITLE = 'Your vault is empty';
 const EMPTY_VAULT_SUB = 'Tokens you earn will show up here.';
-const EMPTY_LEVEL: Level = { level: 1, xp: 0, xpIntoLevel: 0, xpForNextLevel: 500 };
+const EMPTY_ATTENDANCE_HINT = 'Your attendance rate shows up here.';
 
 const GLOW_CYAN = 'radial-gradient(circle, rgba(38,221,249,0.35), transparent 70%)';
 const GLOW_CYAN_SOFT = 'radial-gradient(circle, rgba(38,221,249,0.3), transparent 70%)';
@@ -68,7 +59,7 @@ const MOBILE_TOKEN_COUNT = 2;
 const STAT_PLACEHOLDER = '—';
 
 const MOBILE_STATS = [
-  { key: 'level', label: 'Level', accent: false },
+  { key: 'attendance', label: 'Attendance', accent: false },
   { key: 'streak', label: 'Streak', accent: true },
   { key: 'rank', label: 'Rank', accent: false },
 ] as const;
@@ -164,10 +155,14 @@ interface PopulatedHomeProps {
 }
 
 function PopulatedHome({ displayName, vault, stats, dataLoading }: PopulatedHomeProps) {
-  const { data: level } = useLevel();
-  const { data: rank } = useRank();
-  const { data: board, isLoading } = useLeaderboard(LEADERBOARD_TIMEFRAME);
-  const loading = dataLoading || isLoading || !level || !rank || !board || !vault || !stats;
+  const address = useEmbeddedAddress();
+  const { data: board, isLoading } = useQuery({
+    queryKey: queryKeys.leaderboard(address),
+    queryFn: () => getLeaderboard(address),
+    enabled: !!address,
+  });
+  const rank = board?.find((entry) => entry.isYou)?.rank;
+  const loading = dataLoading || isLoading || !vault || !stats;
 
   return (
     <div className="min-h-screen bg-white">
@@ -184,15 +179,15 @@ function PopulatedHome({ displayName, vault, stats, dataLoading }: PopulatedHome
             <div className="grid animate-fade-in grid-cols-1 gap-5 lg:grid-cols-[1.55fr_1fr]">
               <div className="flex flex-col gap-5">
                 <CheckInCard />
-                <StatRow level={level} rank={rank} streak={stats.currentStreak} />
+                <StatRow attendancePct={stats.currentSemesterAttendancePct} rank={rank} streak={stats.currentStreak} />
                 <VaultPreview vault={vault} />
               </div>
-              <LeaderboardPreview entries={board} />
+              <LeaderboardPreview entries={board ?? []} />
             </div>
           )}
         </PageContainer>
       </div>
-      <MobileHome displayName={displayName} level={level} rank={rank} vault={vault} stats={stats} />
+      <MobileHome displayName={displayName} rank={rank} vault={vault} stats={stats} />
       <MobileTabBar active="home" />
     </div>
   );
@@ -200,14 +195,12 @@ function PopulatedHome({ displayName, vault, stats, dataLoading }: PopulatedHome
 
 function MobileHome({
   displayName,
-  level,
   rank,
   vault,
   stats,
 }: {
   displayName: string;
-  level?: Level;
-  rank?: RankSummary;
+  rank?: number;
   vault?: MemberVault;
   stats?: PersonalStats;
 }) {
@@ -219,7 +212,7 @@ function MobileHome({
         Hey, {displayName} 👋
       </h1>
       <MobileCheckInCard />
-      <MobileStatRow level={level} rank={rank} streak={stats?.currentStreak} />
+      <MobileStatRow attendancePct={stats?.currentSemesterAttendancePct} rank={rank} streak={stats?.currentStreak} />
       <div className="mb-3 flex items-center justify-between">
         <div className="text-sm font-semibold leading-none">{RECENT_TOKENS_TITLE}</div>
         <Link href={VAULT_HREF} className="text-xs font-semibold leading-none text-blue-500">
@@ -272,18 +265,18 @@ function MobileCheckInCard() {
 }
 
 function MobileStatRow({
-  level,
+  attendancePct,
   rank,
   streak,
 }: {
-  level?: Level;
-  rank?: RankSummary;
+  attendancePct?: number;
+  rank?: number;
   streak?: number;
 }) {
   const values: Record<(typeof MOBILE_STATS)[number]['key'], string> = {
-    level: level ? `${level.level}` : STAT_PLACEHOLDER,
+    attendance: attendancePct === undefined ? STAT_PLACEHOLDER : `${attendancePct}%`,
     streak: streak === undefined ? STAT_PLACEHOLDER : `${streak}`,
-    rank: rank ? `#${rank.rank}` : STAT_PLACEHOLDER,
+    rank: rank ? `#${rank}` : STAT_PLACEHOLDER,
   };
 
   return (
@@ -330,25 +323,24 @@ function CheckInCard() {
   );
 }
 
-function StatRow({ level, rank, streak }: { level: Level; rank: RankSummary; streak: number }) {
+function StatRow({
+  attendancePct,
+  rank,
+  streak,
+}: {
+  attendancePct: number;
+  rank?: number;
+  streak: number;
+}) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <StatTile
-        label="Level"
-        value={level.level}
-        progress={level.xpIntoLevel / level.xpForNextLevel}
-        progressHint={`${fmt(level.xpIntoLevel)} / ${fmt(level.xpForNextLevel)} XP`}
-      />
+      <StatTile label="Attendance" value={`${attendancePct}%`} hint={ATTENDANCE_HINT} />
       <StatTile
         label="Streak"
         value={<span className="text-yellow-700">{streak}</span>}
         hint={STREAK_HINT}
       />
-      <StatTile
-        label="Rank"
-        value={`#${rank.rank}`}
-        delta={{ text: `up ${rank.delta} ${RANK_DELTA_SUFFIX}`, tone: 'pos' }}
-      />
+      <StatTile label="Rank" value={rank ? `#${rank}` : STAT_PLACEHOLDER} hint={RANK_HINT} />
     </div>
   );
 }
@@ -396,7 +388,6 @@ function LeaderboardPreview({ entries }: { entries: LeaderboardEntry[] }) {
         ))}
         {you && <LeaderboardRow entry={you} highlighted />}
       </div>
-      <NextRewardChip />
     </div>
   );
 }
@@ -441,33 +432,12 @@ function LeaderboardRow({
             highlighted ? 'text-blue-600' : 'text-content-secondary',
           )}
         >
-          {entry.streakWeeks} wk streak
+          {entry.streak} streak
         </div>
       </div>
       <MonoNum className={cn('text-[13px] font-bold', highlighted && 'text-blue-700')}>
-        {fmt(entry.xp)}
+        {fmt(entry.tokens)}
       </MonoNum>
-    </div>
-  );
-}
-
-function NextRewardChip() {
-  return (
-    <div className="mt-5 border-t border-line pt-[18px]">
-      <div className="mb-3 text-[13px] font-semibold">Next reward at Level {NEXT_REWARD.level}</div>
-      <div className="flex items-center gap-3 rounded-[12px] bg-status-rew-bg p-3">
-        <div className="grid h-9 w-9 flex-none place-items-center rounded-md bg-purple-500 text-white">
-          ★
-        </div>
-        <div>
-          <div className="text-[13px] font-semibold leading-tight text-purple-700">
-            {NEXT_REWARD.title}
-          </div>
-          <div className="mt-[3px] font-mono text-[11px] text-purple-600">
-            {fmt(NEXT_REWARD.xpToGo)} XP to go
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -508,10 +478,9 @@ function EmptyHome({ displayName, semester }: { displayName: string; semester: s
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <StatTile
-            label="Level"
-            value={EMPTY_LEVEL.level}
-            progress={EMPTY_LEVEL.xpIntoLevel / EMPTY_LEVEL.xpForNextLevel}
-            progressHint={`${EMPTY_LEVEL.xpIntoLevel} / ${EMPTY_LEVEL.xpForNextLevel} XP`}
+            label="Attendance"
+            value={<span className="text-content-disabled">0%</span>}
+            hint={EMPTY_ATTENDANCE_HINT}
           />
           <StatTile
             label="Streak"

@@ -1,4 +1,5 @@
-import { MemberVault, PersonalStats } from '@/types';
+import { LeaderboardEntry, MemberStats, MemberVault, PersonalStats } from '@/types';
+import { shortenAddress } from '@/lib/address';
 import { apiRequest, ApiRequestError } from './client';
 
 // Public reads by wallet address (no auth token required) — resolved Open Question #5.
@@ -21,4 +22,24 @@ export async function getMemberVault(address: string): Promise<MemberVault> {
 
 export async function getPersonalStats(address: string): Promise<PersonalStats> {
   return apiRequest<PersonalStats>(`/members/${encodeURIComponent(address)}/stats`);
+}
+
+type PublicMember = Omit<MemberStats, 'id' | 'linkedAccount' | 'joinedAt'>;
+
+// Ranks the public directory by confirmed tokens, then current streak. Members
+// with no confirmed tokens aren't ranked.
+export async function getLeaderboard(viewerAddress?: string): Promise<LeaderboardEntry[]> {
+  const { members } = await apiRequest<{ members: PublicMember[] }>('/members');
+  return members
+    .filter((member) => member.tokensEarned > 0)
+    .sort((a, b) => b.tokensEarned - a.tokensEarned || b.currentStreak - a.currentStreak)
+    .map((member, index) => ({
+      rank: index + 1,
+      handle: shortenAddress(member.walletAddress),
+      avatarSeed: member.walletAddress,
+      streak: member.currentStreak,
+      tokens: member.tokensEarned,
+      attendancePct: member.allTimeAttendancePct,
+      isYou: member.walletAddress.toLowerCase() === viewerAddress?.toLowerCase(),
+    }));
 }

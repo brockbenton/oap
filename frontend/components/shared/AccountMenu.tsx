@@ -10,7 +10,7 @@ import { queryKeys } from '@/lib/api/queryKeys';
 import { retryUnlessForbidden } from '@/lib/api/client';
 import { useProfile } from '@/hooks/useProfile';
 import { shortenAddress } from '@/lib/address';
-import { Avatar, Badge, Button, CopyChip } from '@/components/ui';
+import { Avatar, Button, CopyChip } from '@/components/ui';
 import type { IconProps } from '@/components/ui/icons';
 import {
   ChevronDown,
@@ -22,10 +22,6 @@ import {
 } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
 import { CLUB_NAME } from '@/lib/constants';
-
-// Level + club are display-only samples (gamification isn't wired yet).
-const SAMPLE_LEVEL = 6;
-const SAMPLE_CLUB = CLUB_NAME;
 
 const TRIGGER_AVATAR_SIZE = 32;
 const HEADER_AVATAR_SIZE = 44;
@@ -128,12 +124,9 @@ export default function AccountMenu() {
             <div className="mb-3 flex items-center gap-3">
               <Avatar seed={avatarSeed} label={displayName} colorIndex={avatarColor} size={HEADER_AVATAR_SIZE} />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="truncate text-[15px] font-semibold text-ink">{displayName}</span>
-                  <Badge tone="rew">LVL {SAMPLE_LEVEL}</Badge>
-                </div>
+                <div className="truncate text-[15px] font-semibold text-ink">{displayName}</div>
                 <div className="mt-[5px] font-mono text-xs font-medium text-content-secondary">
-                  {SAMPLE_CLUB}
+                  {CLUB_NAME}
                 </div>
               </div>
             </div>

@@ -7,17 +7,23 @@ import { usePrivy, getIdentityToken } from '@privy-io/react-auth';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import QRCode from 'react-qr-code';
-import { getAdminMe, listAdminSessions, getSessionQR } from '@/lib/api/admin';
+import {
+  getAdminMe,
+  getAdminOverview,
+  getSessionAttendees,
+  getSessionQR,
+  listAdminSessions,
+} from '@/lib/api/admin';
 import { queryKeys } from '@/lib/api/queryKeys';
 import { retryUnlessForbidden, ApiRequestError } from '@/lib/api/client';
-import { useLiveMeeting } from '@/lib/mock/meeting';
+import { shortenAddress } from '@/lib/address';
+import { CLUB_NAME } from '@/lib/constants';
+import LoadError from '@/components/shared/LoadError';
 import { Avatar, Button, Card, MonoNum } from '@/components/ui';
-import type { RosterEntry, SessionWithCount } from '@/types';
+import type { Attendee, SessionWithCount } from '@/types';
 
-// Club handle/slug is not modelled in the backend yet — sample metadata for the check-in URL caption.
-const SAMPLE_CLUB_SLUG = 'blockchain-club';
-const CHECKIN_URL_BASE = 'ocp.xyz/c';
-const QR_CAPTION_SUFFIX = 'code expires when meeting ends';
+const QR_CAPTION = 'Code expires when meeting ends';
+const QR_UNAVAILABLE = 'QR unavailable';
 
 const LIVE_LABEL = 'Meeting live';
 const SCAN_COPY = 'Scan to check in & mint your token';
@@ -26,6 +32,9 @@ const PAUSE_LABEL = 'Pause check-in';
 const END_LABEL = 'End meeting';
 const ACCESS_TITLE = 'Organizer access required';
 const ACCESS_BODY = 'Sign in with an organizer account to run a meeting.';
+const NO_MEETING_TITLE = 'No meeting running';
+const NO_MEETING_BODY = 'Create a session from the admin dashboard, then come back to show the QR.';
+const SESSIONS_ROUTE = '/admin/sessions';
 
 const NOW_THRESHOLD_SECONDS = 10;
 const SECONDS_PER_MINUTE = 60;
@@ -34,30 +43,18 @@ const SECONDS_PER_HOUR = 3600;
 const QR_PANEL_SIZE = 280;
 const QR_INNER_SIZE = 232;
 const ROSTER_AVATAR_SIZE = 32;
-
-// Placeholder QR artwork from the design frame — shown when no live session QR is available.
-const QR_COLOR = '#010304';
-const QR_MODULE_SIZE = 6;
-const QR_FINDER_SIZE = 28;
-const QR_FINDER_STROKE = 8;
-const QR_FINDER_DOT_OFFSET = 10;
-const QR_FINDER_DOT_SIZE = 8;
-const QR_FINDER_ORIGINS: ReadonlyArray<readonly [number, number]> = [
-  [0, 0],
-  [72, 0],
-  [0, 72],
-];
-const QR_MODULE_ORIGINS: ReadonlyArray<readonly [number, number]> = [
-  [40, 4], [52, 4], [40, 16], [60, 16], [4, 40], [16, 40], [40, 40], [52, 46],
-  [64, 40], [76, 40], [88, 46], [4, 60], [28, 52], [40, 64], [52, 60], [72, 60],
-  [88, 64], [40, 76], [52, 88], [64, 76], [76, 88], [88, 76],
-];
+const ROSTER_REFRESH_MS = 5000;
+const MS_PER_SECOND = 1000;
 
 function formatElapsed(total: number): string {
   const h = Math.floor(total / SECONDS_PER_HOUR);
   const m = Math.floor((total % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
   const s = total % SECONDS_PER_MINUTE;
   return [h, m, s].map((n) => String(n).padStart(2, '0')).join(':');
+}
+
+function secondsSince(iso: string, now: number): number {
+  return Math.max(0, Math.floor((now - new Date(iso).getTime()) / MS_PER_SECOND));
 }
 
 function formatAgo(seconds: number): string {
@@ -67,19 +64,15 @@ function formatAgo(seconds: number): string {
 }
 
 function pickActiveSession(sessions: SessionWithCount[]): SessionWithCount | null {
-  if (!sessions.length) return null;
   const open = sessions.filter((s) => s.onchainStatus === 'CONFIRMED' && !s.closedAt);
-  const pool = open.length ? open : sessions;
   return (
-    [...pool].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0] ?? null
+    open.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0] ?? null
   );
 }
 
 export default function OrganizerRunMeetingPage() {
   const { ready, authenticated, user } = usePrivy();
-  const [elapsed, setElapsed] = useState<number | null>(null);
-
-  const { data: meeting } = useLiveMeeting();
+  const [now, setNow] = useState(() => Date.now());
 
   const {
     data: me,
@@ -100,7 +93,12 @@ export default function OrganizerRunMeetingPage() {
 
   const isAdmin = me?.isAdmin === true;
 
-  const { data: sessions } = useQuery({
+  const {
+    data: sessions,
+    isLoading: sessionsLoading,
+    error: sessionsError,
+    refetch: refetchSessions,
+  } = useQuery({
     queryKey: queryKeys.adminSessions(),
     queryFn: async () => {
       const token = await getIdentityToken();
@@ -116,7 +114,7 @@ export default function OrganizerRunMeetingPage() {
     [sessions],
   );
 
-  const { data: qrPayload } = useQuery({
+  const { data: qrPayload, isError: qrError } = useQuery({
     queryKey: queryKeys.sessionQR(activeSession?.sessionId ?? ''),
     queryFn: async () => {
       const token = await getIdentityToken();
@@ -128,12 +126,33 @@ export default function OrganizerRunMeetingPage() {
     retry: (count, err) => !(err instanceof ApiRequestError && err.status === 409) && count < 2,
   });
 
+  const { data: attendees } = useQuery({
+    queryKey: queryKeys.sessionAttendees(activeSession?.sessionId ?? ''),
+    queryFn: async () => {
+      const token = await getIdentityToken();
+      if (!token) throw new Error('Not authenticated');
+      return getSessionAttendees(activeSession!.sessionId, token);
+    },
+    enabled: isAdmin && !!activeSession,
+    refetchInterval: ROSTER_REFRESH_MS,
+    retry: retryUnlessForbidden,
+  });
+
+  const { data: overview } = useQuery({
+    queryKey: queryKeys.adminOverview(),
+    queryFn: async () => {
+      const token = await getIdentityToken();
+      if (!token) throw new Error('Not authenticated');
+      return getAdminOverview(token);
+    },
+    enabled: isAdmin,
+    retry: retryUnlessForbidden,
+  });
+
   useEffect(() => {
-    if (meeting?.elapsedSeconds == null) return;
-    setElapsed(meeting.elapsedSeconds);
-    const id = setInterval(() => setElapsed((s) => (s == null ? s : s + 1)), 1000);
+    const id = setInterval(() => setNow(Date.now()), MS_PER_SECOND);
     return () => clearInterval(id);
-  }, [meeting?.elapsedSeconds]);
+  }, []);
 
   if (!ready || (authenticated && meLoading)) {
     return <FullScreenSpinner />;
@@ -144,11 +163,20 @@ export default function OrganizerRunMeetingPage() {
     return <AccessGate />;
   }
 
-  if (!meeting) {
+  if (sessionsLoading) {
     return <FullScreenSpinner />;
   }
 
-  const clockValue = formatElapsed(elapsed ?? meeting.elapsedSeconds);
+  if (sessionsError) {
+    return <LoadError what="meeting" onRetry={() => void refetchSessions()} />;
+  }
+
+  if (!activeSession) {
+    return <NoMeeting />;
+  }
+
+  const clockValue = formatElapsed(secondsSince(activeSession.createdAt, now));
+  const roster = [...(attendees ?? [])].reverse();
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -178,10 +206,10 @@ export default function OrganizerRunMeetingPage() {
           style={{ background: 'radial-gradient(120% 100% at 50% 0%, #f2f7fe, #fff 60%)' }}
         >
           <div className="mb-3 font-mono text-[12px] font-medium uppercase tracking-[0.1em] text-status-neutral">
-            Week {meeting.week} · {meeting.club}
+            {activeSession.semester} · {CLUB_NAME}
           </div>
           <h1 className="mb-2 text-[34px] font-semibold leading-[40px] tracking-[-1px] text-ink">
-            {meeting.topic}
+            {activeSession.name}
           </h1>
           <p className="mb-7 max-w-md text-[16px] leading-[24px] text-content-secondary">
             {SCAN_COPY}
@@ -194,22 +222,28 @@ export default function OrganizerRunMeetingPage() {
             {qrPayload ? (
               <QRCode value={qrPayload} size={QR_INNER_SIZE} />
             ) : (
-              <PlaceholderQR />
+              <div className="grid h-full place-items-center">
+                {qrError ? (
+                  <span className="text-[13px] text-content-secondary">{QR_UNAVAILABLE}</span>
+                ) : (
+                  <Spinner />
+                )}
+              </div>
             )}
           </div>
 
           <div className="mt-[22px] font-mono text-[13px] font-medium text-content-secondary">
-            {CHECKIN_URL_BASE}/{SAMPLE_CLUB_SLUG} · {QR_CAPTION_SUFFIX}
+            {QR_CAPTION}
           </div>
         </section>
 
         <section className="flex flex-col px-7 py-8">
           <div className="mb-5 rounded-card bg-ink p-5 text-center text-white">
             <MonoNum className="block text-[56px] font-bold leading-none tracking-[-2px] text-cyan">
-              {meeting.checkedIn}
+              {attendees?.length ?? activeSession.attendeeCount}
             </MonoNum>
             <div className="mt-2 text-[13px] font-medium text-[rgba(218,229,247,0.7)]">
-              checked in of {meeting.totalMembers} members
+              {overview ? `checked in of ${overview.totalMembers} members` : 'checked in'}
             </div>
           </div>
 
@@ -219,8 +253,8 @@ export default function OrganizerRunMeetingPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            {meeting.roster.map((entry) => (
-              <RosterRow key={entry.handle} entry={entry} />
+            {roster.map((attendee) => (
+              <RosterRow key={attendee.walletAddress} attendee={attendee} now={now} />
             ))}
           </div>
         </section>
@@ -229,57 +263,45 @@ export default function OrganizerRunMeetingPage() {
   );
 }
 
-function RosterRow({ entry }: { entry: RosterEntry }) {
-  const isNow = entry.secondsAgo < NOW_THRESHOLD_SECONDS;
+function RosterRow({ attendee, now }: { attendee: Attendee; now: number }) {
+  const handle = shortenAddress(attendee.walletAddress);
+  const secondsAgo = secondsSince(attendee.checkedInAt, now);
+  const isNow = secondsAgo < NOW_THRESHOLD_SECONDS;
   return (
     <div className="flex items-center gap-3 border-b border-line py-2.5 last:border-0">
-      <Avatar seed={entry.avatarSeed} label={entry.handle} size={ROSTER_AVATAR_SIZE} />
-      <span className="flex-1 truncate text-[14px] font-semibold text-ink">{entry.handle}</span>
+      <Avatar seed={attendee.walletAddress} label={handle} size={ROSTER_AVATAR_SIZE} />
+      <span className="flex-1 truncate text-[14px] font-semibold text-ink">{handle}</span>
       <MonoNum
         className={`text-[11px] font-medium ${isNow ? 'text-green-600' : 'text-content-secondary'}`}
       >
-        {formatAgo(entry.secondsAgo)}
+        {formatAgo(secondsAgo)}
       </MonoNum>
     </div>
   );
 }
 
-function PlaceholderQR() {
-  return (
-    <svg width="100%" height="100%" viewBox="0 0 100 100" shapeRendering="crispEdges" aria-hidden>
-      {QR_FINDER_ORIGINS.map(([x, y]) => (
-        <g key={`${x}-${y}`}>
-          <rect
-            x={x}
-            y={y}
-            width={QR_FINDER_SIZE}
-            height={QR_FINDER_SIZE}
-            fill="none"
-            stroke={QR_COLOR}
-            strokeWidth={QR_FINDER_STROKE}
-          />
-          <rect
-            x={x + QR_FINDER_DOT_OFFSET}
-            y={y + QR_FINDER_DOT_OFFSET}
-            width={QR_FINDER_DOT_SIZE}
-            height={QR_FINDER_DOT_SIZE}
-            fill={QR_COLOR}
-          />
-        </g>
-      ))}
-      <g fill={QR_COLOR}>
-        {QR_MODULE_ORIGINS.map(([x, y]) => (
-          <rect key={`${x}-${y}`} x={x} y={y} width={QR_MODULE_SIZE} height={QR_MODULE_SIZE} />
-        ))}
-      </g>
-    </svg>
-  );
+function Spinner() {
+  return <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink border-t-transparent" />;
 }
 
 function FullScreenSpinner() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-white">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink border-t-transparent" />
+      <Spinner />
+    </div>
+  );
+}
+
+function NoMeeting() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-white px-6">
+      <Card className="w-full max-w-sm space-y-4 p-8 text-center">
+        <h1 className="text-lg font-semibold text-ink">{NO_MEETING_TITLE}</h1>
+        <p className="text-sm text-content-secondary">{NO_MEETING_BODY}</p>
+        <Link href={SESSIONS_ROUTE} className="inline-block text-sm font-medium text-blue-500 hover:underline">
+          Go to sessions
+        </Link>
+      </Card>
     </div>
   );
 }

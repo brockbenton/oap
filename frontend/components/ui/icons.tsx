@@ -96,28 +96,10 @@ export function WalletIcon(props: IconProps) {
   );
 }
 
-export function LockIcon(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <rect x="5" y="11" width="14" height="9" rx="2" />
-      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-    </Svg>
-  );
-}
-
 export function TrophyIcon(props: IconProps) {
   return (
     <Svg {...props}>
       <path d="M8 21h8M12 17v4M6 4h12v5a6 6 0 0 1-12 0zM6 5H4v2a3 3 0 0 0 2 2m12-4h2v2a3 3 0 0 1-2 2" />
-    </Svg>
-  );
-}
-
-export function GiftIcon(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <rect x="3" y="8" width="18" height="4" rx="1" />
-      <path d="M4 12v8h16v-8M12 8v12M12 8S9 3 6.5 4.5 9 8 12 8zM12 8s3-5 5.5-3.5S15 8 12 8z" />
     </Svg>
   );
 }

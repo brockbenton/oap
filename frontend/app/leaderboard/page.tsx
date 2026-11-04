@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import MemberTopNav from '@/components/shared/MemberTopNav';
 import MobileTabBar from '@/components/shared/MobileTabBar';
 import PageContainer from '@/components/shared/PageContainer';
@@ -8,11 +8,14 @@ import Avatar from '@/components/ui/Avatar';
 import MonoNum from '@/components/ui/MonoNum';
 import { TrophyIcon } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
-import { useLeaderboard, type LeaderboardTimeframe } from '@/lib/mock/gamification';
+import { getLeaderboard } from '@/lib/api/members';
+import { queryKeys } from '@/lib/api/queryKeys';
+import { useEmbeddedAddress } from '@/hooks/useProfile';
+import LoadError from '@/components/shared/LoadError';
 import type { LeaderboardEntry } from '@/types';
 import { CLUB_NAME } from '@/lib/constants';
 
-const CLUB_SUBTITLE = `${CLUB_NAME} · ranked by XP and attendance streak.`;
+const CLUB_SUBTITLE = `${CLUB_NAME} · ranked by tokens earned, then streak.`;
 const PODIUM_COUNT = 3;
 const WINNER_AVATAR_SIZE = 72;
 const PODIUM_AVATAR_SIZE = 60;
@@ -20,15 +23,7 @@ const ROW_AVATAR_SIZE = 32;
 const WINNER_BG = 'linear-gradient(180deg,#fefaf2,#ffffff)'; // yellow-50 → white
 const WINNER_GLOW = 'shadow-[0_8px_24px_rgba(245,158,0,0.4)]';
 
-const TIMEFRAMES: { value: LeaderboardTimeframe; label: string }[] = [
-  { value: 'semester', label: 'Semester' },
-  { value: 'month', label: 'Month' },
-  { value: 'all', label: 'All time' },
-];
-
-const SEG_BASE = 'rounded-[8px] px-4 py-2 text-[13px] transition';
-const SEG_ACTIVE = 'bg-white font-semibold text-ink shadow-[0_1px_3px_rgba(0,0,0,0.06)]';
-const SEG_INACTIVE = 'font-medium text-content-secondary hover:text-ink';
+const EMPTY_TEXT = 'No tokens minted yet. Check in at a meeting to get on the board.';
 
 const TABLE_COLS =
   'grid min-w-[560px] grid-cols-[56px_1fr_120px_120px_100px] items-center gap-3';
@@ -38,10 +33,6 @@ const MOBILE_PODIUM_AVATAR_SIZE = 44;
 const MOBILE_WINNER_AVATAR_SIZE = 56;
 const MOBILE_ROW_AVATAR_SIZE = 28;
 const MOBILE_WINNER_GLOW = 'shadow-[0_6px_18px_rgba(245,158,0,0.4)]';
-
-const MOBILE_SEG_BASE = 'flex-1 rounded-[7px] py-[7px] text-center text-[12px] transition';
-const MOBILE_SEG_ACTIVE = 'bg-white font-semibold text-ink shadow-[0_1px_2px_rgba(0,0,0,0.06)]';
-const MOBILE_SEG_INACTIVE = 'font-medium text-content-secondary';
 
 const MOBILE_ROW_COLS = 'grid grid-cols-[24px_1fr_auto] items-center gap-2.5 px-3.5';
 
@@ -89,9 +80,9 @@ function PodiumCard({
           className={cn('mx-auto mb-3', WINNER_GLOW)}
         />
         <div className="mb-1 text-[17px] font-semibold leading-tight">{entry.handle}</div>
-        <div className="font-mono text-[11px] text-yellow-700">{entry.streakWeeks} wk streak</div>
+        <div className="font-mono text-[11px] text-yellow-700">{entry.streak} streak</div>
         <MonoNum className="mt-3.5 block text-[26px] font-bold leading-none tracking-[-0.5px]">
-          {fmt(entry.xp)}
+          {fmt(entry.tokens)}
         </MonoNum>
       </div>
     );
@@ -104,10 +95,10 @@ function PodiumCard({
       <Avatar seed={entry.avatarSeed} size={PODIUM_AVATAR_SIZE} className="mx-auto mb-3" />
       <div className="mb-1 text-[15px] font-semibold leading-tight">{entry.handle}</div>
       <div className="font-mono text-[11px] text-content-secondary">
-        {entry.streakWeeks} wk streak
+        {entry.streak} streak
       </div>
       <MonoNum className="mt-3.5 block text-[22px] font-bold leading-none tracking-[-0.5px]">
-        {fmt(entry.xp)}
+        {fmt(entry.tokens)}
       </MonoNum>
     </div>
   );
@@ -133,10 +124,12 @@ function TableRow({ entry }: { entry: LeaderboardEntry }) {
         </span>
       </div>
       <MonoNum className={cn('text-right text-[13px] font-semibold', txt)}>
-        {entry.streakWeeks} wk
+        {entry.streak}
       </MonoNum>
-      <MonoNum className={cn('text-right text-[13px] font-semibold', txt)}>{entry.tokens}</MonoNum>
-      <MonoNum className={cn('text-right text-[13px] font-bold', txt)}>{fmt(entry.xp)}</MonoNum>
+      <MonoNum className={cn('text-right text-[13px] font-semibold', txt)}>
+        {entry.attendancePct}%
+      </MonoNum>
+      <MonoNum className={cn('text-right text-[13px] font-bold', txt)}>{fmt(entry.tokens)}</MonoNum>
     </div>
   );
 }
@@ -165,7 +158,7 @@ function MobilePodiumTile({ entry, winner }: { entry: LeaderboardEntry; winner: 
           className={cn('mx-auto mb-1.5', MOBILE_WINNER_GLOW)}
         />
         <div className="truncate text-[13px] font-semibold leading-none">{entry.handle}</div>
-        <MonoNum className="mt-1 block text-[14px] font-bold leading-none">{fmt(entry.xp)}</MonoNum>
+        <MonoNum className="mt-1 block text-[14px] font-bold leading-none">{fmt(entry.tokens)}</MonoNum>
       </div>
     );
   }
@@ -177,7 +170,7 @@ function MobilePodiumTile({ entry, winner }: { entry: LeaderboardEntry; winner: 
         className="mx-auto mb-1.5"
       />
       <div className="truncate text-[12px] font-semibold leading-none">{entry.handle}</div>
-      <MonoNum className="mt-1 block text-[13px] font-bold leading-none">{fmt(entry.xp)}</MonoNum>
+      <MonoNum className="mt-1 block text-[13px] font-bold leading-none">{fmt(entry.tokens)}</MonoNum>
       <div className="mt-[3px] font-mono text-[10px] font-bold text-content-secondary">
         {ordinal(entry.rank)}
       </div>
@@ -200,7 +193,15 @@ function MobileRow({ entry, first }: { entry: LeaderboardEntry; first: boolean }
         <Avatar seed={entry.avatarSeed} size={MOBILE_ROW_AVATAR_SIZE} />
         <span className={cn('truncate text-[13px] font-semibold', txt)}>{entry.handle}</span>
       </div>
-      <MonoNum className={cn('text-[12px] font-bold', txt)}>{fmt(entry.xp)}</MonoNum>
+      <MonoNum className={cn('text-[12px] font-bold', txt)}>{fmt(entry.tokens)}</MonoNum>
+    </div>
+  );
+}
+
+function EmptyBoard() {
+  return (
+    <div className="mt-3.5 rounded-card border border-line bg-white p-8 text-center text-sm text-content-secondary">
+      {EMPTY_TEXT}
     </div>
   );
 }
@@ -219,12 +220,16 @@ function MobileSkeleton() {
 }
 
 export default function LeaderboardPage() {
-  const [timeframe, setTimeframe] = useState<LeaderboardTimeframe>('semester');
-  const { data, isLoading } = useLeaderboard(timeframe);
+  const address = useEmbeddedAddress();
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: queryKeys.leaderboard(address),
+    queryFn: () => getLeaderboard(address),
+  });
 
   const entries = data ?? [];
-  const podium = entries.slice(0, PODIUM_COUNT);
-  const rows = entries.slice(PODIUM_COUNT);
+  const hasPodium = entries.length >= PODIUM_COUNT;
+  const podium = hasPodium ? entries.slice(0, PODIUM_COUNT) : [];
+  const rows = hasPodium ? entries.slice(PODIUM_COUNT) : entries;
 
   const podiumItems = [
     { entry: podium[0], winner: true, order: 'sm:order-2' },
@@ -242,26 +247,17 @@ export default function LeaderboardPage() {
             <h1 className="mb-2 text-[30px] font-semibold leading-9 tracking-[-1px]">Leaderboard</h1>
             <p className="text-sm leading-5 text-content-secondary">{CLUB_SUBTITLE}</p>
           </div>
-          <div className="flex gap-1.5 rounded-[12px] bg-card-filled p-[5px]">
-            {TIMEFRAMES.map((tf) => (
-              <button
-                key={tf.value}
-                type="button"
-                onClick={() => setTimeframe(tf.value)}
-                aria-pressed={timeframe === tf.value}
-                className={cn(SEG_BASE, timeframe === tf.value ? SEG_ACTIVE : SEG_INACTIVE)}
-              >
-                {tf.label}
-              </button>
-            ))}
-          </div>
         </div>
 
-        {isLoading ? (
+        {error ? (
+          <LoadError what="leaderboard" onRetry={() => void refetch()} />
+        ) : isLoading ? (
           <Skeleton />
+        ) : entries.length === 0 ? (
+          <EmptyBoard />
         ) : (
           <div className="animate-fade-in">
-            {podium.length === PODIUM_COUNT && (
+            {hasPodium && (
               <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3 sm:items-end">
                 {podiumItems.map(
                   ({ entry, winner, order }) =>
@@ -283,8 +279,8 @@ export default function LeaderboardPage() {
                   <span className={HEADER_CELL}>Rank</span>
                   <span className={HEADER_CELL}>Member</span>
                   <span className={cn(HEADER_CELL, 'text-right')}>Streak</span>
+                  <span className={cn(HEADER_CELL, 'text-right')}>Attendance</span>
                   <span className={cn(HEADER_CELL, 'text-right')}>Tokens</span>
-                  <span className={cn(HEADER_CELL, 'text-right')}>XP</span>
                 </div>
                 {rows.map((entry) => (
                   <TableRow key={entry.rank} entry={entry} />
@@ -297,28 +293,16 @@ export default function LeaderboardPage() {
 
       <div className="px-5 pb-24 pt-5 md:hidden">
         <h1 className="text-[22px] font-semibold leading-[28px] tracking-[-0.5px]">Leaderboard</h1>
-        <div className="mt-3 flex gap-[5px] rounded-md bg-card-filled p-1">
-          {TIMEFRAMES.map((tf) => (
-            <button
-              key={tf.value}
-              type="button"
-              onClick={() => setTimeframe(tf.value)}
-              aria-pressed={timeframe === tf.value}
-              className={cn(
-                MOBILE_SEG_BASE,
-                timeframe === tf.value ? MOBILE_SEG_ACTIVE : MOBILE_SEG_INACTIVE,
-              )}
-            >
-              {tf.label}
-            </button>
-          ))}
-        </div>
 
-        {isLoading ? (
+        {error ? (
+          <LoadError what="leaderboard" onRetry={() => void refetch()} />
+        ) : isLoading ? (
           <MobileSkeleton />
+        ) : entries.length === 0 ? (
+          <EmptyBoard />
         ) : (
           <div className="mt-3.5 animate-fade-in">
-            {podium.length === PODIUM_COUNT && (
+            {hasPodium && (
               <div className="mb-3.5 grid grid-cols-3 items-end gap-2">
                 <MobilePodiumTile entry={podium[1]} winner={false} />
                 <MobilePodiumTile entry={podium[0]} winner />
