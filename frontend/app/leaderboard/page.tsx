@@ -33,21 +33,6 @@ const MOBILE_ROW_AVATAR_SIZE = 28;
 
 const MOBILE_ROW_COLS = 'grid grid-cols-[24px_1fr_auto] items-center gap-2.5 px-3.5';
 
-function ordinal(n: number): string {
-  const mod100 = n % 100;
-  if (mod100 >= 11 && mod100 <= 13) return `${n}TH`;
-  switch (n % 10) {
-    case 1:
-      return `${n}ST`;
-    case 2:
-      return `${n}ND`;
-    case 3:
-      return `${n}RD`;
-    default:
-      return `${n}TH`;
-  }
-}
-
 function fmt(n: number): string {
   return n.toLocaleString('en-US');
 }
@@ -86,7 +71,7 @@ function PodiumCard({
   return (
     <div className={cn('rounded-lg border border-line bg-surface p-6 text-center', className)}>
       <div className="mb-3.5 font-mono text-[13px] font-bold text-content-secondary">
-        {ordinal(entry.rank)}
+        {entry.rankLabel}
       </div>
       <Avatar seed={entry.avatarSeed} size={PODIUM_AVATAR_SIZE} className="mx-auto mb-3" />
       <div className="mb-1 text-[15px] font-semibold leading-tight">{entry.handle}</div>
@@ -111,7 +96,7 @@ function TableRow({ entry }: { entry: LeaderboardEntry }) {
         you ? 'bg-status-info-bg py-4' : 'py-3.5',
       )}
     >
-      <MonoNum className={cn('text-[14px] font-bold', txt)}>{entry.rank}</MonoNum>
+      <MonoNum className={cn('text-[14px] font-bold', txt)}>{entry.rankLabel}</MonoNum>
       <div className="flex items-center gap-3">
         <Avatar seed={entry.avatarSeed} size={ROW_AVATAR_SIZE} />
         <span className={cn('text-[14px] font-semibold', txt)}>
@@ -147,7 +132,6 @@ function MobilePodiumTile({ entry, winner }: { entry: LeaderboardEntry; winner: 
   if (winner) {
     return (
       <div className="text-center">
-        <div className="mb-1 text-[16px] font-bold leading-none">🏆</div>
         <Avatar
           seed={entry.avatarSeed}
           size={MOBILE_WINNER_AVATAR_SIZE}
@@ -168,7 +152,7 @@ function MobilePodiumTile({ entry, winner }: { entry: LeaderboardEntry; winner: 
       <div className="truncate text-[12px] font-semibold leading-none">{entry.handle}</div>
       <MonoNum className="mt-1 block text-[13px] font-bold leading-none">{fmt(entry.tokens)}</MonoNum>
       <div className="mt-[3px] font-mono text-[10px] font-bold text-content-secondary">
-        {ordinal(entry.rank)}
+        {entry.rankLabel}
       </div>
     </div>
   );
@@ -184,7 +168,7 @@ function MobileRow({ entry, first }: { entry: LeaderboardEntry; first: boolean }
         entry.isYou ? 'bg-status-info-bg py-3' : 'py-[11px]',
       )}
     >
-      <MonoNum className={cn('text-[13px] font-bold', txt)}>{entry.rank}</MonoNum>
+      <MonoNum className={cn('text-[13px] font-bold', txt)}>{entry.rankLabel}</MonoNum>
       <div className="flex min-w-0 items-center gap-[9px]">
         <Avatar seed={entry.avatarSeed} size={MOBILE_ROW_AVATAR_SIZE} />
         <span className={cn('truncate text-[13px] font-semibold', txt)}>{entry.handle}</span>
@@ -234,7 +218,7 @@ export default function LeaderboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-canvas">
       <MemberTopNav active="leaderboard" />
 
       <PageContainer className="hidden py-8 md:block">

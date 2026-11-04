@@ -21,7 +21,6 @@ export interface TokenDetailData {
   chain: string;
   standard: string;
   color?: TokenColor;
-  rarity?: 'RARE' | null;
   traits: { label: string; value: string; tone?: TraitTone }[];
   /** Null while the mint is still pending — the tx row and Basescan link hide. */
   txHash: string | null;
@@ -34,7 +33,6 @@ export interface TokenDetailModalProps {
 }
 
 const ESCAPE_KEY = 'Escape';
-const RARITY_RARE = 'RARE';
 const TRAIT_TONE_INFO: TraitTone = 'info';
 
 const EDITION_PREFIX = '#';
@@ -62,8 +60,6 @@ const PANEL_CLASSES =
 const GRID_CLASSES = 'grid grid-cols-1 md:grid-cols-[320px_1fr]';
 
 const ART_CLASSES = 'relative grid min-h-[440px] place-items-center overflow-hidden';
-const RARE_TAG_CLASSES =
-  'absolute right-2.5 top-2.5 rounded-sm bg-canvas/70 px-1.5 py-0.5 text-[9px] font-bold leading-[14px] text-content';
 const EDITION_CLASSES = 'relative font-mono text-[72px] font-bold leading-none';
 const EDITION_FOOTER_CLASSES =
   'absolute inset-x-0 bottom-[18px] text-center font-mono text-xs font-medium text-content-secondary';
@@ -130,9 +126,6 @@ export default function TokenDetailModal({ open, onClose, token }: TokenDetailMo
       >
         <div className={GRID_CLASSES}>
           <div className={ART_CLASSES} style={{ background: artBackground }}>
-            {token.rarity === RARITY_RARE ? (
-              <span className={RARE_TAG_CLASSES}>{RARITY_RARE}</span>
-            ) : null}
             <div className="relative text-center text-content">
               <div className={EDITION_CLASSES}>{`${EDITION_PREFIX}${token.editionNumber}`}</div>
             </div>

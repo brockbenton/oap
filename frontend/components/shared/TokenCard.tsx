@@ -4,15 +4,12 @@ import type { TokenColor } from '@/lib/tokenArt';
 import { TOKEN_COLORS, colorForTopic } from '@/lib/tokenArt';
 import { cn } from '@/lib/cn';
 
-const RARITY_RARE = 'RARE';
 const EDITION_PREFIX = '#';
 const META_SEPARATOR = ' · ';
 
 const CARD_CLASSES =
   'block w-full text-left bg-surface border border-line rounded overflow-hidden transition-colors duration-150 hover:border-line-strong';
 const HERO_CLASSES = 'relative grid aspect-square place-items-center overflow-hidden';
-const RARE_TAG_CLASSES =
-  'absolute right-2.5 top-2.5 rounded-sm bg-canvas/70 px-1.5 py-0.5 text-[9px] font-bold leading-[14px] text-content';
 
 export interface TokenCardProps {
   editionNumber: number;
@@ -20,7 +17,6 @@ export interface TokenCardProps {
   date: string;
   editionOf?: number;
   color?: TokenColor;
-  rarity?: 'RARE' | null;
   onClick?: () => void;
   className?: string;
 }
@@ -31,7 +27,6 @@ export default function TokenCard({
   date,
   editionOf,
   color,
-  rarity,
   onClick,
   className,
 }: TokenCardProps) {
@@ -43,7 +38,6 @@ export default function TokenCard({
   const content = (
     <>
       <div className={HERO_CLASSES} style={{ background: heroBackground }}>
-        {rarity === RARITY_RARE ? <span className={RARE_TAG_CLASSES}>{RARITY_RARE}</span> : null}
         <span className="relative font-mono text-4xl text-content">{editionLabel}</span>
       </div>
       <div className="px-3.5 py-3">

@@ -35,6 +35,7 @@ export async function getLeaderboard(viewerAddress?: string): Promise<Leaderboar
     .sort((a, b) => b.tokensEarned - a.tokensEarned || b.currentStreak - a.currentStreak)
     .map((member, index) => ({
       rank: index + 1,
+      rankLabel: `#${String(index + 1).padStart(2, '0')}`,
       handle: shortenAddress(member.walletAddress),
       avatarSeed: member.walletAddress,
       streak: member.currentStreak,

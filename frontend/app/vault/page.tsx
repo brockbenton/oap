@@ -24,8 +24,6 @@ import { CLUB_NAME } from '@/lib/constants';
 const ALL_SEMESTERS = 'All semesters';
 const ALL_LABEL = 'All';
 const TOKENS_LABEL = 'tokens';
-const RARE_LABEL = 'rare';
-const CLUB_LABEL = 'club';
 const MORE_TOKENS_LABEL = 'more tokens';
 const MINT_PENDING_LABEL = 'Minting…';
 const MINT_FAILED_LABEL = 'Failed';
@@ -37,20 +35,16 @@ const MAX_VISIBLE_TOKENS = 9;
 const RECENT_TOKEN_LIMIT = 6;
 
 const MOBILE_FILTER_ALL = 'all' as const;
-const MOBILE_FILTER_RARE = 'rare' as const;
 const MOBILE_FILTER_RECENT = 'recent' as const;
 
 const MOBILE_FILTERS = [
   { key: MOBILE_FILTER_ALL, label: 'All' },
-  { key: MOBILE_FILTER_RARE, label: 'Rare' },
   { key: MOBILE_FILTER_RECENT, label: 'Recent' },
 ] as const;
 
 type MobileFilter = (typeof MOBILE_FILTERS)[number]['key'];
 
 const CLUB_COUNT = 1;
-/** Real vault data carries no rarity signal yet, so the rare tally is always zero. */
-const RARE_TOKEN_COUNT = 0;
 
 const TONE_NEUTRAL = 'neutral' as const;
 const TONE_INFO = 'info' as const;
@@ -66,11 +60,11 @@ const MINT_TRAIT_VALUES: Record<VaultToken['mintStatus'], string> = {
   FAILED: 'Failed',
 };
 
-const CHIP_BASE = 'rounded-full px-3.5 py-2 text-xs transition';
+const CHIP_BASE = 'rounded px-3.5 py-2 text-xs transition';
 const CHIP_ACTIVE = 'bg-raised font-semibold text-content';
 const CHIP_INACTIVE = 'border border-line font-medium text-content-secondary hover:text-content';
 const MINT_BADGE_BASE =
-  'pointer-events-none absolute right-2.5 top-2.5 z-10 rounded-full px-2 py-0.5 text-[10px] font-semibold';
+  'pointer-events-none absolute right-2.5 top-2.5 z-10 rounded px-2 py-0.5 text-[10px] font-semibold';
 const MORE_TILE_CLASSES =
   'flex h-full min-h-[172px] flex-col items-center justify-center gap-2 rounded-tile border border-dashed border-line-strong bg-raised text-content-secondary transition hover:border-content-secondary';
 
@@ -129,7 +123,6 @@ export default function VaultPage() {
   );
 
   const mobileTokens = useMemo(() => {
-    if (mobileFilter === MOBILE_FILTER_RARE) return []; // no rarity signal in vault data yet
     if (mobileFilter === MOBILE_FILTER_RECENT) return allByRecent.slice(0, RECENT_TOKEN_LIMIT);
     return allByRecent;
   }, [allByRecent, mobileFilter]);
@@ -146,8 +139,6 @@ export default function VaultPage() {
   const headerStats = data
     ? [
         { value: data.tokenCount, label: TOKENS_LABEL },
-        { value: RARE_TOKEN_COUNT, label: RARE_LABEL },
-        { value: CLUB_COUNT, label: CLUB_LABEL },
       ]
     : [];
 
@@ -211,7 +202,6 @@ export default function VaultPage() {
                     topic={token.name}
                     date={formatCardDate(token.date)}
                     color={colorNameForTopic(token.name)}
-                    rarity={null}
                     onClick={() => setSelected(token)}
                   />
                   {token.mintStatus !== 'CONFIRMED' && <MintStatusBadge status={token.mintStatus} />}
@@ -232,7 +222,7 @@ export default function VaultPage() {
         <h1 className="text-[22px] font-semibold leading-7">My Vault</h1>
         {data && (
           <p className="mt-1.5 font-mono text-xs font-medium tabular-nums text-content-secondary">
-            {tokenCount} {TOKENS_LABEL} · {RARE_TOKEN_COUNT} {RARE_LABEL}
+            {tokenCount} {TOKENS_LABEL}
           </p>
         )}
 
@@ -266,7 +256,6 @@ export default function VaultPage() {
                   topic={token.name}
                   date={formatCardDate(token.date)}
                   color={colorNameForTopic(token.name)}
-                  rarity={null}
                   onClick={() => setSelected(token)}
                 />
                 {token.mintStatus !== 'CONFIRMED' && <MintStatusBadge status={token.mintStatus} />}
@@ -301,7 +290,6 @@ function toDetail(token: VaultToken): TokenDetailData {
     chain: CHAIN_NAME,
     standard: TOKEN_STANDARD,
     color: colorNameForTopic(token.name),
-    rarity: null,
     traits: [
       { label: SEASON_TRAIT_LABEL, value: token.semester, tone: TONE_NEUTRAL },
       { label: MINT_TRAIT_LABEL, value: MINT_TRAIT_VALUES[token.mintStatus], tone: TONE_INFO },

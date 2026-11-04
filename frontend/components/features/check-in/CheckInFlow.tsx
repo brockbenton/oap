@@ -38,8 +38,8 @@ const SUBMITTING_SUB = 'Queuing your attendance token onchain.';
 
 // The mint is queued, not yet confirmed, when this screen first renders — the
 // chip reflects the token's real mint status rather than claiming success.
-const MINTED_CHIP_LABEL = 'Minted onchain';
-const QUEUED_CHIP_LABEL = 'Check-in recorded · minting';
+const MINTED_CHIP_LABEL = '> token minted ✓';
+const QUEUED_CHIP_LABEL = '> minting token…';
 const TOKEN_CARD_FALLBACK = 'Your token';
 const TOKEN_SHORT_MAX = 4;
 const EDITION_PAD = 3;
@@ -295,7 +295,7 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
           <button
             type="button"
             onClick={() => setScannerOpen(true)}
-            className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-raised text-base font-semibold text-content transition active:scale-[0.98]"
+            className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded bg-green text-base font-medium text-canvas transition-colors hover:bg-green-dim"
           >
             <QrIcon size={18} />
             {OPEN_SCANNER_LABEL}
@@ -344,8 +344,8 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
           <div
             className={
               confirmed
-                ? 'inline-flex items-center gap-1.5 rounded-full bg-green/20 px-3.5 py-1.5 text-xs font-bold text-status-pos'
-                : 'inline-flex items-center gap-1.5 rounded-full bg-raised px-3.5 py-1.5 text-xs font-bold text-content-secondary'
+                ? 'inline-flex items-center gap-1.5 rounded border border-green/40 px-3 py-1.5 font-mono text-xs text-status-pos'
+                : 'inline-flex items-center gap-1.5 rounded border border-line px-3 py-1.5 font-mono text-xs text-content-secondary'
             }
           >
             {confirmed ? <CheckIcon size={14} /> : <ClockIcon size={14} />}
@@ -381,7 +381,7 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
         <div className="mt-8 flex flex-col gap-2.5">
           <Link
             href={VAULT_HREF}
-            className="flex h-14 items-center justify-center rounded-full bg-green text-base font-semibold text-canvas transition active:scale-[0.98]"
+            className="flex h-14 items-center justify-center rounded bg-green text-base font-semibold text-canvas transition"
           >
             {ADD_TO_VAULT_LABEL}
           </Link>
@@ -404,7 +404,7 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
       {variant.href ? (
         <Link
           href={variant.href}
-          className="mt-6 flex h-12 w-full items-center justify-center rounded-full bg-raised text-[15px] font-semibold text-content transition active:scale-[0.98]"
+          className="mt-6 flex h-12 w-full items-center justify-center rounded bg-green text-[15px] font-medium text-canvas transition-colors hover:bg-green-dim"
         >
           {variant.ctaLabel}
         </Link>
@@ -412,7 +412,7 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
         <button
           type="button"
           onClick={onRestart}
-          className="mt-6 flex h-12 w-full items-center justify-center rounded-full bg-raised text-[15px] font-semibold text-content transition active:scale-[0.98]"
+          className="mt-6 flex h-12 w-full items-center justify-center rounded bg-green text-[15px] font-medium text-canvas transition-colors hover:bg-green-dim"
         >
           {variant.ctaLabel}
         </button>

@@ -35,8 +35,8 @@ export default function StatsPage() {
   if (!ready || !authenticated) return <FullPageSpinner />;
 
   return (
-    <div className="min-h-screen flex flex-col bg-raised">
-      <header className="flex items-center px-6 py-4 bg-surface border-b border-line">
+    <div className="min-h-screen flex flex-col bg-canvas">
+      <header className="flex items-center px-6 py-4 bg-canvas border-b border-line">
         <Link href="/" className="text-content-muted hover:text-content mr-4" aria-label="Back">
           <BackArrow />
         </Link>
@@ -163,10 +163,10 @@ function StatTile({
 function ProgressBar({ pct }: { pct: number }) {
   const clamped = Math.max(0, Math.min(100, pct));
   const color =
-    pct >= ATTENDANCE_GOOD_PCT ? 'bg-green' : pct >= ATTENDANCE_OK_PCT ? 'bg-amber' : 'bg-green';
+    pct >= ATTENDANCE_GOOD_PCT ? 'bg-green' : pct >= ATTENDANCE_OK_PCT ? 'bg-amber' : 'bg-cyan';
   return (
-    <div className="mt-6 h-2 w-full rounded-full bg-raised overflow-hidden">
-      <div className={`h-full rounded-full ${color}`} style={{ width: `${clamped}%` }} />
+    <div className="mt-6 h-2 w-full rounded bg-raised overflow-hidden">
+      <div className={`h-full rounded ${color}`} style={{ width: `${clamped}%` }} />
     </div>
   );
 }
@@ -178,7 +178,7 @@ function Badge({ children, tone }: { children: React.ReactNode; tone: 'amber' | 
     gray: 'bg-raised text-content-secondary',
   }[tone];
   return (
-    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${styles}`}>
+    <span className={`inline-flex items-center rounded px-3 py-1 text-xs font-semibold ${styles}`}>
       {children}
     </span>
   );
@@ -223,7 +223,7 @@ function StatsSkeleton() {
 
 function FullPageSpinner() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-raised">
+    <div className="min-h-screen flex items-center justify-center bg-canvas">
       <div className="w-8 h-8 border-4 border-green border-t-transparent rounded-full animate-spin" />
     </div>
   );

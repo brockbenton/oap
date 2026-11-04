@@ -182,6 +182,7 @@ export interface ApiError {
 // A ranked row on the leaderboard, derived from the public member directory.
 export interface LeaderboardEntry {
   rank: number;
+  rankLabel: string;
   handle: string;
   avatarSeed: string;
   streak: number;

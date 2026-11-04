@@ -24,7 +24,7 @@ const VAULT_HREF = '/vault';
 // admin-gated), so the card is a standing entry point rather than a live claim.
 const CHECK_IN_TITLE = 'Check in to a meeting';
 const CHECK_IN_SUBTITLE = 'Scan the QR on the projector to mint your attendance token.';
-const SCAN_LABEL = 'Scan QR code';
+const SCAN_LABEL = '[ check in ]';
 
 const STREAK_HINT = 'Consecutive meetings attended.';
 const ATTENDANCE_HINT = 'This semester.';
@@ -50,7 +50,6 @@ const EMPTY_ATTENDANCE_HINT = 'Your attendance rate shows up here.';
 const SUBTLE_LIGHT = 'text-content-secondary';
 
 const CHECK_IN_EYEBROW = '● Check in';
-const MOBILE_SCAN_LABEL = 'Scan to check in';
 const RECENT_TOKENS_TITLE = 'Recent tokens';
 const MOBILE_TOKEN_COUNT = 2;
 const STAT_PLACEHOLDER = '—';
@@ -87,7 +86,7 @@ export default function MemberHome() {
 
   if (vaultQuery.error || statsQuery.error) {
     return (
-      <div className="min-h-screen bg-surface">
+      <div className="min-h-screen bg-canvas">
         <MemberTopNav active="home" />
         <PageContainer className="py-8">
           <LoadError
@@ -158,11 +157,11 @@ function PopulatedHome({ displayName, vault, stats, dataLoading }: PopulatedHome
     queryFn: () => getLeaderboard(address),
     enabled: !!address,
   });
-  const rank = board?.find((entry) => entry.isYou)?.rank;
+  const rank = board?.find((entry) => entry.isYou)?.rankLabel;
   const loading = dataLoading || isLoading || !vault || !stats;
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-canvas">
       <MemberTopNav active="home" />
       <div className="hidden md:block">
         <PageContainer className="py-8">
@@ -197,16 +196,16 @@ function MobileHome({
   stats,
 }: {
   displayName: string;
-  rank?: number;
+  rank?: string;
   vault?: MemberVault;
   stats?: PersonalStats;
 }) {
   const recent = (vault?.tokens ?? []).slice(0, MOBILE_TOKEN_COUNT);
 
   return (
-    <div className="px-5 pb-24 pt-1.5 md:hidden md:pb-0">
+    <div className="px-5 pb-24 pt-5 md:hidden md:pb-0">
       <h1 className="mb-4 text-[22px] font-semibold leading-[28px]">
-        Hey, {displayName} 👋
+        Hey, {displayName}
       </h1>
       <MobileCheckInCard />
       <MobileStatRow attendancePct={stats?.currentSemesterAttendancePct} rank={rank} streak={stats?.currentStreak} />
@@ -249,9 +248,9 @@ function MobileCheckInCard() {
       </div>
       <Link
         href={CHECK_IN_HREF}
-        className="relative flex h-[46px] w-full items-center justify-center rounded-full bg-green text-[15px] font-semibold leading-none text-canvas transition active:scale-[0.98]"
+        className="relative flex h-[46px] w-full items-center justify-center rounded bg-green text-[15px] font-semibold leading-none text-canvas transition"
       >
-        {MOBILE_SCAN_LABEL}
+        {SCAN_LABEL}
       </Link>
     </div>
   );
@@ -263,13 +262,13 @@ function MobileStatRow({
   streak,
 }: {
   attendancePct?: number;
-  rank?: number;
+  rank?: string;
   streak?: number;
 }) {
   const values: Record<(typeof MOBILE_STATS)[number]['key'], string> = {
     attendance: attendancePct === undefined ? STAT_PLACEHOLDER : `${attendancePct}%`,
     streak: streak === undefined ? STAT_PLACEHOLDER : `${streak}`,
-    rank: rank ? `#${rank}` : STAT_PLACEHOLDER,
+    rank: rank ?? STAT_PLACEHOLDER,
   };
 
   return (
@@ -318,7 +317,7 @@ function StatRow({
   streak,
 }: {
   attendancePct: number;
-  rank?: number;
+  rank?: string;
   streak: number;
 }) {
   return (
@@ -329,7 +328,7 @@ function StatRow({
         value={<span className="text-status-warn">{streak}</span>}
         hint={STREAK_HINT}
       />
-      <StatTile label="Rank" value={rank ? `#${rank}` : STAT_PLACEHOLDER} hint={RANK_HINT} />
+      <StatTile label="Rank" value={rank ?? STAT_PLACEHOLDER} hint={RANK_HINT} />
     </div>
   );
 }
@@ -403,7 +402,7 @@ function LeaderboardRow({
           : 'border-b border-line py-[11px]',
       )}
     >
-      <span className={cn('font-mono text-sm font-bold', rankColor)}>{entry.rank}</span>
+      <span className={cn('font-mono text-sm font-bold', rankColor)}>{entry.rankLabel}</span>
       <Avatar seed={entry.avatarSeed} size={LEADERBOARD_AVATAR_SIZE} />
       <div className="min-w-0">
         <div
@@ -433,10 +432,10 @@ function LeaderboardRow({
 
 function EmptyHome({ displayName, semester }: { displayName: string; semester: string | null }) {
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-canvas">
       <MemberTopNav active="home" />
       <PageContainer className="py-8">
-        <GreetingHeader title={`Welcome to ${APP_SHORT_NAME}, ${displayName} 👋`} semester={semester} />
+        <GreetingHeader title={`Welcome to ${APP_SHORT_NAME}, ${displayName}`} semester={semester} />
 
         <div className="relative mb-5 overflow-hidden rounded-lg bg-raised p-9 text-center text-content">
           <div className="relative">
