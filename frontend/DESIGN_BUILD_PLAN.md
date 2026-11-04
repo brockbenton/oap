@@ -1,5 +1,9 @@
 # Frontend Design Build Plan — OCP (Hubble recreation)
 
+## Phase 5 v1 superseding product requirements
+
+The completed milestones below record the earlier UI build, including sample XP/levels/rewards. They do not define v1 governance economics. `../MASTER_PLAN.md` now requires Colony-inspired participation reputation: 10 nominal Rep per verified eligible attendance after two-officer sign-off, gradual decay in v1 (provisional 180-day half-life), fixed proposal snapshots, and permanent AT/lifetime attendance history. Replace sample gamification with current decayed influence and timestamped ranks, plus separate lifetime stats. Show pending-approval and approved-awaiting-credit states. Do not build weekly Rep budget, pro-rata award reduction or deferred-claim UI. Any financial reward budget is separate. Multi-club remains Phase 6.
+
 Recreate the full OCP design handoff in the existing Next.js frontend. Work is broken
 into bite-sized, checkbox-driven tasks so each can be attacked independently. Check items
 off as they land.
@@ -161,3 +165,4 @@ Reuse existing admin API wiring (`lib/api/admin.ts`); club-level metadata is moc
 - Organizer route shape: single `/organizer` vs per-club `/c/[handle]` (design shows handles → lean `/c/[handle]`, `/organizer` for the console chrome).
 - Whether to delete old `/admin/*` + `/stats` once superseded, or leave as redirects.
 - Real vs mock line for the 6-week attendance matrix (4.4) — derive from real check-ins if the query is cheap, else mock.
+

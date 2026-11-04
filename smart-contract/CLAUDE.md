@@ -11,8 +11,8 @@
 smart-contract/
   src/
     AttendanceRegistry.sol    # Legacy v1 registry (deployed; read-only after Phase 5 import)
-    AttendanceRegistry2.sol   # Phase 5: officer-run sessions, attendee caps, Rep credit at close
-    ClubRep.sol               # Phase 5: soulbound Rep (OZ Votes base), voting power
+    AttendanceRegistry2.sol   # Phase 5: officer-run sessions, attendee caps, 10 Rep per attendance after two-officer approval
+    ClubRep.sol               # Phase 5: soulbound, decay-aware IVotes; current + historical power
     ClubGovernor.sol          # Phase 5: OZ Governor (+ reachable quorum floor)
     ClubTimelock.sol          # Phase 5: OZ TimelockController + expireGuardian()
     interfaces/
@@ -23,7 +23,7 @@ smart-contract/
       BaseTest.sol            # Shared test setup
   script/
     Deploy.s.sol              # Legacy deployment script
-    DeployClub.s.sol          # Phase 5: deploys Rep → registry → Timelock → Governor, hands off roles
+    DeployClub.s.sol          # Phase 5: deploys Timelock → Rep → registry → Governor, hands off roles
     ImportLegacy.s.sol        # Phase 5: batches ClubRep.importLegacy over legacy sessions
     CreateSession.s.sol       # Admin ops scripts
   lib/                        # Foundry dependencies (git submodules)
@@ -75,19 +75,18 @@ function _update(address from, address to, uint256[] memory ids, uint256[] memor
   `createSession` takes `maxAttendees` (≤ `MAX_ATTENDEES`); minting stops after close, at the
   attendee cap, or while paused. `mintBatch` skips duplicates (never reverts the batch) and mints
   via `_update` without the receiver hook. ATs carry no Rep.
-- **Two-officer Rep sign-off:** `closeSession(id, attendees)` stores only the list hash + count
-  (list emitted in the event; strictly increasing; each holds the AT) → Pending;
-  `confirmSessionRep(id)` by a different officer (or the Timelock) fixes
-  `perAttendee = min(REP_PER_CHECKIN, sessionCap / count)` with
-  `sessionCap = max(repFloor, capBps × totalSupply / 10_000)` and checks + reserves the
-  club-wide weekly budget; `creditSessionRep(id, attendees, from, to)` (anyone) credits in
-  sequential pages, each member capped at `memberWeeklyCap` per week with the excess moved to a
-  `deferred` balance (same packed slot: `{uint32 week, uint96 creditedThisWeek, uint128 deferred}`);
-  `claimDeferredRep(accounts)` (anyone) credits deferred Rep up to the current week's allowance;
-  `rejectSessionRep(id)` (any officer, while Pending) voids the session's Rep. Pending Rep never
-  expires and has no voting power; same for deferred Rep (cleared by a Timelock `revoke`).
-- **Weekly limits use fixed calendar-week buckets** (`block.timestamp / 7 days`), not rolling
-  windows: constant gas, no history storage.
+- **Two-officer Rep sign-off:** `closeSession(id, attendees)` commits to the sorted unique
+  AT-holder list hash + count (list emitted) → Pending; a different officer (or Timelock)
+  calls `confirmSessionRep(id)` → Confirmed and fixes a common recognition timestamp.
+  `creditSessionRep(id, attendees, from, to)` (anyone) credits **10 nominal Rep per attendee**
+  in sequential, non-overlapping pages. Delayed pages decay from the common recognition time;
+  they have no voting power before their page lands and cannot change earlier snapshots.
+  Empty lists complete with zero credit. `rejectSessionRep` voids Pending Rep only. ATs remain.
+- **No supply-based per-session Rep reduction, per-member weekly cap, club-wide weekly budget,
+  weekly counter, deferred balance or `claimDeferredRep`.** Retire `repFloor`, `capBps`,
+  `memberWeeklyCap`, `weeklyFloor`, `weeklyBps`. Attendee and page-count limits remain.
+- Decay does **not** prevent Sybils or repeated fabricated sessions by colluding officers.
+  No aggregate issuance-rate bound is claimed. Review this changed threat model before deploy.
 
 ### Metadata
 - `uri()` returns IPFS URL: `ipfs://{BASE_CID}/{sessionId}.json`
@@ -122,10 +121,26 @@ function _update(address from, address to, uint256[] memory ids, uint256[] memor
 - Never deploy from a personal wallet in production — use a dedicated deployer
 
 ### Governance (Phase 5 v1)
-- **Rep (`ClubRep`)**: OZ `Votes` base (not ERC-20) — no transfer/approve surface;
-  `delegates(a) == a`, `delegate`/`delegateBySig` revert. `REP_PER_CHECKIN = 10` (constant).
-  No decay in v1. One-time `importLegacy` derives Rep from legacy ERC-1155 balances on-chain,
-  then `finalizeImport()`; `ClubGovernor.propose` reverts until finalized.
+- **Rep (`ClubRep`)**: decay-aware `IVotes`, not ERC-20. No transfer/approve surface;
+  `delegates(a) == a`, `delegate`/`delegateBySig` revert. Each attendance earns 10 nominal Rep.
+  Decay is **required in v1**: `r × 2^(-(t-t0)/H)`, with **180-day half-life provisional**
+  for 5a validation; immutable per deployment, independent of semesters or keeper/epoch jobs.
+  Use fixed-point precision (proposed 18 decimals) consistently for awards and governance params.
+  Standard OZ `Votes` does not implement passive decay: adapt/review checkpoints and math rather
+  than assuming its ordinary balances supply historical decayed power automatically.
+  Current account/total reads decay without transactions. Historical reads evaluate state at t;
+  later credits/revokes/decay must not alter past snapshots. Account and global power must agree
+  within a documented rounding tolerance, without member-wide or unbounded-history iteration.
+  New awards never refresh the age of old Rep. Lifetime attendance and ATs never decay.
+  `importLegacy` derives nominal amounts from closed legacy ERC-1155 balances on-chain; all
+  imported credits share a deployment-fixed migration recognition timestamp and then decay.
+  Finalize before any proposal. Timelock grants also decay from execution; revoke removes
+  remaining power and blocks future credits until cleared, while preserving earlier snapshots.
+  Explicit changes emit vote-compatible events plus recognition data; passive decay emits none.
+  Indexers/UI must use as-of timestamps, not event-only cached vote balances.
+  Required tests: reference-model half-life math, rounding/dust, long inactivity/overflow,
+  same-timestamp updates, delayed pages, import timing, revoke/blocking, total/account agreement,
+  fixed proposal snapshots, and bounded gas. Resolve below-threshold/zero-supply recovery before deploy.
 - **Clock**: ERC-6372 timestamp mode (`clock() = uint48(block.timestamp)`,
   `CLOCK_MODE() = "mode=timestamp"`). All governance durations are in **seconds**.
 - **Governance parameters** (constructor defaults; governance may change them only within bounds
@@ -135,11 +150,13 @@ function _update(address from, address to, uint256[] memory ids, uint256[] memor
   timelock min delay 172800 ∈ [1 d, 7 d] · proposal threshold 30 Rep ∈ [10, 1,000] ·
   quorum numerator 10% ∈ [5%, 30%]; quorum = `max(numerator × supply, min(minQuorum, 50% × supply))`
   with immutable `minQuorum = 100` Rep.
-- **Registry params** (Timelock-only, bounded): `repFloor` 500 Rep ∈ [100, 5,000],
-  `capBps` 2,000 ∈ [500, 5,000], `memberWeeklyCap` 100 Rep ∈ [20, 1,000],
-  `weeklyFloor` 1,000 Rep ∈ [500, 20,000],
-  `weeklyBps` 2,500 ∈ [500, 5,000]. Constants: `MAX_ATTENDEES = 300`, `mintBatch` ≤ 200,
-  credit pages ~100, officer floor 2.
+- **Registry constants:** `MAX_ATTENDEES = 300`, `mintBatch` ≤ 200, credit pages ~100,
+  officer floor 2. Full 10 nominal Rep per eligible attendee; no Rep budget params.
+- **Threshold and quorum:** use decayed power at `clock()-1` for proposing and at the fixed
+  proposal snapshot for vote weights/quorum. Threshold 30 Rep and minQuorum 100 Rep are
+  provisional settings in scaled units, not guaranteed counts of check-ins after decay.
+  The positive-supply quorum clamp alone does not solve inactivity/zero-supply recovery;
+  resolve and test that liveness policy in 5a (#52, #61, #68).
 - **Pause**: any officer, 14 days, once per officer per 30 days; unpause needs 2 distinct
   officers or the Timelock. Blocks AT minting only.
 - Every Timelock-changeable parameter must have on-chain bounds.
@@ -153,7 +170,7 @@ function _update(address from, address to, uint256[] memory ids, uint256[] memor
 - Upgradeable proxies — KISS, the contracts are simple enough to redeploy if needed (Phase 6 may use non-upgradeable clones; that needs its own amendment)
 - `tx.origin` for auth — always use `msg.sender`
 - `block.timestamp` for access control (who may call what). It **is** allowed for durations and
-  windows: pause expiry, guardian expiry, the weekly Rep buckets (per-member and club-wide), and the ERC-6372
+  windows: pause expiry, guardian expiry, gradual Rep decay and recognition timestamps, and the ERC-6372
   governance clock (validators can skew it by seconds, which is irrelevant at hour/day scales).
   Do not add time limits on creating sessions (owner decision).
 - Storing off-chain data on-chain (token metadata belongs on IPFS)
@@ -177,3 +194,4 @@ PRIVATE_KEY          # Deployer wallet
 ALCHEMY_API_KEY      # Base RPC
 BASESCAN_API_KEY     # Contract verification
 ```
+
