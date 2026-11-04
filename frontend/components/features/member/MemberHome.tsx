@@ -52,7 +52,7 @@ const SUBTLE_LIGHT = 'text-content-secondary';
 const CHECK_IN_EYEBROW = '● Check in';
 const RECENT_TOKENS_TITLE = 'Recent tokens';
 const MOBILE_TOKEN_COUNT = 2;
-const STAT_PLACEHOLDER = '—';
+const STAT_PLACEHOLDER = '-';
 
 const MOBILE_STATS = [
   { key: 'attendance', label: 'Attendance', accent: false },

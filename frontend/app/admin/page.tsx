@@ -35,7 +35,7 @@ export default function AdminOverviewPage() {
       ) : error ? (
         <p className="text-status-neg text-sm py-16 text-center">Couldn&apos;t load the overview. Please try again.</p>
       ) : !data || data.totalSessions === 0 ? (
-        <p className="text-content-secondary text-sm py-16 text-center">No sessions yet — create one to see attendance trends.</p>
+        <p className="text-content-secondary text-sm py-16 text-center">No sessions yet. Create one to see attendance trends.</p>
       ) : (
         <OverviewBody data={data} />
       )}

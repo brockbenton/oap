@@ -268,7 +268,7 @@ function MemberRow({ member, sessions }: { member: MemberStats; sessions: Recent
           return (
             <span
               key={session.sessionIdOnchain}
-              title={`${session.name} · ${formatSessionDate(session.date)} — ${
+              title={`${session.name} · ${formatSessionDate(session.date)}: ${
                 present ? 'attended' : 'absent'
               }`}
               className={present ? CELL_PRESENT : CELL_ABSENT}

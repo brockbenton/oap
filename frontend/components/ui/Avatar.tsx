@@ -1,5 +1,5 @@
 import { cn } from '@/lib/cn';
-import { avatarGradient, avatarGradientByIndex } from '@/lib/tokenArt';
+import { avatarColorByIndex, avatarColorForSeed } from '@/lib/tokenArt';
 
 export interface AvatarProps {
   seed: string;
@@ -13,15 +13,16 @@ const DEFAULT_SIZE = 36;
 const INITIAL_FONT_RATIO = 0.42;
 
 export default function Avatar({ seed, label, size = DEFAULT_SIZE, colorIndex, className }: AvatarProps) {
-  const initial = (label ?? seed).charAt(0).toUpperCase();
+  // Skip the 0x prefix, or every wallet-labelled avatar would read "0".
+  const initial = (label ?? seed).replace(/^0x/i, '').charAt(0).toUpperCase();
   const background =
     colorIndex === null || colorIndex === undefined
-      ? avatarGradient(seed)
-      : avatarGradientByIndex(colorIndex);
+      ? avatarColorForSeed(seed)
+      : avatarColorByIndex(colorIndex);
   return (
     <div
       className={cn(
-        'inline-flex items-center justify-center rounded-full text-content font-semibold',
+        'inline-flex items-center justify-center rounded-full font-mono font-medium text-canvas',
         className,
       )}
       style={{

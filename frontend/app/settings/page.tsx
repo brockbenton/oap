@@ -11,7 +11,7 @@ import { Avatar, Badge, Button, Input, Textarea } from '@/components/ui';
 import { CheckIcon, SignOutIcon } from '@/components/ui/icons';
 import { useProfile, useUpdateProfile, useEmbeddedAddress } from '@/hooks/useProfile';
 import { shortenAddress } from '@/lib/address';
-import { AVATAR_COLOR_COUNT, avatarGradientByIndex } from '@/lib/tokenArt';
+import { AVATAR_COLOR_COUNT, avatarColorByIndex } from '@/lib/tokenArt';
 import { ApiRequestError } from '@/lib/api/client';
 import { cn } from '@/lib/cn';
 import type { ProfilePatch } from '@/lib/api/profile';
@@ -100,7 +100,7 @@ export default function SettingsPage() {
       ? null
       : updateProfile.error instanceof ApiRequestError
         ? updateProfile.error.message
-        : "Couldn't save — check your connection and try again.";
+        : "Couldn't save. Check your connection and try again.";
 
   const onSave = () => {
     if (!dirty || usernameInvalid) return;
@@ -176,10 +176,10 @@ export default function SettingsPage() {
                         aria-pressed={avatarColor === i}
                         onClick={() => setAvatarColor(i)}
                         className={cn(
-                          'h-9 w-9 rounded-full ring-2 ring-offset-2 transition',
-                          avatarColor === i ? 'ring-green' : 'ring-transparent hover:ring-line',
+                          'h-9 w-9 rounded-full ring-2 ring-offset-2 ring-offset-surface transition',
+                          avatarColor === i ? 'ring-green' : 'ring-transparent hover:ring-line-strong',
                         )}
-                        style={{ background: avatarGradientByIndex(i) }}
+                        style={{ background: avatarColorByIndex(i) }}
                       />
                     ))}
                   </div>
@@ -344,7 +344,7 @@ function NotificationsSection() {
         <div className="min-w-0">
           <div className="text-sm font-semibold">Email me attendance summaries</div>
           <p className="mt-1 text-xs text-content-secondary">
-            We&apos;ll only use this once notifications ship — no emails are sent yet.
+            We&apos;ll only use this once notifications ship. No emails are sent yet.
           </p>
         </div>
         <ToggleSwitch

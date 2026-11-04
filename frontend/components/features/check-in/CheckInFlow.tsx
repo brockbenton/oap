@@ -329,7 +329,7 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
     const shortLabel = topic.slice(0, TOKEN_SHORT_MAX).toUpperCase();
     const editionLabel = mintedToken
       ? `#${String(mintedToken.meetingNumber).padStart(EDITION_PAD, '0')}`
-      : '#—';
+      : '#-';
     const dateMeta = mintedToken
       ? `${formatTokenDate(mintedToken.date)} · Meeting ${mintedToken.meetingNumber}`
       : '';

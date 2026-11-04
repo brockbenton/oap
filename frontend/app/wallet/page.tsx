@@ -32,7 +32,7 @@ const EMBEDDED_TITLE = 'Embedded wallet';
 const EMBEDDED_DESC = 'The self-custodial wallet OCP created for you. It holds your attendance tokens.';
 const BASESCAN_LABEL = 'View on Basescan';
 const EXPORT_KEY_LABEL = 'Export private key';
-const EXPORT_KEY_WARNING = 'Anyone with your private key controls this wallet — never share it.';
+const EXPORT_KEY_WARNING = 'Anyone with your private key controls this wallet. Never share it.';
 
 const CONNECTED_TITLE = 'Connected wallets';
 const CONNECTED_DESC = 'Link an external wallet to sign in and interact with it too.';

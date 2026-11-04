@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Avatar, Button, Input } from '@/components/ui';
 import { useUpdateProfile, useEmbeddedAddress } from '@/hooks/useProfile';
 import { shortenAddress } from '@/lib/address';
-import { AVATAR_COLOR_COUNT, avatarGradientByIndex } from '@/lib/tokenArt';
+import { AVATAR_COLOR_COUNT, avatarColorByIndex } from '@/lib/tokenArt';
 import { ApiRequestError } from '@/lib/api/client';
 import { cn } from '@/lib/cn';
 
@@ -19,7 +19,7 @@ const COLOR_SWATCHES = Array.from({ length: AVATAR_COLOR_COUNT }, (_, i) => i);
 
 const HEADING = 'Welcome to OCP';
 const SUBHEADING =
-  'Set up your profile to get started. Pick a username and a color — you can change both anytime in Settings.';
+  'Set up your profile to get started. Pick a username and a color. You can change both anytime in Settings.';
 const USERNAME_LABEL = 'Username';
 const USERNAME_PLACEHOLDER = 'satoshi';
 const COLOR_LABEL = 'Profile color';
@@ -45,7 +45,7 @@ export default function Onboarding() {
       ? null
       : updateProfile.error instanceof ApiRequestError
         ? updateProfile.error.message
-        : "Couldn't save — check your connection and try again.";
+        : "Couldn't save. Check your connection and try again.";
 
   const seed = address ?? 'account';
   const previewName = username || (address ? shortenAddress(address) : FALLBACK_NAME);
@@ -96,10 +96,10 @@ export default function Onboarding() {
                   aria-pressed={avatarColor === i}
                   onClick={() => setAvatarColor(i)}
                   className={cn(
-                    'h-9 w-9 rounded-full ring-2 ring-offset-2 transition',
-                    avatarColor === i ? 'ring-green' : 'ring-transparent hover:ring-line',
+                    'h-9 w-9 rounded-full ring-2 ring-offset-2 ring-offset-surface transition',
+                    avatarColor === i ? 'ring-green' : 'ring-transparent hover:ring-line-strong',
                   )}
-                  style={{ background: avatarGradientByIndex(i) }}
+                  style={{ background: avatarColorByIndex(i) }}
                 />
               ))}
             </div>

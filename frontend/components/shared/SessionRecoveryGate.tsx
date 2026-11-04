@@ -22,7 +22,7 @@ const COOKIE_EPOCH = 'Thu, 01 Jan 1970 00:00:00 GMT';
 const HEALING_LABEL = 'Restoring your session…';
 const FAILED_TITLE = 'This is taking longer than expected';
 const FAILED_BODY =
-  'Your sign-in session looks stuck. Reset it to start fresh — you may need to sign in again.';
+  'Your sign-in session looks stuck. Reset it to start fresh. You may need to sign in again.';
 const RESET_LABEL = 'Reset session';
 
 /**

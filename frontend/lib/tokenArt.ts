@@ -12,17 +12,9 @@ export const TOKEN_COLORS: Record<TokenColor, string> = {
 
 export const TOKEN_COLOR_NAMES = Object.keys(TOKEN_COLORS) as TokenColor[];
 
-const GRADIENT_ANGLE = '135deg';
-
-const AVATAR_PAIRS: ReadonlyArray<readonly [string, string]> = [
-  ['#337df3', '#6833ff'],
-  ['#11a642', '#26ddf9'],
-  ['#6833ff', '#a485ff'],
-  ['#337df3', '#865cff'],
-  ['#f59e00', '#fc4848'],
-  ['#0e8535', '#c8f028'],
-  ['#fb6832', '#f7b133'],
-];
+// Seven distinct hues, indexed by the stored avatarColor (the backend allows 0-6).
+// Green is left out so it stays reserved for actions and status.
+const AVATAR_COLORS = ['#7CC7FF', '#F5B84B', '#FF8A80', '#B79CFF', '#F28CC3', '#4FD1C5', '#D9C8A9'];
 
 function charSum(input: string): number {
   let sum = 0;
@@ -41,15 +33,13 @@ export function colorForTopic(topic: string): string {
   return TOKEN_COLORS[colorNameForTopic(topic)];
 }
 
-export function avatarGradient(seed: string): string {
-  const [from, to] = AVATAR_PAIRS[charSum(seed) % AVATAR_PAIRS.length];
-  return `linear-gradient(${GRADIENT_ANGLE}, ${from}, ${to})`;
+export const AVATAR_COLOR_COUNT = AVATAR_COLORS.length;
+
+export function avatarColorByIndex(index: number): string {
+  const wrapped = ((index % AVATAR_COLOR_COUNT) + AVATAR_COLOR_COUNT) % AVATAR_COLOR_COUNT;
+  return AVATAR_COLORS[wrapped];
 }
 
-export const AVATAR_COLOR_COUNT = AVATAR_PAIRS.length;
-
-export function avatarGradientByIndex(index: number): string {
-  const wrapped = ((index % AVATAR_COLOR_COUNT) + AVATAR_COLOR_COUNT) % AVATAR_COLOR_COUNT;
-  const [from, to] = AVATAR_PAIRS[wrapped];
-  return `linear-gradient(${GRADIENT_ANGLE}, ${from}, ${to})`;
+export function avatarColorForSeed(seed: string): string {
+  return avatarColorByIndex(charSum(seed));
 }

@@ -86,13 +86,13 @@ const HOW_STEPS: HowStep[] = [
   {
     number: '01',
     title: 'Scan the meeting QR',
-    body: 'Each meeting shows a unique code on the projector. No wallet setup — sign in with email or Google.',
+    body: 'Each meeting shows a unique code on the projector. No wallet setup. Sign in with email or Google.',
     badgeClass: 'bg-status-info-bg text-cyan',
   },
   {
     number: '02',
     title: 'Mint your token',
-    body: 'A collectible with the date, topic, and edition number is minted to your embedded wallet — gas covered.',
+    body: 'A collectible with the date, topic, and edition number is minted to your embedded wallet, gas covered.',
     badgeClass: 'bg-status-warn-bg text-status-warn',
   },
   {
@@ -112,12 +112,12 @@ interface ValueProp {
 const WHY_OCP: ValueProp[] = [
   {
     title: 'Tamper-proof by default',
-    body: 'Every check-in is a soulbound token — non-transferable, timestamped, and impossible to backfill or fake after the fact.',
+    body: 'Every check-in is a soulbound token: non-transferable, timestamped, and impossible to backfill or fake after the fact.',
     dotClass: 'bg-green',
   },
   {
     title: 'Zero friction to join',
-    body: 'Members sign in with email or Google. We provision an embedded wallet and sponsor the gas — no seed phrase, no ETH, no extension.',
+    body: 'Members sign in with email or Google. We provision an embedded wallet and sponsor the gas: no seed phrase, no ETH, no extension.',
     dotClass: 'bg-green',
   },
   {
@@ -127,7 +127,7 @@ const WHY_OCP: ValueProp[] = [
   },
   {
     title: 'A record they own',
-    body: 'Attendance lives onchain, not in a spreadsheet — portable, publicly verifiable, and theirs to keep long after they leave.',
+    body: 'Attendance lives onchain, not in a spreadsheet: portable, publicly verifiable, and theirs to keep long after they leave.',
     dotClass: 'bg-green',
   },
 ];
@@ -140,7 +140,7 @@ interface TokenFact {
 const TOKEN_FACTS: TokenFact[] = [
   { label: 'Standard', value: 'ERC-1155, soulbound' },
   { label: 'Metadata', value: 'Topic · date · edition · club' },
-  { label: 'Gas', value: 'Sponsored — $0 to member' },
+  { label: 'Gas', value: 'Sponsored, $0 to member' },
 ];
 
 const TOKEN_SAMPLE = {

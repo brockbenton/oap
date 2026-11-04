@@ -25,7 +25,7 @@ const AVATAR_SIZE = 80;
 const MENU_ICON_SIZE = 18;
 const CHEVRON_SIZE = 16;
 
-const STAT_PLACEHOLDER = '—';
+const STAT_PLACEHOLDER = '-';
 
 interface ProfileStat {
   label: string;

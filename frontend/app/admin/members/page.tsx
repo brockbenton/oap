@@ -132,7 +132,7 @@ function MemberRow({ member, rank, toggling, onToggleFounding }: MemberRowProps)
         </span>
       </td>
       <td className="px-4 py-3 text-content-secondary max-w-[180px] truncate">
-        {member.linkedAccount ?? <span className="text-content-muted">—</span>}
+        {member.linkedAccount ?? <span className="text-content-muted">-</span>}
       </td>
       <td className="px-4 py-3 text-right tabular-nums text-content">{member.tokensEarned}</td>
       <td className="px-4 py-3 text-right">
@@ -148,7 +148,7 @@ function MemberRow({ member, rank, toggling, onToggleFounding }: MemberRowProps)
         {member.lastSeen ? (
           formatRelativeDate(member.lastSeen)
         ) : (
-          <span className="text-content-muted">—</span>
+          <span className="text-content-muted">-</span>
         )}
       </td>
       <td className="px-4 py-3">

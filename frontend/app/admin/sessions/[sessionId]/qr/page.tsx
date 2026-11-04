@@ -188,7 +188,7 @@ function CountdownLine({ secondsLeft }: { secondsLeft: number | null }) {
     );
   }
   return (
-    <p className="text-sm text-status-neg font-medium">QR expired — refreshing&hellip;</p>
+    <p className="text-sm text-status-neg font-medium">QR expired. Refreshing&hellip;</p>
   );
 }
 
