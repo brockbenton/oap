@@ -1,5 +1,9 @@
 # Frontend — Rules & Conventions
 
+## Phase 5 v1 target: participation reputation
+
+Follow `../MASTER_PLAN.md` for the planned DAO. Show current decayed Rep/influence with an as-of timestamp, separate from permanent ATs and lifetime attendance. Explain 10 nominal Rep per verified eligible attendance and gradual decay (180-day half-life is provisional). Distinguish pending officer approval, approved-awaiting-credit and credited; no weekly-budget/deferred-claim UI. Proposal vote weight and quorum use the fixed historical snapshot, not the member's changing live balance. Replace mock XP/levels with real Rep/rank for v1; do not imply rewards are cash-redeemable. Officer session actions, proposals and queue/execute use funded officer/member wallets; AT minting and signed member votes use the relay. Keep Privy prompts enabled; never enable delegated/session signers. No claim that decay prevents fake attendance.
+
 ## Stack
 - **Next.js 14** (App Router, `app/` directory)
 - **TypeScript** — strict mode, no `any`
@@ -73,3 +77,4 @@ NEXT_PUBLIC_CONTRACT_ADDRESS
 NEXT_PUBLIC_CHAIN_ID
 NEXT_PUBLIC_API_URL
 ```
+
