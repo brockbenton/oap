@@ -75,3 +75,6 @@ jobs:
       - run: npm ci
       - run: npm run typecheck --if-present
       - run: npm run build
+        env:
+          # Placeholder: next.config.mjs requires it, and CI never talks to Privy.
+          NEXT_PUBLIC_PRIVY_APP_ID: clci000000000000000000000

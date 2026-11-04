@@ -18,19 +18,13 @@ interface AppProvidersProps {
 }
 
 export default function AppProviders({ children }: AppProvidersProps) {
-  const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
-
   // No `typeof window` gate on purpose: it would fork server vs. first client
   // paint, forcing a hydration mismatch that re-mounts the (SSR-safe) provider.
-  // `appId` is build-inlined and identical both sides, so this branch is stable.
-  if (!appId) {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
-  }
-
+  // next.config.mjs fails the build when this env var is missing.
   return (
     <QueryClientProvider client={queryClient}>
       <PrivyProvider
-        appId={appId}
+        appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID as string}
         config={{
           defaultChain: baseSepolia,
           supportedChains: [baseSepolia],
