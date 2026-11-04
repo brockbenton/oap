@@ -175,7 +175,7 @@ export default function OrganizerRunMeetingPage() {
     return <NoMeeting />;
   }
 
-  const clockValue = formatElapsed(secondsSince(activeSession.createdAt, now));
+  const clockValue = formatElapsed(secondsSince(activeSession.date, now));
   const roster = [...(attendees ?? [])].reverse();
 
   return (
