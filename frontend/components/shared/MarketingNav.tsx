@@ -33,7 +33,7 @@ export default function MarketingNav() {
   };
 
   return (
-    <header className="border-b border-line bg-surface">
+    <header className="border-b border-line bg-canvas">
       <div className="mx-auto flex h-16 max-w-[1180px] items-center px-6">
         <Brand href={HOME_ROUTE} />
         <nav className="ml-11 flex items-center gap-1.5">

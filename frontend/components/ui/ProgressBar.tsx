@@ -14,12 +14,12 @@ export default function ProgressBar({ value, className }: ProgressBarProps) {
   return (
     <div
       className={cn(
-        'h-1.5 rounded-full bg-raised overflow-hidden',
+        'h-1 bg-raised overflow-hidden',
         className,
       )}
     >
       <div
-        className="h-full rounded-full bg-green"
+        className="h-full bg-green"
         style={{ width: `${clamped * PERCENT}%` }}
       />
     </div>

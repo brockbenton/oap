@@ -6,7 +6,7 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
 }
 
 const BASE_CLASSES =
-  'inline-flex items-center justify-center h-10 w-10 rounded-full text-content transition duration-200 hover:bg-raised disabled:opacity-40 disabled:pointer-events-none';
+  'inline-flex items-center justify-center h-10 w-10 rounded text-content transition-colors duration-150 hover:bg-raised disabled:opacity-40 disabled:pointer-events-none';
 
 export default function IconButton({ label, className, children, ...props }: IconButtonProps) {
   return (

@@ -134,7 +134,7 @@ function GreetingHeader({
   return (
     <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
       <div>
-        <div className="mb-2 font-mono text-[13px] uppercase tracking-[0.06em] text-status-neutral">
+        <div className="mb-2 font-mono text-[13px] uppercase tracking-[0.08em] text-status-neutral">
           {semester ? `${CLUB_NAME} · ${semester}` : CLUB_NAME}
         </div>
         <h1 className="text-[32px] font-semibold leading-[38px]">{title}</h1>
@@ -240,7 +240,7 @@ function VaultTokenCard({ token }: { token: VaultToken }) {
 function MobileCheckInCard() {
   return (
     <div className="relative mb-4 overflow-hidden rounded-lg bg-raised p-5 text-content">
-      <div className="relative mb-2 font-mono text-[11px] font-medium uppercase leading-none tracking-[0.06em] text-green">
+      <div className="relative mb-2 font-mono text-xs font-medium uppercase leading-none tracking-[0.08em] text-green">
         {CHECK_IN_EYEBROW}
       </div>
       <div className="relative mb-1 text-[17px] font-semibold leading-[1.3]">{CHECK_IN_TITLE}</div>
@@ -304,7 +304,7 @@ function CheckInCard() {
         <div className={cn('text-sm leading-5', SUBTLE_LIGHT)}>{CHECK_IN_SUBTITLE}</div>
       </div>
       <Link href={CHECK_IN_HREF} className="relative flex-none">
-        <Button variant="cyan" size="lg">
+        <Button size="lg">
           {SCAN_LABEL}
         </Button>
       </Link>
@@ -364,7 +364,7 @@ function LeaderboardPreview({ entries }: { entries: LeaderboardEntry[] }) {
     <div className="self-start rounded-lg border border-line bg-surface p-[22px]">
       <div className="mb-1.5 flex items-center justify-between">
         <div className="text-base font-semibold">{LEADERBOARD_TITLE}</div>
-        <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-content-secondary">
+        <span className="font-mono text-xs uppercase tracking-[0.08em] text-content-secondary">
           {LEADERBOARD_TIMEFRAME_LABEL}
         </span>
       </div>
@@ -450,7 +450,7 @@ function EmptyHome({ displayName, semester }: { displayName: string; semester: s
               {MINT_BODY}
             </p>
             <Link href={CHECK_IN_HREF} className="inline-block">
-              <Button variant="cyan" size="lg">
+              <Button size="lg">
                 {SCAN_LABEL}
               </Button>
             </Link>

@@ -9,7 +9,7 @@ const EDITION_PREFIX = '#';
 const META_SEPARATOR = ' · ';
 
 const CARD_CLASSES =
-  'block w-full text-left bg-surface border border-line rounded-tile overflow-hidden duration-200';
+  'block w-full text-left bg-surface border border-line rounded overflow-hidden transition-colors duration-150 hover:border-line-strong';
 const HERO_CLASSES = 'relative grid aspect-square place-items-center overflow-hidden';
 const RARE_TAG_CLASSES =
   'absolute right-2.5 top-2.5 rounded-sm bg-canvas/70 px-1.5 py-0.5 text-[9px] font-bold leading-[14px] text-content';

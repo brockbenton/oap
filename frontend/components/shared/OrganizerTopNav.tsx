@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import AccountMenu from '@/components/shared/AccountMenu';
 import Brand from '@/components/shared/Brand';
-import { Avatar } from '@/components/ui';
 import { cn } from '@/lib/cn';
 
 type OrganizerNavKey = 'overview' | 'meetings' | 'members' | 'settings';
@@ -27,18 +27,14 @@ const NAV_ITEMS: OrganizerNavItem[] = [
 ];
 
 const NAV_ITEM_BASE = 'rounded-md px-3.5 py-2 text-sm transition';
-const NAV_ITEM_ACTIVE = 'bg-raised font-semibold text-content';
+const NAV_ITEM_ACTIVE = 'bg-raised font-medium text-content';
 const NAV_ITEM_INACTIVE = 'text-content-secondary hover:text-content';
 const ORGANIZER_BADGE =
-  'ml-3.5 rounded-sm bg-status-warn-bg px-2.5 py-1 font-mono text-[10px] tracking-[0.06em] text-status-warn';
-
-const AVATAR_SEED = 'organizer';
-const AVATAR_LABEL = 'MK';
-const AVATAR_SIZE = 34;
+  'ml-3.5 rounded-sm bg-status-warn-bg px-2.5 py-1 font-mono text-[10px] tracking-[0.08em] text-status-warn';
 
 export default function OrganizerTopNav({ active }: OrganizerTopNavProps) {
   return (
-    <header className="border-b border-line bg-surface">
+    <header className="border-b border-line bg-canvas">
       <div className="mx-auto flex h-16 max-w-[1180px] items-center px-6">
         <Brand href={ROOT_ROUTE} />
         <span className={ORGANIZER_BADGE}>ORGANIZER</span>
@@ -54,7 +50,7 @@ export default function OrganizerTopNav({ active }: OrganizerTopNavProps) {
           ))}
         </nav>
         <div className="ml-auto flex items-center">
-          <Avatar seed={AVATAR_SEED} label={AVATAR_LABEL} size={AVATAR_SIZE} />
+          <AccountMenu />
         </div>
       </div>
     </header>

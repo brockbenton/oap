@@ -335,7 +335,7 @@ export default function Landing() {
             <div className="grid grid-cols-2 gap-x-8 gap-y-4">
               {TOKEN_FACTS.map((fact) => (
                 <div key={fact.label}>
-                  <div className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.06em] text-content-secondary">
+                  <div className="mb-1.5 font-mono text-xs uppercase tracking-[0.08em] text-content-secondary">
                     {fact.label}
                   </div>
                   <div className="text-sm font-medium leading-[1.3]">{fact.value}</div>

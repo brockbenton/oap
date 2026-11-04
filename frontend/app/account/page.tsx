@@ -87,7 +87,7 @@ export default function AccountPage() {
             />
             <div className="mb-1.5 flex items-center gap-2">
               <span className="text-[20px] font-semibold leading-none">{displayName}</span>
-              {stats && <Badge tone="rew">{stats.statusTier}</Badge>}
+              {stats && <Badge>{stats.statusTier}</Badge>}
             </div>
             <div className="font-mono text-xs font-medium text-content-secondary">
               {stats?.currentSemester ? `${CLUB_NAME} · ${stats.currentSemester}` : CLUB_NAME}

@@ -36,7 +36,7 @@ function columnsFor(rangeLabel: string): Column[] {
 }
 
 const ROW_GRID = 'grid grid-cols-[1.4fr_90px_90px_240px_90px] items-center gap-4 px-5';
-const HEADER_LABEL = 'font-mono text-[11px] font-medium uppercase tracking-[0.06em] text-content-secondary';
+const HEADER_LABEL = 'font-mono text-xs font-medium uppercase tracking-[0.08em] text-content-secondary';
 const CELL_PRESENT =
   'grid h-[22px] w-[22px] place-items-center rounded bg-status-pos-bg font-mono text-[11px] font-bold text-status-pos';
 const CELL_ABSENT = 'h-[22px] w-[22px] rounded bg-raised';

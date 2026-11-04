@@ -36,6 +36,14 @@
     font-weight: 500;
   }
 
+  th {
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-size: 12px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
   :focus-visible {
     outline: 1px solid rgb(var(--green));
     outline-offset: 2px;

@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes } from 'react';
 import { cn } from '@/lib/cn';
 
-type ButtonVariant = 'primary' | 'cyan' | 'outline' | 'ghost' | 'destructive';
+type ButtonVariant = 'primary' | 'outline' | 'ghost' | 'destructive';
 type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -10,21 +10,20 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const BASE_CLASSES =
-  'inline-flex items-center justify-center gap-2 font-semibold rounded-full transition duration-200 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none whitespace-nowrap';
+  'inline-flex items-center justify-center gap-2 rounded font-medium transition-colors duration-150 disabled:opacity-40 disabled:pointer-events-none whitespace-nowrap';
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {
-  xs: 'h-6 px-3 text-xs',
-  sm: 'h-8 px-4 text-[13px]',
-  md: 'h-10 px-5 text-sm',
-  lg: 'h-14 px-7 text-base',
+  xs: 'h-6 px-2.5 text-xs',
+  sm: 'h-8 px-3 text-[13px]',
+  md: 'h-10 px-4 text-sm',
+  lg: 'h-12 px-6 text-[15px]',
 };
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: 'bg-raised text-content hover:bg-line',
-  cyan: 'bg-green text-canvas hover:brightness-95',
-  outline: 'bg-surface text-content border border-line hover:bg-raised',
-  ghost: 'bg-raised text-content hover:bg-raised',
-  destructive: 'bg-transparent text-status-neg hover:bg-status-neg-bg',
+  primary: 'bg-green text-canvas hover:bg-green-dim',
+  outline: 'border border-line-strong text-content hover:bg-raised',
+  ghost: 'bg-raised text-content hover:bg-line',
+  destructive: 'border border-red/40 text-status-neg hover:bg-status-neg-bg',
 };
 
 export default function Button({

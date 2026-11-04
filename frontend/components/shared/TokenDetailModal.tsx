@@ -76,7 +76,7 @@ const TITLE_CLASSES = 'mb-1.5 text-[26px] font-semibold leading-[30px]';
 const SUBTITLE_CLASSES = 'mb-[22px] font-mono text-[13px] font-medium text-content-secondary';
 const META_GRID_CLASSES = 'mb-[22px] grid grid-cols-2 gap-x-5 gap-y-4';
 const META_LABEL_CLASSES =
-  'font-mono text-[11px] font-bold uppercase tracking-[0.06em] text-content-secondary';
+  'font-mono text-xs uppercase tracking-[0.08em] text-content-secondary';
 const META_VALUE_CLASSES = 'mt-1.5 text-[14px] font-medium leading-[1.3] text-content';
 
 const TRAIT_ROW_CLASSES = 'mb-[22px] flex flex-wrap gap-2';

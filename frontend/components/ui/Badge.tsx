@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
-type BadgeTone = 'info' | 'pos' | 'warn' | 'neg' | 'rew' | 'neutral';
+type BadgeTone = 'info' | 'pos' | 'warn' | 'neg' | 'neutral';
 
 export interface BadgeProps {
   tone?: BadgeTone;
@@ -10,14 +10,13 @@ export interface BadgeProps {
 }
 
 const BASE_CLASSES =
-  'inline-flex items-center rounded-sm px-2 py-0.5 text-[11px] font-semibold';
+  'inline-flex items-center rounded-sm px-2 py-0.5 font-mono text-xs font-medium uppercase tracking-[0.08em]';
 
 const TONE_CLASSES: Record<BadgeTone, string> = {
   info: 'text-status-info bg-status-info-bg',
   pos: 'text-status-pos bg-status-pos-bg',
   warn: 'text-status-warn bg-status-warn-bg',
   neg: 'text-status-neg bg-status-neg-bg',
-  rew: 'text-status-warn bg-status-warn-bg',
   neutral: 'text-status-neutral bg-status-neutral-bg',
 };
 
