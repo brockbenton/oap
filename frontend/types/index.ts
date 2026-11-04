@@ -179,47 +179,15 @@ export interface ApiError {
   };
 }
 
-// --- Frontend sample-data domains (gamification, explore, live meeting) ---
-
-export interface Level {
-  level: number;
-  xp: number;
-  xpIntoLevel: number;
-  xpForNextLevel: number;
-}
-
+// A ranked row on the leaderboard, derived from the public member directory.
 export interface LeaderboardEntry {
   rank: number;
   handle: string;
   avatarSeed: string;
-  streakWeeks: number;
+  streak: number;
   tokens: number;
-  xp: number;
+  attendancePct: number;
   isYou: boolean;
-}
-
-export interface Reward {
-  id: string;
-  title: string;
-  description: string;
-  requiredLevel: number;
-  status: 'ready' | 'locked' | 'claimed';
-}
-
-export interface RosterEntry {
-  handle: string;
-  avatarSeed: string;
-  secondsAgo: number;
-}
-
-export interface LiveMeeting {
-  topic: string;
-  week: number;
-  club: string;
-  checkedIn: number;
-  totalMembers: number;
-  elapsedSeconds: number;
-  roster: RosterEntry[];
 }
 
 // Editable member profile (GET/PATCH /members/me). avatarColor indexes the

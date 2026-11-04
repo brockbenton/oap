@@ -20,8 +20,6 @@ export interface TokenDetailData {
   mintedAt: string;
   chain: string;
   standard: string;
-  /** Omitted when there is no XP model behind the token. */
-  xp?: number | null;
   gradient?: GradientName;
   rarity?: 'RARE' | null;
   traits: { label: string; value: string; tone?: TraitTone }[];
@@ -43,8 +41,6 @@ const EDITION_PREFIX = '#';
 const META_SEPARATOR = ' · ';
 const ELLIPSIS = '…';
 const WEEK_PREFIX = 'Week ';
-const XP_PREFIX = '+';
-const XP_SUFFIX = ' XP';
 const TX_PREFIX = 'Tx ';
 const HASH_HEAD_LENGTH = 6;
 const HASH_TAIL_LENGTH = 4;
@@ -59,7 +55,6 @@ const SHARE_LABEL = 'Share';
 const META_MINTED = 'Minted';
 const META_CHAIN = 'Chain';
 const META_STANDARD = 'Standard';
-const META_XP = 'XP earned';
 
 const OVERLAY_CLASSES = 'fixed inset-0 z-50 grid place-items-center bg-[rgba(1,3,4,0.5)] p-4';
 const PANEL_CLASSES =
@@ -127,9 +122,6 @@ export default function TokenDetailModal({ open, onClose, token }: TokenDetailMo
     { label: META_CHAIN, value: token.chain },
     { label: META_STANDARD, value: token.standard },
   ];
-  if (token.xp != null) {
-    metaItems.push({ label: META_XP, value: `${XP_PREFIX}${token.xp}${XP_SUFFIX}` });
-  }
 
   return (
     <div className={OVERLAY_CLASSES} onClick={onClose}>

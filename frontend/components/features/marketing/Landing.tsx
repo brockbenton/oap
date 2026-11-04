@@ -104,7 +104,7 @@ const HOW_STEPS: HowStep[] = [
   {
     number: '03',
     title: 'Build your streak',
-    body: "Show up weekly to level up, unlock rewards, and rise on your club's leaderboard.",
+    body: "Show up weekly to build your streak and rise on your club's leaderboard.",
     badgeClass: 'bg-status-pos-bg text-green-600',
   },
 ];

@@ -300,8 +300,6 @@ function toDetail(token: VaultToken): TokenDetailData {
     mintedAt: formatMintedAt(token.date),
     chain: CHAIN_NAME,
     standard: TOKEN_STANDARD,
-    // No XP model exists in the backend; the tile is omitted rather than faked.
-    xp: null,
     gradient: gradientNameForTopic(token.name),
     rarity: null,
     traits: [

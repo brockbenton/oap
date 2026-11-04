@@ -4,7 +4,6 @@ import type { ComponentType } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/cn';
 import {
-  GiftIcon,
   GridIcon,
   HomeIcon,
   QrIcon,
@@ -12,7 +11,7 @@ import {
   type IconProps,
 } from '@/components/ui/icons';
 
-type MobileTabKey = 'home' | 'vault' | 'scan' | 'ranks' | 'rewards';
+type MobileTabKey = 'home' | 'vault' | 'scan' | 'ranks';
 
 export interface MobileTabBarProps {
   active?: MobileTabKey;
@@ -31,7 +30,6 @@ const ROUTES: Record<MobileTabKey, string> = {
   vault: '/vault',
   scan: '/check-in',
   ranks: '/leaderboard',
-  rewards: '/rewards',
 };
 
 const TAB_ITEMS: MobileTabItem[] = [
@@ -39,7 +37,6 @@ const TAB_ITEMS: MobileTabItem[] = [
   { key: 'vault', label: 'Vault', href: ROUTES.vault, Icon: GridIcon },
   { key: 'scan', label: 'Scan', href: ROUTES.scan, Icon: QrIcon, center: true },
   { key: 'ranks', label: 'Ranks', href: ROUTES.ranks, Icon: TrophyIcon },
-  { key: 'rewards', label: 'Rewards', href: ROUTES.rewards, Icon: GiftIcon },
 ];
 
 const TAB_ICON_SIZE = 22;
@@ -47,7 +44,7 @@ const SCAN_ICON_SIZE = 24;
 
 export default function MobileTabBar({ active }: MobileTabBarProps) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[72px] grid-cols-5 items-center border-t border-line bg-white px-2 md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[72px] grid-cols-4 items-center border-t border-line bg-white px-2 md:hidden">
       {TAB_ITEMS.map(({ key, label, href, Icon, center }) => {
         if (center) {
           return (

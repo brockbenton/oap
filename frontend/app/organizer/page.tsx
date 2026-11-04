@@ -19,26 +19,20 @@ import { cn } from '@/lib/cn';
 import type { AdminOverview, SessionWithCount } from '@/types';
 import { CLUB_NAME } from '@/lib/constants';
 
-// The backend has no clubs surface: club identity (name/handle/logo), meeting cadence and the
-// next scheduled meeting aren't persisted, so they're sample and mirror the design frame. Every
-// figure inside the stat row, the recent-meetings table and the tokens total is real admin data.
+// The backend has no clubs surface, so club identity comes from static config. Every figure in
+// the stat row, the recent-meetings table and the tokens total is real admin data.
 const CLUB = {
   name: CLUB_NAME,
-  handle: 'ocp.xyz/c/blockchain-club',
   logo: '◆',
   gradient: TOKEN_GRADIENTS.blue,
 } as const;
 
-const MEETING_CADENCE = 'Weekly · Thursdays';
+const MEETINGS_HINT = 'All time';
 const MEMBERS_HINT = 'Across the club';
 const AVG_HINT = 'Avg per meeting';
 const TOKENS_HINT = 'Across all meetings';
 
-const NEXT_MEETING = {
-  topic: 'Rollups Deep Dive',
-  when: 'Thu Apr 18 · 6:00 PM · Room 214',
-  blurb: "Draft the topic, then open the meeting when everyone's seated to reveal the check-in QR.",
-} as const;
+const RUN_MEETING_BLURB = "Open the meeting when everyone's seated to reveal the check-in QR.";
 
 const RUN_ROUTE = '/organizer/run';
 const RECENT_MEETINGS_LIMIT = 3;
@@ -148,12 +142,9 @@ function ClubHeader() {
           {CLUB.logo}
         </div>
         <div>
-          <h1 className="mb-1.5 text-[26px] font-semibold leading-[30px] tracking-[-0.8px] text-ink">
+          <h1 className="text-[26px] font-semibold leading-[30px] tracking-[-0.8px] text-ink">
             {CLUB.name}
           </h1>
-          <div className="font-mono text-[12px] font-medium leading-none text-content-secondary">
-            {CLUB.handle}
-          </div>
         </div>
       </div>
       <div className="flex gap-2.5">
@@ -187,7 +178,7 @@ function DashboardBody({ overview, sessions }: { overview: AdminOverview; sessio
 
   const tiles: StatTileProps[] = [
     { label: 'Members', value: overview.totalMembers, hint: MEMBERS_HINT },
-    { label: 'Meetings held', value: overview.totalSessions, hint: MEETING_CADENCE },
+    { label: 'Meetings held', value: overview.totalSessions, hint: MEETINGS_HINT },
     { label: 'Avg attendance', value: overview.avgHeadcount, delta: avgDelta, hint: AVG_HINT },
     { label: 'Tokens minted', value: tokensMinted.toLocaleString(), hint: TOKENS_HINT },
   ];
@@ -256,16 +247,8 @@ function DashboardBody({ overview, sessions }: { overview: AdminOverview; sessio
         </Card>
 
         <Card className={PANEL_PADDING}>
-          <div className={cn(PANEL_TITLE, 'mb-4')}>Next meeting</div>
-          <div className="mb-4 rounded-[14px] bg-status-info-bg p-[18px]">
-            <div className="mb-1.5 text-[16px] font-semibold leading-[1.2] text-blue-700">
-              {NEXT_MEETING.topic}
-            </div>
-            <div className="font-mono text-[12px] font-medium leading-none text-blue-600">
-              {NEXT_MEETING.when}
-            </div>
-          </div>
-          <p className="mb-4 text-[13px] leading-[20px] text-content-secondary">{NEXT_MEETING.blurb}</p>
+          <div className={cn(PANEL_TITLE, 'mb-4')}>Run a meeting</div>
+          <p className="mb-4 text-[13px] leading-[20px] text-content-secondary">{RUN_MEETING_BLURB}</p>
           <Link href={RUN_ROUTE} className="block">
             <Button type="button" variant="primary" className={cn(BTN_H, 'w-full')}>
               Open meeting
