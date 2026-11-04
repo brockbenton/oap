@@ -44,7 +44,6 @@ const MOBILE_FILTERS = [
 
 type MobileFilter = (typeof MOBILE_FILTERS)[number]['key'];
 
-const CLUB_COUNT = 1;
 
 const TONE_NEUTRAL = 'neutral' as const;
 const TONE_INFO = 'info' as const;
