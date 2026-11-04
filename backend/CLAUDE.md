@@ -1,5 +1,9 @@
 # Backend — Rules & Conventions
 
+## Phase 5 v1 target: participation reputation
+
+The current attendance backend is not yet the DAO implementation. For Phase 5, follow `../MASTER_PLAN.md`: ATs mint immediately; two distinct officers approve the final unique AT-holder list; permissionless paged credit awards 10 nominal Rep per eligible attendance using one session recognition timestamp. Preserve that timestamp on retries and delayed pages. No weekly Rep counters, budget reservations, deferred balances or claim jobs. Rep decays gradually (provisional 180-day half-life); passive decay emits no events, so timestamp and refresh/recompute cached influence and ranks even without new chain events. Use chain-consistent math and a common as-of time; keep lifetime attendance/ATs separate. Never substitute event-only balances for historical voting snapshots. Officers send session transactions from their wallets; the backend has no admin key and the QR signer is role-less. Governance role changes require proposals/Timelock. Preserve verification/anomaly monitoring; decay is not Sybil protection. Treasury/gas budgets remain separate from reputation issuance.
+
 ## Stack
 - **Node.js** + **Express** + **TypeScript** (strict)
 - **PostgreSQL** + **Prisma ORM** — all DB access through Prisma client
@@ -106,3 +110,4 @@ PRIVY_APP_SECRET
 QR_TTL_MS                  # Default: 600000 (10 min)
 CHAIN_ID                   # 8453 (Base Mainnet) or 84532 (Base Sepolia)
 ```
+
