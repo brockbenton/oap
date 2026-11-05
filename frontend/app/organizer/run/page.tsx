@@ -204,7 +204,7 @@ export default function OrganizerRunMeetingPage() {
         <section
           className="flex flex-col items-center justify-center border-b border-line px-6 py-12 text-center sm:px-10 lg:border-b-0 lg:border-r"
         >
-          <div className="mb-3 font-mono text-[12px] font-medium uppercase tracking-[0.08em] text-status-neutral">
+          <div className="mb-3 font-mono text-[12px] font-medium text-status-neutral">
             {activeSession.semester} · {CLUB_NAME}
           </div>
           <h1 className="mb-2 text-[34px] font-medium leading-[40px] text-content">

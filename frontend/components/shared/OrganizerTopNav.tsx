@@ -30,7 +30,7 @@ const NAV_ITEM_BASE = 'rounded-md px-3.5 py-2 text-sm transition';
 const NAV_ITEM_ACTIVE = 'bg-raised font-medium text-content';
 const NAV_ITEM_INACTIVE = 'text-content-secondary hover:text-content';
 const ORGANIZER_BADGE =
-  'ml-3.5 rounded-sm bg-status-warn-bg px-2.5 py-1 font-mono text-[10px] tracking-[0.08em] text-status-warn';
+  'ml-3.5 rounded-sm bg-status-warn-bg px-2.5 py-1 font-mono text-[10px] text-status-warn';
 
 export default function OrganizerTopNav({ active }: OrganizerTopNavProps) {
   return (

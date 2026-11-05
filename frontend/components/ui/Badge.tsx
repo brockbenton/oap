@@ -10,7 +10,7 @@ export interface BadgeProps {
 }
 
 const BASE_CLASSES =
-  'inline-flex items-center rounded-sm px-2 py-0.5 font-mono text-xs font-medium uppercase tracking-[0.08em]';
+  'inline-flex items-center rounded-sm px-2 py-0.5 font-mono text-xs font-medium';
 
 const TONE_CLASSES: Record<BadgeTone, string> = {
   info: 'text-status-info bg-status-info-bg',

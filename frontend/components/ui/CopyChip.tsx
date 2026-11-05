@@ -37,7 +37,7 @@ export default function CopyChip({ value, display, className }: CopyChipProps) {
       <button
         type="button"
         onClick={handleCopy}
-        className="ml-3 shrink-0 rounded-sm border border-line-strong text-content text-[10px] uppercase px-2.5 py-1 transition-colors hover:bg-line"
+        className="ml-3 shrink-0 rounded-sm border border-line-strong text-content text-[10px] px-2.5 py-1 transition-colors hover:bg-line"
       >
         {copied ? COPIED_LABEL : IDLE_LABEL}
       </button>

@@ -45,8 +45,6 @@
     font-family: var(--font-plex-mono), ui-monospace, monospace;
     font-size: 12px;
     font-weight: 400;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
   }
 
   :focus-visible {

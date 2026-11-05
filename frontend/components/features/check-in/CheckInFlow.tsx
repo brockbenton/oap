@@ -63,7 +63,7 @@ function findMintedToken(
 }
 
 function formatTokenDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', TOKEN_DATE_FORMAT).toUpperCase();
+  return new Date(iso).toLocaleDateString('en-US', TOKEN_DATE_FORMAT);
 }
 
 
@@ -238,7 +238,7 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
   if (step === 'scan') {
     return (
       <div className="flex flex-col items-center text-center">
-        <div className="font-mono text-xs uppercase tracking-[0.08em] text-status-neutral">
+        <div className="font-mono text-xs text-status-neutral">
           {MEETING_EYEBROW}
         </div>
         <h2 className="mt-2.5 text-[24px] font-medium leading-[30px] text-content">

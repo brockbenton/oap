@@ -285,7 +285,7 @@ function LoginsSection() {
   return (
     <section id={SECTION_LOGINS} className={SECTION_CARD}>
       <h2 className={SECTION_HEADING}>Linked logins</h2>
-      <p className={SECTION_CAPTION}>Ways you can sign in to your account.</p>
+      <p className={SECTION_CAPTION}>Ways you can sign in to your account</p>
 
       <div className="mt-5 divide-y divide-line">
         {rows.map((row) => (
@@ -338,7 +338,7 @@ function NotificationsSection() {
   return (
     <section id={SECTION_NOTIFICATIONS} className={SECTION_CARD}>
       <h2 className={SECTION_HEADING}>Notifications</h2>
-      <p className={SECTION_CAPTION}>Choose what lands in your inbox.</p>
+      <p className={SECTION_CAPTION}>Choose what lands in your inbox</p>
 
       <div className="mt-5 flex items-start justify-between gap-4">
         <div className="min-w-0">
@@ -368,7 +368,7 @@ function AccountSection() {
   return (
     <section id={SECTION_ACCOUNT} className={SECTION_CARD}>
       <h2 className={SECTION_HEADING}>Account</h2>
-      <p className={SECTION_CAPTION}>Sign out of OCP on this device.</p>
+      <p className={SECTION_CAPTION}>Sign out of OCP on this device</p>
 
       <div className="mt-5">
         <Button variant="outline" onClick={() => logout()}>

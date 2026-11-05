@@ -387,8 +387,7 @@ function SortIcon() {
 
 function formatCardDate(iso: string): string {
   return new Date(iso)
-    .toLocaleDateString('en-US', { month: 'short', day: '2-digit', timeZone: 'UTC' })
-    .toUpperCase();
+    .toLocaleDateString('en-US', { month: 'short', day: '2-digit', timeZone: 'UTC' });
 }
 
 function formatMintedAt(iso: string): string {
