@@ -71,7 +71,7 @@ export default function WalletPage() {
     <div className="min-h-screen bg-canvas">
       <MemberTopNav />
       <PageContainer className="pt-8 pb-24 md:pb-8">
-        <h1 className="mb-6 text-[30px] font-semibold leading-9">{PAGE_TITLE}</h1>
+        <h1 className="mb-10 text-[30px] font-medium leading-9">{PAGE_TITLE}</h1>
 
         <div className="mb-6 flex items-center gap-4">
           <Avatar
@@ -88,9 +88,9 @@ export default function WalletPage() {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-10">
           <Card className="p-6">
-            <h2 className="text-[17px] font-semibold">{EMBEDDED_TITLE}</h2>
+            <h2 className="text-[17px] font-medium">{EMBEDDED_TITLE}</h2>
             <p className="mt-1 text-sm text-content-secondary">{EMBEDDED_DESC}</p>
 
             <div className="mt-5 max-w-md space-y-4">
@@ -116,7 +116,7 @@ export default function WalletPage() {
           </Card>
 
           <Card className="p-6">
-            <h2 className="text-[17px] font-semibold">{CONNECTED_TITLE}</h2>
+            <h2 className="text-[17px] font-medium">{CONNECTED_TITLE}</h2>
             <p className="mt-1 text-sm text-content-secondary">{CONNECTED_DESC}</p>
 
             <div className="mt-5 max-w-md space-y-4">

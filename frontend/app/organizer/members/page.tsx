@@ -126,12 +126,12 @@ export default function OrganizerMembersPage() {
   return (
     <div className="min-h-screen bg-canvas">
       <OrganizerTopNav active="members" />
-      <PageContainer className="py-8">
+      <PageContainer className="py-12">
         {gate ?? (
           <>
             <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="mb-1.5 text-[26px] font-semibold leading-[30px]">Members</h1>
+                <h1 className="mb-1.5 text-[26px] font-medium leading-[30px]">Members</h1>
                 <p className="text-[14px] leading-[20px] text-content-secondary">
                   {members.length} total
                   {recentSessions.length > 0 &&
@@ -304,7 +304,7 @@ function AccessState({ title, message, action }: AccessStateProps) {
   return (
     <div className="flex justify-center py-20">
       <Card className="max-w-sm space-y-4 p-8 text-center">
-        <h2 className="text-[18px] font-semibold">{title}</h2>
+        <h2 className="text-[18px] font-medium">{title}</h2>
         <p className="text-[14px] leading-[20px] text-content-secondary">{message}</p>
         {action}
       </Card>

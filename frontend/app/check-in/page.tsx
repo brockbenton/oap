@@ -45,7 +45,7 @@ export default function CheckInPage() {
         >
           <ArrowLeft size={20} />
         </Link>
-        <h1 className="text-lg font-semibold text-content">{PAGE_TITLE}</h1>
+        <h1 className="text-lg font-medium text-content">{PAGE_TITLE}</h1>
       </header>
 
       <main className="flex flex-1 items-center justify-center px-6 py-8">

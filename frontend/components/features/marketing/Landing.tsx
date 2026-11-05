@@ -79,7 +79,6 @@ interface HowStep {
   number: string;
   title: string;
   body: string;
-  badgeClass: string;
 }
 
 const HOW_STEPS: HowStep[] = [
@@ -87,48 +86,40 @@ const HOW_STEPS: HowStep[] = [
     number: '01',
     title: 'Scan the meeting QR',
     body: 'Each meeting shows a unique code on the projector. No wallet setup. Sign in with email or Google.',
-    badgeClass: 'bg-status-info-bg text-cyan',
   },
   {
     number: '02',
     title: 'Mint your token',
     body: 'A collectible with the date, topic, and edition number is minted to your embedded wallet, gas covered.',
-    badgeClass: 'bg-status-warn-bg text-status-warn',
   },
   {
     number: '03',
     title: 'Build your streak',
     body: "Show up weekly to build your streak and rise on your club's leaderboard.",
-    badgeClass: 'bg-status-pos-bg text-status-pos',
   },
 ];
 
 interface ValueProp {
   title: string;
   body: string;
-  dotClass: string;
 }
 
 const WHY_OCP: ValueProp[] = [
   {
     title: 'Tamper-proof by default',
     body: 'Every check-in is a soulbound token: non-transferable, timestamped, and impossible to backfill or fake after the fact.',
-    dotClass: 'bg-green',
   },
   {
     title: 'Zero friction to join',
     body: 'Members sign in with email or Google. We provision an embedded wallet and sponsor the gas: no seed phrase, no ETH, no extension.',
-    dotClass: 'bg-green',
   },
   {
     title: 'Motivation built in',
     body: 'Streaks and club leaderboards turn showing up into something members actually want to keep doing.',
-    dotClass: 'bg-amber',
   },
   {
     title: 'A record they own',
     body: 'Attendance lives onchain, not in a spreadsheet: portable, publicly verifiable, and theirs to keep long after they leave.',
-    dotClass: 'bg-green',
   },
 ];
 
@@ -157,13 +148,13 @@ export default function Landing() {
       <MarketingNav />
 
       <section>
-        <PageContainer className="grid gap-10 pb-14 pt-12 md:grid-cols-[1.05fr_0.95fr] md:pt-16">
+        <PageContainer className="grid gap-10 pb-16 pt-16 md:grid-cols-[1.05fr_0.95fr] md:pb-24 md:pt-24">
           <div className="self-center">
             <div className="mb-[22px] inline-flex items-center gap-2 rounded border border-line-strong px-3 py-1.5 font-mono text-xs leading-none text-content-secondary">
               <span className="h-[7px] w-[7px] rounded-full bg-green" />
               {APP_NAME}
             </div>
-            <h2 className="mb-5 text-[44px] font-semibold leading-[46px] sm:text-[60px] sm:leading-[60px]">
+            <h2 className="mb-5 text-[44px] font-medium leading-[46px] sm:text-[60px] sm:leading-[60px]">
               Proof you
               <br />
               showed up.
@@ -175,7 +166,7 @@ export default function Landing() {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/check-in">
-                <Button variant="primary" size="lg" className="px-[30px]">
+                <Button variant="primary" size="lg">
                   Check in to a meeting
                   <ArrowRight size={16} />
                 </Button>
@@ -241,24 +232,17 @@ export default function Landing() {
         </PageContainer>
       </section>
 
-      <section className="border-t border-line">
-        <PageContainer className="py-14">
+      <section>
+        <PageContainer className="py-16 md:py-24">
           <Eyebrow className={cn('mb-2', MKT_EYEBROW)}>How it works</Eyebrow>
-          <h3 className="mb-8 text-[30px] font-semibold leading-[38px]">
+          <h3 className="mb-12 text-[30px] font-medium leading-[38px]">
             Three taps from seat to onchain.
           </h3>
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3">
             {HOW_STEPS.map((step) => (
               <div key={step.number} className="rounded-lg border border-line p-6">
-                <div
-                  className={cn(
-                    'mb-[18px] grid h-11 w-11 place-items-center rounded font-mono text-[18px] font-bold leading-none',
-                    step.badgeClass,
-                  )}
-                >
-                  {step.number}
-                </div>
-                <div className="mb-2 text-[17px] font-semibold leading-[1.3]">{step.title}</div>
+                <div className="mb-10 font-mono text-xs text-content-muted">{step.number}</div>
+                <div className="mb-2 text-base font-medium leading-[1.3]">{step.title}</div>
                 <div className="text-[14px] leading-[22px] text-content-secondary">{step.body}</div>
               </div>
             ))}
@@ -266,17 +250,16 @@ export default function Landing() {
         </PageContainer>
       </section>
 
-      <section id={PROTOCOL_ANCHOR} className="scroll-mt-20 border-t border-line">
-        <PageContainer className="py-14">
+      <section id={PROTOCOL_ANCHOR} className="scroll-mt-20">
+        <PageContainer className="py-16 md:py-24">
           <Eyebrow className={cn('mb-2', MKT_EYEBROW)}>Why {APP_SHORT_NAME}</Eyebrow>
-          <h3 className="mb-8 max-w-[22ch] text-[30px] font-semibold leading-[38px]">
+          <h3 className="mb-12 max-w-[22ch] text-[30px] font-medium leading-[38px]">
             Attendance that can&apos;t be faked, forgotten, or lost.
           </h3>
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             {WHY_OCP.map((prop) => (
               <div key={prop.title} className="rounded-lg border border-line p-6">
-                <span className={cn('mb-4 block h-2.5 w-2.5 rounded-full', prop.dotClass)} />
-                <div className="mb-2 text-[17px] font-semibold leading-[1.3]">{prop.title}</div>
+                <div className="mb-2 text-base font-medium leading-[1.3]">{prop.title}</div>
                 <div className="text-[14px] leading-[22px] text-content-secondary">{prop.body}</div>
               </div>
             ))}
@@ -284,8 +267,8 @@ export default function Landing() {
         </PageContainer>
       </section>
 
-      <section className="border-t border-line">
-        <PageContainer className="grid items-center gap-12 py-12 md:grid-cols-[280px_1fr]">
+      <section>
+        <PageContainer className="grid items-center gap-12 py-16 md:grid-cols-[280px_1fr] md:py-24">
           <div className="w-60 overflow-hidden rounded-lg border border-line bg-surface">
             <div
               className="relative grid h-[150px] place-items-center overflow-hidden"
@@ -322,7 +305,7 @@ export default function Landing() {
 
           <div>
             <Eyebrow className={cn('mb-2', MKT_EYEBROW)}>Anatomy of a token</Eyebrow>
-            <h2 className="mb-5 text-[26px] font-semibold leading-8">
+            <h2 className="mb-5 text-[26px] font-medium leading-8">
               Every meeting, permanently on record.
             </h2>
             <div className="grid grid-cols-2 gap-x-8 gap-y-4">

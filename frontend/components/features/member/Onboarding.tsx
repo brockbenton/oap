@@ -60,7 +60,7 @@ export default function Onboarding() {
       <div className="w-full max-w-md animate-fade-in rounded-lg border border-line bg-surface p-8">
         <div className="flex flex-col items-center text-center">
           <Avatar seed={seed} label={previewName} colorIndex={avatarColor} size={AVATAR_SIZE} />
-          <h1 className="mt-5 text-[26px] font-semibold leading-8">{HEADING}</h1>
+          <h1 className="mt-5 text-[26px] font-medium leading-8">{HEADING}</h1>
           <p className="mt-2 text-sm leading-5 text-content-secondary">{SUBHEADING}</p>
         </div>
 

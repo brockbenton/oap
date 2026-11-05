@@ -67,7 +67,7 @@ export default function SessionRecoveryGate() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-6">
       <div className="w-full max-w-sm animate-fade-in rounded-lg border border-line bg-surface p-8 text-center">
-        <h1 className="text-lg font-semibold">{FAILED_TITLE}</h1>
+        <h1 className="text-lg font-medium">{FAILED_TITLE}</h1>
         <p className="mt-2 text-sm leading-5 text-content-secondary">{FAILED_BODY}</p>
         <Button variant="primary" className="mt-6 w-full" onClick={() => resetSession(logout)}>
           {RESET_LABEL}

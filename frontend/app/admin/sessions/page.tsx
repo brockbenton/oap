@@ -55,15 +55,15 @@ export default function AdminSessionsPage() {
   });
 
   return (
-    <div className="max-w-5xl mx-auto w-full space-y-8">
-      <h1 className="text-2xl font-bold text-content">Sessions</h1>
+    <div className="max-w-5xl mx-auto w-full space-y-10">
+      <h1 className="text-2xl font-medium text-content">Sessions</h1>
 
       <CreateSessionForm
         onSuccess={() => queryClient.invalidateQueries({ queryKey: queryKeys.adminSessions() })}
       />
 
         <section>
-          <h2 className="text-base font-semibold text-content mb-4">All Sessions</h2>
+          <h2 className="text-base font-medium text-content mb-4">All Sessions</h2>
 
           {isLoading ? (
             <div className="flex justify-center py-12">

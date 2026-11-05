@@ -34,6 +34,7 @@
   h1, h2, h3 {
     font-family: var(--font-plex-mono), ui-monospace, monospace;
     font-weight: 500;
+    letter-spacing: -0.02em;
   }
 
   input, select, textarea {

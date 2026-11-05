@@ -241,7 +241,7 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
         <div className="font-mono text-xs uppercase tracking-[0.08em] text-status-neutral">
           {MEETING_EYEBROW}
         </div>
-        <h2 className="mt-2.5 text-[24px] font-semibold leading-[30px] text-content">
+        <h2 className="mt-2.5 text-[24px] font-medium leading-[30px] text-content">
           {MEETING_TOPIC}
         </h2>
         <p className="mt-1.5 max-w-[280px] text-sm leading-5 text-content-secondary">
@@ -397,7 +397,7 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
       <div className={`grid h-16 w-16 place-items-center rounded-tile ${variant.tileClass}`}>
         <Icon size={30} />
       </div>
-      <h2 className="mt-5 text-xl font-semibold leading-[26px] text-content">
+      <h2 className="mt-5 text-xl font-medium leading-[26px] text-content">
         {variant.title}
       </h2>
       <p className="mt-2 max-w-[280px] text-sm leading-[21px] text-content-secondary">{errorMessage}</p>

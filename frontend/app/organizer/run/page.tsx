@@ -207,7 +207,7 @@ export default function OrganizerRunMeetingPage() {
           <div className="mb-3 font-mono text-[12px] font-medium uppercase tracking-[0.08em] text-status-neutral">
             {activeSession.semester} · {CLUB_NAME}
           </div>
-          <h1 className="mb-2 text-[34px] font-semibold leading-[40px] text-content">
+          <h1 className="mb-2 text-[34px] font-medium leading-[40px] text-content">
             {activeSession.name}
           </h1>
           <p className="mb-7 max-w-md text-[16px] leading-[24px] text-content-secondary">
@@ -295,7 +295,7 @@ function NoMeeting() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-6">
       <Card className="w-full max-w-sm space-y-4 p-8 text-center">
-        <h1 className="text-lg font-semibold text-content">{NO_MEETING_TITLE}</h1>
+        <h1 className="text-lg font-medium text-content">{NO_MEETING_TITLE}</h1>
         <p className="text-sm text-content-secondary">{NO_MEETING_BODY}</p>
         <Link href={SESSIONS_ROUTE} className="inline-block text-sm font-medium text-cyan hover:underline">
           Go to sessions
@@ -309,7 +309,7 @@ function AccessGate() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-6">
       <Card className="w-full max-w-sm space-y-4 p-8 text-center">
-        <h1 className="text-lg font-semibold text-content">{ACCESS_TITLE}</h1>
+        <h1 className="text-lg font-medium text-content">{ACCESS_TITLE}</h1>
         <p className="text-sm text-content-secondary">{ACCESS_BODY}</p>
         <Link href="/" className="inline-block text-sm font-medium text-cyan hover:underline">
           Back to app

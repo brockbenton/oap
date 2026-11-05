@@ -221,10 +221,10 @@ export default function LeaderboardPage() {
     <div className="min-h-screen bg-canvas">
       <MemberTopNav active="leaderboard" />
 
-      <PageContainer className="hidden py-8 md:block">
+      <PageContainer className="hidden py-12 md:block">
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="mb-2 text-[30px] font-semibold leading-9">Leaderboard</h1>
+            <h1 className="mb-2 text-[30px] font-medium leading-9">Leaderboard</h1>
             <p className="text-sm leading-5 text-content-secondary">{CLUB_SUBTITLE}</p>
           </div>
         </div>
@@ -272,7 +272,7 @@ export default function LeaderboardPage() {
       </PageContainer>
 
       <div className="px-5 pb-24 pt-5 md:hidden">
-        <h1 className="text-[22px] font-semibold leading-[28px]">Leaderboard</h1>
+        <h1 className="text-[22px] font-medium leading-[28px]">Leaderboard</h1>
 
         {error ? (
           <LoadError what="leaderboard" onRetry={() => void refetch()} />

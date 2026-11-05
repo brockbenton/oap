@@ -43,10 +43,10 @@ export default function AdminMembersPage() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto w-full space-y-6">
+    <div className="max-w-7xl mx-auto w-full space-y-10">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-content">Members</h1>
+          <h1 className="text-2xl font-medium text-content">Members</h1>
           {data?.currentSemester && (
             <p className="text-sm text-content-secondary">
               Current semester: {data.currentSemester} &middot; {data.totalSessions} session

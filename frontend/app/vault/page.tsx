@@ -147,11 +147,11 @@ export default function VaultPage() {
     <div className="flex min-h-screen flex-col bg-canvas">
       <MemberTopNav active="vault" />
 
-      <main className="hidden flex-1 py-8 md:block">
+      <main className="hidden flex-1 py-12 md:block">
         <PageContainer>
           <div className="mb-[22px] flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="text-[30px] font-semibold leading-9">My Vault</h1>
+              <h1 className="text-[30px] font-medium leading-9">My Vault</h1>
               {data && (
                 <div className="mt-2 flex flex-wrap gap-5">
                   {headerStats.map((stat) => (
@@ -218,7 +218,7 @@ export default function VaultPage() {
       </main>
 
       <main className="flex-1 px-5 pb-24 pt-1 md:hidden">
-        <h1 className="text-[22px] font-semibold leading-7">My Vault</h1>
+        <h1 className="text-[22px] font-medium leading-7">My Vault</h1>
         {data && (
           <p className="mt-1.5 font-mono text-xs font-medium tabular-nums text-content-secondary">
             {tokenCount} {TOKENS_LABEL}

@@ -41,14 +41,14 @@ export default function StatsPage() {
           <BackArrow />
         </Link>
         <div className="flex-1">
-          <h1 className="text-lg font-semibold text-content">My Stats</h1>
+          <h1 className="text-lg font-medium text-content">My Stats</h1>
           {data?.currentSemester && (
             <p className="text-xs text-content-secondary">Current semester: {data.currentSemester}</p>
           )}
         </div>
       </header>
 
-      <main className="flex-1 px-6 py-8 max-w-4xl mx-auto w-full">
+      <main className="flex-1 px-6 py-12 max-w-4xl mx-auto w-full">
         {isLoading ? (
           <StatsSkeleton />
         ) : error ? (
@@ -71,7 +71,7 @@ export default function StatsPage() {
 
 function StatsBody({ stats }: { stats: PersonalStats }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <section className="rounded-2xl bg-surface border border-line p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           <div>
@@ -104,7 +104,7 @@ function StatsBody({ stats }: { stats: PersonalStats }) {
       </section>
 
       <section>
-        <h2 className="text-sm font-semibold text-content mb-3">Recent activity</h2>
+        <h2 className="text-sm font-medium text-content mb-3">Recent activity</h2>
         <div className="grid grid-cols-3 gap-4">
           <StatTile label="Last 30 days" value={stats.meetingsLast30Days} suffix={meetingSuffix(stats.meetingsLast30Days)} compact />
           <StatTile label="Last 90 days" value={stats.meetingsLast90Days} suffix={meetingSuffix(stats.meetingsLast90Days)} compact />
@@ -114,7 +114,7 @@ function StatsBody({ stats }: { stats: PersonalStats }) {
 
       {stats.semesterBreakdown.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-content mb-3">By semester</h2>
+          <h2 className="text-sm font-medium text-content mb-3">By semester</h2>
           <div className="space-y-2.5">
             {stats.semesterBreakdown.map((s) => (
               <div key={s.semester} className="flex items-center gap-3 text-sm">
@@ -210,7 +210,7 @@ function EmptyStats({ totalSessions }: { totalSessions: number }) {
 
 function StatsSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <div className="rounded-2xl bg-surface border border-line p-8 h-40 animate-pulse" />
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (

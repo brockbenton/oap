@@ -88,7 +88,7 @@ export default function MemberHome() {
     return (
       <div className="min-h-screen bg-canvas">
         <MemberTopNav active="home" />
-        <PageContainer className="py-8">
+        <PageContainer className="py-12">
           <LoadError
             what="home"
             onRetry={() => {
@@ -136,7 +136,7 @@ function GreetingHeader({
         <div className="mb-2 font-mono text-[13px] uppercase tracking-[0.08em] text-status-neutral">
           {semester ? `${CLUB_NAME} · ${semester}` : CLUB_NAME}
         </div>
-        <h1 className="text-[32px] font-semibold leading-[38px]">{title}</h1>
+        <h1 className="text-[32px] font-medium leading-[38px]">{title}</h1>
       </div>
       {note && <div className="font-mono text-[13px] text-content-secondary">{note}</div>}
     </div>
@@ -164,7 +164,7 @@ function PopulatedHome({ displayName, vault, stats, dataLoading }: PopulatedHome
     <div className="min-h-screen bg-canvas">
       <MemberTopNav active="home" />
       <div className="hidden md:block">
-        <PageContainer className="py-8">
+        <PageContainer className="py-12">
           <GreetingHeader
             title={`Welcome back, ${displayName}`}
             semester={stats?.currentSemester}
@@ -204,7 +204,7 @@ function MobileHome({
 
   return (
     <div className="px-5 pb-24 pt-5 md:hidden md:pb-0">
-      <h1 className="mb-4 text-[22px] font-semibold leading-[28px]">
+      <h1 className="mb-4 text-[22px] font-medium leading-[28px]">
         Hey, {displayName}
       </h1>
       <MobileCheckInCard />
@@ -434,7 +434,7 @@ function EmptyHome({ displayName, semester }: { displayName: string; semester: s
   return (
     <div className="min-h-screen bg-canvas">
       <MemberTopNav active="home" />
-      <PageContainer className="py-8">
+      <PageContainer className="py-12">
         <GreetingHeader title={`Welcome to ${APP_SHORT_NAME}, ${displayName}`} semester={semester} />
 
         <div className="relative mb-5 overflow-hidden rounded-lg bg-raised p-9 text-center text-content">
@@ -442,7 +442,7 @@ function EmptyHome({ displayName, semester }: { displayName: string; semester: s
             <div className="mx-auto mb-[18px] grid h-[72px] w-[72px] place-items-center rounded-lg bg-raised">
               <QrIcon size={34} className="text-green" />
             </div>
-            <h2 className="mb-2 text-2xl font-semibold leading-[30px]">
+            <h2 className="mb-2 text-2xl font-medium leading-[30px]">
               {MINT_TITLE}
             </h2>
             <p className={cn('mx-auto mb-6 max-w-[44ch] text-[15px] leading-[22px]', SUBTLE_LIGHT)}>

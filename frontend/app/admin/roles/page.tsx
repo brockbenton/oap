@@ -101,7 +101,7 @@ export default function AdminRolesPage() {
   if (notConfigured) {
     return (
       <div className="max-w-2xl w-full">
-        <h1 className="text-2xl font-bold text-content mb-4">Admin Roles</h1>
+        <h1 className="text-2xl font-medium text-content mb-4">Admin Roles</h1>
         <div className="rounded-lg border border-amber bg-status-warn-bg p-4 text-status-warn text-sm">
           <strong>Role management is not configured.</strong> Set{' '}
           <code className="font-mono bg-status-warn-bg px-1 rounded">DEFAULT_ADMIN_PRIVATE_KEY</code>{' '}
@@ -112,8 +112,8 @@ export default function AdminRolesPage() {
   }
 
   return (
-    <div className="max-w-3xl w-full space-y-8">
-      <h1 className="text-2xl font-bold text-content">Admin Roles</h1>
+    <div className="max-w-3xl w-full space-y-10">
+      <h1 className="text-2xl font-medium text-content">Admin Roles</h1>
 
       {/* Grant form */}
       <form onSubmit={handleGrant} className="space-y-3">

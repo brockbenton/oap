@@ -110,8 +110,8 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-canvas">
       <MemberTopNav />
-      <PageContainer className="py-8">
-        <h1 className="mb-6 text-[30px] font-semibold leading-9">Settings</h1>
+      <PageContainer className="py-12">
+        <h1 className="mb-10 text-[30px] font-medium leading-9">Settings</h1>
 
         <div className="lg:flex lg:gap-10">
           <nav className="hidden lg:block lg:w-44 lg:shrink-0">
@@ -128,9 +128,9 @@ export default function SettingsPage() {
             </div>
           </nav>
 
-          <div className="min-w-0 flex-1 space-y-6">
+          <div className="min-w-0 flex-1 space-y-10">
             <section id="profile" className={SECTION_CARD}>
-              <h2 className="text-[17px] font-semibold">Profile</h2>
+              <h2 className="text-[17px] font-medium">Profile</h2>
               <p className="mt-1 text-sm text-content-secondary">
                 How you appear across OCP. Your email is never shown publicly.
               </p>

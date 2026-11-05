@@ -59,7 +59,7 @@ export default function CreateSessionForm({ onSuccess }: CreateSessionFormProps)
 
   return (
     <section>
-      <h2 className="text-base font-semibold text-content mb-4">Create Session</h2>
+      <h2 className="text-base font-medium text-content mb-4">Create Session</h2>
       <form
         onSubmit={handleSubmit}
         className="bg-surface border border-line rounded-xl p-6 space-y-4"

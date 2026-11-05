@@ -22,9 +22,9 @@ export default function AdminOverviewPage() {
   });
 
   return (
-    <div className="max-w-5xl mx-auto w-full space-y-6">
+    <div className="max-w-5xl mx-auto w-full space-y-10">
       <div>
-        <h1 className="text-2xl font-bold text-content">Overview</h1>
+        <h1 className="text-2xl font-medium text-content">Overview</h1>
         <p className="text-sm text-content-secondary">
           {data?.currentSemester ? `Current semester: ${data.currentSemester}` : 'Club attendance at a glance'}
         </p>
@@ -47,7 +47,7 @@ export default function AdminOverviewPage() {
 
 function OverviewBody({ data }: { data: AdminOverview }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Tile label="Members" value={data.totalMembers} />
         <Tile label="Meetings held" value={data.totalSessions} />
@@ -61,7 +61,7 @@ function OverviewBody({ data }: { data: AdminOverview }) {
 
       <section className="rounded-2xl bg-surface border border-line p-5 sm:p-6">
         <div className="flex items-baseline justify-between mb-4">
-          <h2 className="text-sm font-semibold text-content">Attendance rate over time</h2>
+          <h2 className="text-sm font-medium text-content">Attendance rate over time</h2>
           {data.latest && (
             <span className="text-xs text-content-secondary">
               Latest {data.latest.attendanceRate}%
@@ -73,7 +73,7 @@ function OverviewBody({ data }: { data: AdminOverview }) {
       </section>
 
       <section className="rounded-2xl bg-surface border border-line p-5 sm:p-6">
-        <h2 className="text-sm font-semibold text-content mb-4">Per-session headcount</h2>
+        <h2 className="text-sm font-medium text-content mb-4">Per-session headcount</h2>
         <HeadcountBars series={data.series} />
       </section>
     </div>
@@ -201,7 +201,7 @@ function HeadcountBars({ series }: { series: OverviewSessionPoint[] }) {
 
 function OverviewSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="rounded-2xl bg-surface border border-line h-24 animate-pulse" />

@@ -110,7 +110,7 @@ export default function OrganizerDashboardPage() {
   return (
     <div className="min-h-screen bg-canvas">
       <OrganizerTopNav active="overview" />
-      <PageContainer className="py-8">
+      <PageContainer className="py-12">
         <ClubHeader />
         {loading ? (
           <DashboardSkeleton />
@@ -142,7 +142,7 @@ function ClubHeader() {
           {CLUB.logo}
         </div>
         <div>
-          <h1 className="text-[26px] font-semibold leading-[30px] text-content">
+          <h1 className="text-[26px] font-medium leading-[30px] text-content">
             {CLUB.name}
           </h1>
         </div>
@@ -275,7 +275,7 @@ function SignInGate() {
   return (
     <GateShell>
       <Card className="w-full max-w-sm p-8 text-center">
-        <h1 className="mb-2 text-lg font-semibold text-content">Organizer console</h1>
+        <h1 className="mb-2 text-lg font-medium text-content">Organizer console</h1>
         <p className="mb-6 text-sm text-content-secondary">
           Sign in with an organizer account to manage your club.
         </p>
@@ -291,7 +291,7 @@ function AccessGate({ forbidden }: { forbidden: boolean }) {
   return (
     <GateShell>
       <Card className="w-full max-w-sm p-8 text-center">
-        <h1 className="mb-2 text-lg font-semibold text-content">Organizer access required</h1>
+        <h1 className="mb-2 text-lg font-medium text-content">Organizer access required</h1>
         <p className="mb-6 text-sm text-content-secondary">
           {forbidden
             ? "This account doesn't have organizer access to this club."
@@ -309,7 +309,7 @@ function AccessGate({ forbidden }: { forbidden: boolean }) {
 
 function DashboardSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <div className={STAT_GRID}>
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="h-28 animate-pulse rounded-tile border border-line bg-surface" />

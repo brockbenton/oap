@@ -107,7 +107,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </span>
           </div>
         </header>
-        <main className="min-h-0 flex-1 overflow-auto p-5 md:p-8">{children}</main>
+        <main className="min-h-0 flex-1 overflow-auto p-6 md:p-12">{children}</main>
       </div>
     </div>
   );
@@ -160,7 +160,7 @@ function AdminSignIn() {
           A
         </div>
         <div className="space-y-1">
-          <h1 className="text-content text-lg font-semibold">Admin Dashboard</h1>
+          <h1 className="text-content text-lg font-medium">Admin Dashboard</h1>
           <p className="text-content-muted text-sm">Sign in with an admin account to manage the club.</p>
         </div>
         <button
@@ -182,7 +182,7 @@ function AccessDenied({ notAdmin }: { notAdmin: boolean }) {
   return (
     <div className="min-h-screen bg-canvas flex items-center justify-center px-6">
       <div className="w-full max-w-sm rounded-2xl bg-surface border border-line p-8 text-center space-y-4">
-        <h1 className="text-content text-lg font-semibold">Access denied</h1>
+        <h1 className="text-content text-lg font-medium">Access denied</h1>
         <p className="text-content-muted text-sm">
           {notAdmin
             ? 'This account does not have admin privileges.'

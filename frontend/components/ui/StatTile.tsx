@@ -37,7 +37,7 @@ export default function StatTile({
   className,
 }: StatTileProps) {
   return (
-    <div className={cn('p-5 border border-line rounded bg-surface', className)}>
+    <div className={cn('p-4 border border-line rounded bg-surface', className)}>
       <Eyebrow>{label}</Eyebrow>
       <div className="mt-2 font-mono text-3xl font-medium leading-none">{value}</div>
       {progress !== undefined && <ProgressBar value={progress} className="mt-3" />}
