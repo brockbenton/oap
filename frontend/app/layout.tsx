@@ -18,7 +18,7 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: APP_NAME,
-  description: `${APP_NAME}: an onchain protocol for clubs: QR check-in, gasless soulbound tokens, and member stats.`,
+  description: `${APP_NAME}: your club, onchain.`,
 };
 
 export default function RootLayout({

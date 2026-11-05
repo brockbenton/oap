@@ -2,14 +2,14 @@
 
 export const dynamic = 'force-dynamic';
 
-import { usePrivy, getIdentityToken } from '@privy-io/react-auth';
+import { usePrivy } from '@privy-io/react-auth';
 import { usePathname } from 'next/navigation';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { getAdminMe } from '@/lib/api/admin';
-import { queryKeys } from '@/lib/api/queryKeys';
-import { retryUnlessForbidden, ApiRequestError } from '@/lib/api/client';
+import { ApiRequestError } from '@/lib/api/client';
 import Brand from '@/components/shared/Brand';
+import RoleSwitch from '@/components/shared/RoleSwitch';
+import { useAdminMe } from '@/hooks/useAdminMe';
 
 const NAV = [
   { href: '/admin', label: 'Overview', exact: true },
@@ -25,21 +25,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname() ?? '';
   const queryClient = useQueryClient();
 
-  // Authorization must be per-identity and never served stale: key by Privy user
-  // id and disable caching so a different (or signed-out) user can never inherit
-  // a previous admin's cached verdict on a shared/kiosk browser.
-  const { data: me, isLoading, isError, error } = useQuery({
-    queryKey: queryKeys.adminMe(user?.id),
-    queryFn: async () => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
-      return getAdminMe(token);
-    },
-    enabled: ready && authenticated,
-    retry: retryUnlessForbidden,
-    staleTime: 0,
-    gcTime: 0,
-  });
+  const { data: me, isLoading, isError, error } = useAdminMe();
 
   const handleLogout = () => {
     queryClient.clear();
@@ -73,9 +59,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ))}
         </nav>
         <div className="px-3 py-4 border-t border-line space-y-2">
-          <Link href="/" className="block px-3 py-2 rounded-lg text-sm text-content-muted hover:bg-raised">
-            ← Back to app
-          </Link>
           <button
             onClick={handleLogout}
             className="w-full text-left px-3 py-2 rounded-lg text-sm text-content-muted hover:bg-raised"
@@ -97,9 +80,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <span className="hidden sm:inline text-xs text-content-secondary truncate max-w-[180px]">{account}</span>
-            <span className="inline-flex items-center rounded bg-raised text-content-secondary text-xs px-2 py-1">
-              Admin
-            </span>
+            <RoleSwitch active="admin" />
           </div>
         </header>
         <main className="min-h-0 flex-1 overflow-auto p-6 md:p-12">{children}</main>
@@ -151,7 +132,7 @@ function AdminSignIn() {
   return (
     <div className="min-h-screen bg-canvas flex items-center justify-center px-6">
       <div className="w-full max-w-sm rounded-2xl bg-surface border border-line p-8 text-center space-y-5">
-        <div className="w-12 h-12 rounded-xl bg-green mx-auto flex items-center justify-center text-canvas text-lg font-bold">
+        <div className="w-12 h-12 rounded-xl bg-content mx-auto flex items-center justify-center text-canvas text-lg font-bold">
           A
         </div>
         <div className="space-y-1">
@@ -160,7 +141,7 @@ function AdminSignIn() {
         </div>
         <button
           onClick={login}
-          className="w-full py-2.5 rounded-xl bg-green text-canvas font-semibold hover:bg-green-dim transition-colors"
+          className="w-full py-2.5 rounded-xl bg-content text-canvas font-semibold hover:bg-content-secondary transition-colors"
         >
           Admin sign in
         </button>
@@ -186,7 +167,7 @@ function AccessDenied({ notAdmin }: { notAdmin: boolean }) {
         <div className="flex flex-col gap-2">
           <Link
             href="/"
-            className="w-full py-2.5 rounded-xl bg-green text-canvas font-semibold hover:bg-green-dim transition-colors"
+            className="w-full py-2.5 rounded-xl bg-content text-canvas font-semibold hover:bg-content-secondary transition-colors"
           >
             Back to app
           </Link>

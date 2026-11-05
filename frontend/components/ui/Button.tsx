@@ -20,7 +20,7 @@ const SIZE_CLASSES: Record<ButtonSize, string> = {
 };
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: 'bg-green text-canvas hover:bg-green-dim',
+  primary: 'bg-content text-canvas hover:bg-content-secondary',
   outline: 'border border-line-strong text-content hover:bg-raised',
   ghost: 'bg-raised text-content hover:bg-line',
   destructive: 'border border-red/40 text-status-neg hover:bg-status-neg-bg',

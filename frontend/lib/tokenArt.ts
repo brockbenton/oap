@@ -1,16 +1,19 @@
-export type TokenColor = 'blue' | 'purple' | 'green' | 'orange' | 'red' | 'teal';
+export type TokenColor = 'red' | 'orange' | 'yellow' | 'teal' | 'blue' | 'purple' | 'pink' | 'green';
 
-// Flat, dark tints: token art sits on the canvas without gradients or glow.
+// Bright, flat hues that take dark text. Each meeting topic gets its own color.
 export const TOKEN_COLORS: Record<TokenColor, string> = {
-  blue: '#17303F',
-  purple: '#2A2440',
-  green: '#17352A',
-  orange: '#3A2A16',
-  red: '#3A1E20',
-  teal: '#143533',
+  red: '#FF6B6B',
+  orange: '#FF9F43',
+  yellow: '#FFD93D',
+  teal: '#2DD4BF',
+  blue: '#5CB8FF',
+  purple: '#A78BFA',
+  pink: '#F472B6',
+  green: '#3DDC84',
 };
 
-export const TOKEN_COLOR_NAMES = Object.keys(TOKEN_COLORS) as TokenColor[];
+// Green is left out so it stays reserved for the member's own live moments.
+const TOKEN_COLOR_NAMES: TokenColor[] = ['red', 'orange', 'yellow', 'teal', 'blue', 'purple', 'pink'];
 
 // Seven distinct hues, indexed by the stored avatarColor (the backend allows 0-6).
 // Green is left out so it stays reserved for actions and status.

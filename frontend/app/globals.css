@@ -2,19 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Calm terminal tokens, as RGB channels so Tailwind opacity modifiers work. */
+/* Theme tokens, as RGB channels so Tailwind opacity modifiers work. */
 :root {
   color-scheme: dark;
 
-  --canvas: 10 15 12;
-  --surface: 17 24 20;
-  --raised: 24 33 27;
-  --line: 38 53 44;
-  --line-strong: 58 77 65;
+  --canvas: 0 0 0;
+  --surface: 18 18 18;
+  --raised: 30 30 30;
+  --line: 42 42 42;
+  --line-strong: 72 72 72;
 
-  --content: 230 237 232;
-  --content-secondary: 163 179 168;
-  --content-muted: 125 148 134;
+  --content: 245 245 243;
+  --content-secondary: 180 180 178;
+  --content-muted: 142 142 140;
 
   --green: 61 220 132;
   --green-dim: 47 191 111;

@@ -15,6 +15,7 @@ import { AVATAR_COLOR_COUNT, avatarColorByIndex } from '@/lib/tokenArt';
 import { ApiRequestError } from '@/lib/api/client';
 import { cn } from '@/lib/cn';
 import type { ProfilePatch } from '@/lib/api/profile';
+import FullPageSpinner from '@/components/shared/FullPageSpinner';
 
 const USERNAME_REGEX = /^[a-z0-9_.-]{3,20}$/;
 const USERNAME_HINT = '3–20 characters: a–z, 0–9, and . _ -';
@@ -415,13 +416,5 @@ function ToggleSwitch({ checked, disabled, onChange, label }: ToggleSwitchProps)
         )}
       />
     </button>
-  );
-}
-
-function FullPageSpinner() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-canvas">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-green border-t-transparent" />
-    </div>
   );
 }

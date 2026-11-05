@@ -6,6 +6,7 @@ import MemberHome from '@/components/features/member/MemberHome';
 import Onboarding from '@/components/features/member/Onboarding';
 import SessionRecoveryGate from '@/components/shared/SessionRecoveryGate';
 import { useProfile } from '@/hooks/useProfile';
+import FullPageSpinner from '@/components/shared/FullPageSpinner';
 
 // The root route is auth-gated on the client: logged-out visitors see the
 // marketing Landing; signed-in members see their Home command center. Privy
@@ -29,12 +30,4 @@ export default function RootPage() {
   }
 
   return <Landing />;
-}
-
-function FullPageSpinner() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-canvas">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-green border-t-transparent" />
-    </div>
-  );
 }

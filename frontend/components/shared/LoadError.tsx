@@ -19,7 +19,7 @@ export default function LoadError({ what, onRetry }: LoadErrorProps) {
       <p className="text-content-secondary text-sm mt-1 max-w-xs">This is usually a temporary connection issue.</p>
       <button
         onClick={onRetry}
-        className="mt-5 rounded-xl bg-green px-5 py-2.5 text-sm font-semibold text-canvas hover:bg-green-dim transition-colors"
+        className="mt-5 rounded-xl bg-content px-5 py-2.5 text-sm font-semibold text-canvas hover:bg-content-secondary transition-colors"
       >
         Try again
       </button>

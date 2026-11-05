@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { getIdentityToken } from '@privy-io/react-auth';
 import { useMutation } from '@tanstack/react-query';
 import { createSession } from '@/lib/api/admin';
-import { ApiRequestError } from '@/lib/api/client';
+import { requireIdentityToken, ApiRequestError } from '@/lib/api/client';
 
 interface CreateSessionFormProps {
   onSuccess: () => void;
@@ -26,8 +25,7 @@ export default function CreateSessionForm({ onSuccess }: CreateSessionFormProps)
 
   const { mutate, isPending } = useMutation({
     mutationFn: async () => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       const sessionId = Date.now().toString();
       return createSession(
         { sessionId, date: dayAtCurrentTime(date), name: name.trim(), semester: semester.trim() },
@@ -105,7 +103,7 @@ export default function CreateSessionForm({ onSuccess }: CreateSessionFormProps)
           <button
             type="submit"
             disabled={isPending}
-            className="py-2 px-5 rounded-lg bg-green text-canvas text-sm font-semibold hover:bg-green-dim disabled:opacity-50 transition-colors"
+            className="py-2 px-5 rounded-lg bg-content text-canvas text-sm font-semibold hover:bg-content-secondary disabled:opacity-50 transition-colors"
           >
             {isPending ? 'Creating...' : 'Create Session'}
           </button>

@@ -2,11 +2,11 @@
 
 export const dynamic = 'force-dynamic';
 
-import { usePrivy, getIdentityToken } from '@privy-io/react-auth';
+import { usePrivy } from '@privy-io/react-auth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { listAdminMembers, toggleFoundingMember, downloadMembersCSV } from '@/lib/api/admin';
 import { queryKeys } from '@/lib/api/queryKeys';
-import { retryUnlessForbidden } from '@/lib/api/client';
+import { requireIdentityToken, retryUnlessForbidden } from '@/lib/api/client';
 import { ATTENDANCE_GOOD_PCT, ATTENDANCE_OK_PCT } from '@/lib/constants';
 import { MemberStats } from '@/types';
 
@@ -17,8 +17,7 @@ export default function AdminMembersPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: queryKeys.adminMembers(),
     queryFn: async () => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       return listAdminMembers(token);
     },
     enabled: authenticated,
@@ -27,16 +26,14 @@ export default function AdminMembersPage() {
 
   const { mutate: exportCSV, isPending: exporting } = useMutation({
     mutationFn: async () => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       await downloadMembersCSV(token);
     },
   });
 
   const { mutate: setFounding, isPending: togglingId } = useMutation({
     mutationFn: async ({ memberId, founding }: { memberId: string; founding: boolean }) => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       await toggleFoundingMember(memberId, founding, token);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.adminMembers() }),

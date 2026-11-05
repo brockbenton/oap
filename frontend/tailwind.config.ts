@@ -5,7 +5,6 @@ const tint = (name: string) => `rgb(var(--${name}) / 0.12)`;
 
 const config: Config = {
   content: [
-    './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
@@ -50,13 +49,11 @@ const config: Config = {
       fontWeight: { bold: '600' },
       keyframes: {
         fadeInUp: { from: { opacity:'0', transform:'translateY(6px)' }, to: { opacity:'1', transform:'none' } },
-        stackSpin: { from: { transform:'rotateY(45deg)' }, to: { transform:'rotateY(405deg)' } },
-        blockDrop: { from: { transform:'translateY(-90px)', opacity:'0' }, to: { transform:'none', opacity:'1' } },
+        fanDrift: { from: { transform:'rotateX(8deg) rotateY(-14deg)' }, to: { transform:'rotateX(8deg) rotateY(-4deg)' } },
       },
       animation: {
         'fade-in': 'fadeInUp 0.4s ease-out both',
-        'stack-spin': 'stackSpin 60s linear infinite',
-        'block-drop': 'blockDrop 0.7s ease-out 0.2s backwards',
+        'fan-drift': 'fanDrift 16s ease-in-out infinite alternate',
       },
     },
   },

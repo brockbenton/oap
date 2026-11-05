@@ -38,7 +38,7 @@ export default function TokenCard({
   const content = (
     <>
       <div className={HERO_CLASSES} style={{ background: heroBackground }}>
-        <span className="relative font-mono text-4xl text-content">{editionLabel}</span>
+        <span className="relative font-mono text-4xl text-canvas">{editionLabel}</span>
       </div>
       <div className="px-3.5 py-3">
         <div className="truncate text-[13px] font-semibold leading-tight">{topic}</div>

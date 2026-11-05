@@ -18,8 +18,7 @@ model Member {
   notifyEmail    Boolean  @default(false) @map("notify_email")
   createdAt      DateTime @default(now()) @map("created_at")
 
-  checkIns    CheckIn[]
-  tokenEvents TokenEvent[]
+  checkIns CheckIn[]
 
   @@map("members")
 }
@@ -37,8 +36,7 @@ model Session {
   closedAt         DateTime? @map("closed_at")
   createdAt        DateTime  @default(now()) @map("created_at")
 
-  checkIns    CheckIn[]
-  tokenEvents TokenEvent[]
+  checkIns CheckIn[]
 
   @@map("sessions")
 }
@@ -63,23 +61,6 @@ model CheckIn {
 
   @@unique([memberId, sessionId])
   @@map("check_ins")
-}
-
-/// Reserved for a future on-chain event indexer; not currently populated.
-/// check_ins is the source of truth for attendance (see MASTER_PLAN → Architecture).
-model TokenEvent {
-  id          String   @id @default(cuid())
-  memberId    String   @map("member_id")
-  sessionId   String   @map("session_id")
-  tokenId     String   @map("token_id")
-  blockNumber BigInt   @map("block_number")
-  txHash      String   @map("tx_hash")
-  indexedAt   DateTime @default(now()) @map("indexed_at")
-
-  member  Member  @relation(fields: [memberId], references: [id])
-  session Session @relation(fields: [sessionId], references: [id])
-
-  @@map("token_events")
 }
 
 model AdminRole {

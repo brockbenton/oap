@@ -2,12 +2,9 @@
 
 import type { ComponentType } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { usePrivy, getIdentityToken, useWallets } from '@privy-io/react-auth';
-import { useQuery } from '@tanstack/react-query';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import Link from 'next/link';
-import { getAdminMe } from '@/lib/api/admin';
-import { queryKeys } from '@/lib/api/queryKeys';
-import { retryUnlessForbidden } from '@/lib/api/client';
+import { useAdminMe } from '@/hooks/useAdminMe';
 import { useProfile } from '@/hooks/useProfile';
 import { shortenAddress } from '@/lib/address';
 import { Avatar, Button, CopyChip } from '@/components/ui';
@@ -69,18 +66,7 @@ export default function AccountMenu() {
     return () => document.removeEventListener('mousedown', onDocClick);
   }, []);
 
-  const { data: me } = useQuery({
-    queryKey: queryKeys.adminMe(user?.id),
-    queryFn: async () => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
-      return getAdminMe(token);
-    },
-    enabled: ready && authenticated,
-    retry: retryUnlessForbidden,
-    staleTime: 0,
-    gcTime: 0,
-  });
+  const { data: me } = useAdminMe();
 
   if (!ready) {
     return (

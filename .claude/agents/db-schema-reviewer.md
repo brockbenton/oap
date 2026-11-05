@@ -32,8 +32,6 @@ Check that the following columns have indexes (they are used in WHERE / JOIN cla
 - `members.privy_user_id` — queried on auth
 - `check_ins.session_id` — queried for session attendance lists
 - `check_ins.member_id` — queried for member history
-- `token_events.member_id` — queried for vault/stats
-- `token_events.session_id` — queried for session reports
 - `sessions.date` — queried for date-range stat calculations
 
 If any of these are missing `@@index` or `@unique`, flag them.

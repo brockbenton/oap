@@ -8,6 +8,7 @@ import { verifyQR } from '../services/qr.service';
 import { mintQueue } from '../lib/queue';
 import prisma from '../lib/prisma';
 import logger from '../lib/logger';
+import { findSessionOr404 } from '../lib/session';
 
 const router = Router();
 
@@ -74,14 +75,8 @@ router.post(
     const checksummedAddress = getAddress(recoveredAddress);
 
     // 5. Look up the session
-    const session = await prisma.session.findUnique({
-      where: { sessionIdOnchain: qr.sessionId },
-    });
-
-    if (!session) {
-      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Session not found' } });
-      return;
-    }
+    const session = await findSessionOr404(qr.sessionId, res);
+    if (!session) return;
 
     if (session.closedAt) {
       res.status(409).json({ error: { code: 'SESSION_CLOSED', message: 'Session is closed' } });

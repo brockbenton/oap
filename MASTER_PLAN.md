@@ -32,7 +32,7 @@ The POAP protocol requires manual approval per event from the POAP team, ties ad
 - **Next.js 14** (App Router) + **TypeScript**
 - **Tailwind CSS** (plain — no component library)
 - **Privy** — wallet abstraction, embedded wallets; supported login methods: **email**, **Google**, and **passkey**
-- **viem** + **wagmi** — type-safe contract interaction
+- **viem** — type-safe contract interaction
 - **TanStack Query** — async state, caching
 
 ### Smart Contracts
@@ -345,7 +345,7 @@ Every setter OZ exposes to governance is overridden with bounds (audit B3) — e
 
 #### Voting and proposals
 - **Votes are free:** members sign EIP-712 `castVoteBySig` with their Privy wallet; the relay submits **one tx per vote** (no Multicall in v1, so one failure can't revert other votes) after validating the signature and simulating with `eth_call`.
-- **Anyone can submit a signed vote.** The frontend checks `hasVoted` over **public RPC** (wagmi), not via the backend; if a vote hasn't landed, any officer's funded wallet can submit the member's signed vote from the UI.
+- **Anyone can submit a signed vote.** The frontend checks `hasVoted` over **public RPC** (viem), not via the backend; if a vote hasn't landed, any officer's funded wallet can submit the member's signed vote from the UI.
 - **Proposals need gas:** officers (and members who choose to fund their wallet) call `propose` directly. Templates: appoint/remove officer (**grant the new officer before revoking the old one**, so the 2-officer floor never blocks a swap), grant/revoke Rep, rotate relay, change parameters within bounds, custom call. Queue/execute are also sent from funded wallets.
 - **Officer elections in v1 are proposals** calling `grantRole` / `revokeRole(ADMIN_ROLE, …)` on the registry through the Timelock. Terms are one semester **by convention** (a "new term" proposal each semester). Approval voting with seat counts is Phase 6.
 - **Readable signing:** the UI shows the proposal title and For/Against/Abstain before the Privy prompt; Privy confirmation prompts stay on. **Never enable Privy delegated actions / session signers** — the backend must never be able to sign for members.
@@ -372,7 +372,7 @@ Every setter OZ exposes to governance is overridden with bounds (audit B3) — e
 
 #### Backend changes
 - **Relay sender (#59):** one sender with a nonce manager that sends without waiting, replaces stuck txs (gas bump / cancel) and reconciles receipts; check-ins coalesced into `mintBatch` per session; statuses `PENDING → SUBMITTED → CONFIRMED` (after N confirmations) / `FAILED`.
-- **Schema (v2-ready, single club):** add `Session.registryAddress` with `@@unique([registryAddress, sessionIdOnchain])`, `maxAttendees`, `repStatus` (`NONE / PENDING / CONFIRMED / REJECTED / CREDITED`), `attendeesHash`, `closedBy`, `confirmedBy`; new indexed tables `Proposal`, `Vote` (`@@unique([proposalId, voter])`), `RepEvent`; populate `TokenEvent`; drop `AdminRole` (the chain is the truth). Contract addresses come from config (Phase 6 moves them to a `Club` row). Reviewed by `db-schema-reviewer`.
+- **Schema (v2-ready, single club):** add `Session.registryAddress` with `@@unique([registryAddress, sessionIdOnchain])`, `maxAttendees`, `repStatus` (`NONE / PENDING / CONFIRMED / REJECTED / CREDITED`), `attendeesHash`, `closedBy`, `confirmedBy`; new indexed tables `Proposal`, `Vote` (`@@unique([proposalId, voter])`), `RepEvent`; add a `TokenEvent` table for indexed events (the unused v0 table was dropped); drop `AdminRole` (the chain is the truth). Contract addresses come from config (Phase 6 moves them to a `Club` row). Reviewed by `db-schema-reviewer`.
 - **Indexer:** one worker, single cursor, confirmation depth; indexes registry, Rep, Governor and Timelock events.
 - **Open-session warning (owner decision 2026-11-03):** a backend job flags sessions still open after `OPEN_SESSION_WARN_HOURS` (default **6 h**, env-configurable, off-chain only) and alerts the officers. It's a nudge — sessions never auto-close on-chain.
 - **Rep sign-off support:** an API returns the session's confirmed attendees (sorted addresses) for officer A's `closeSession`; a **pending-review queue** for the other officers with **anomaly flags** (attendance far above the trailing median of recent sessions, many first-time wallets, wallets created in the last 24 h, list differs from the backend's confirmed check-ins); an **alert to all officers** when a session is anomalous; after confirmation the relay submits `creditSessionRep` pages, with their common recognition timestamp; retries must preserve decay age and avoid duplicate credit. No deferred-claim job exists.
@@ -490,13 +490,7 @@ Every setter OZ exposes to governance is overridden with bounds (audit B3) — e
 
 ## Database Schema (PostgreSQL)
 
-```sql
-members        (id, wallet_address, privy_user_id, created_at)
-sessions       (id, session_id_onchain, name, date, semester, created_by, closed_at)
-check_ins      (id, member_id, session_id, tx_hash, checked_in_at)
-token_events   (id, member_id, session_id, token_id, block_number, tx_hash, indexed_at)
-admin_roles    (id, wallet_address, granted_by, granted_at, revoked_at)
-```
+See [`backend/prisma/schema.prisma`](backend/prisma/schema.prisma).
 
 ---
 
@@ -504,21 +498,8 @@ admin_roles    (id, wallet_address, granted_by, granted_at, revoked_at)
 
 ### Current (Phases 1–4)
 
-The backend holds three keys. Only the relay key is mint-only:
+The live key inventory and security controls are in [SECURITY.md](SECURITY.md).
 
-| Env var | On-chain role | Used for | Blast radius if leaked |
-|---|---|---|---|
-| `RELAY_PRIVATE_KEY` | `RELAY_ROLE` | `mint` (check-in queue) | Can mint ATs into any session that is still open — sessions an admin forgets to close stay mintable indefinitely |
-| `ADMIN_SIGNER_PRIVATE_KEY` | `ADMIN_ROLE` | `createSession` / `closeSession`, **and** signing QR payloads | Can create sessions and forge valid QR codes; combined with the relay key, can fabricate attendance |
-| `DEFAULT_ADMIN_PRIVATE_KEY` (optional) | `DEFAULT_ADMIN_ROLE` | `grantRole` / `revokeRole(ADMIN_ROLE)` from the dashboard, `setBaseCid` on IPFS publish | **Full control of the contract** — can grant itself or anyone every role, including `RELAY_ROLE` |
-
-- All three keys live only in backend env — never exposed to the frontend. If `DEFAULT_ADMIN_PRIVATE_KEY` is unset, role management and metadata publishing are disabled and must be done from the deployer wallet.
-- **Soulbound enforcement** is at contract level (`_update` reverts on transfer; `setApprovalForAll` reverts) — not just frontend
-- **One token per member per session** enforced on-chain and by the `check_ins` unique constraint
-- **Re-entrancy** guard on mint
-- **Rate limiting** on the check-in endpoint (`checkInLimiter`)
-- **Input validation** on all backend endpoints
-- Member wallet address is their identity — Privy ties it to a real account (email/Google/passkey). Nothing currently prevents one person from holding multiple accounts.
 - **Known gaps:** no on-chain mint deadline (see relay row); the backend is a single trusted operator for attendance — it mints without on-chain proof of presence.
 
 ### Phase 5 (v1) target

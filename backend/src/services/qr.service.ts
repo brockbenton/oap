@@ -1,5 +1,5 @@
+import { randomUUID } from 'node:crypto';
 import { verifyMessage } from 'viem';
-import { v4 as uuidv4 } from 'uuid';
 import { adminAccount } from '../lib/contract';
 import { QREnvelope, QRPayload } from '../types';
 
@@ -11,7 +11,7 @@ export async function generateQR(sessionId: string): Promise<string> {
     sessionId,
     issuedAt,
     expiresAt: issuedAt + QR_TTL_MS,
-    nonce: uuidv4(),
+    nonce: randomUUID(),
   };
 
   const message = JSON.stringify(payload);

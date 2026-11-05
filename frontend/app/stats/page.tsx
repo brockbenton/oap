@@ -12,6 +12,7 @@ import { queryKeys } from '@/lib/api/queryKeys';
 import LoadError from '@/components/shared/LoadError';
 import { ATTENDANCE_GOOD_PCT, ATTENDANCE_OK_PCT } from '@/lib/constants';
 import { PersonalStats } from '@/types';
+import FullPageSpinner from '@/components/shared/FullPageSpinner';
 
 export default function StatsPage() {
   const { ready, authenticated, user } = usePrivy();
@@ -200,7 +201,7 @@ function EmptyStats({ totalSessions }: { totalSessions: number }) {
       </p>
       <Link
         href="/check-in"
-        className="mt-5 inline-block rounded-xl bg-green px-5 py-2.5 text-sm font-semibold text-canvas hover:bg-green-dim transition-colors"
+        className="mt-5 inline-block rounded-xl bg-content px-5 py-2.5 text-sm font-semibold text-canvas hover:bg-content-secondary transition-colors"
       >
         Scan QR Code
       </Link>
@@ -217,14 +218,6 @@ function StatsSkeleton() {
           <div key={i} className="rounded-2xl bg-surface border border-line h-24 animate-pulse" />
         ))}
       </div>
-    </div>
-  );
-}
-
-function FullPageSpinner() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-canvas">
-      <div className="w-8 h-8 border-4 border-green border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }

@@ -112,7 +112,6 @@ const MEMBERS: SeedMember[] = [
 
 async function main(): Promise<void> {
   // Idempotent: wipe attendance data (respect FK order).
-  await prisma.tokenEvent.deleteMany();
   await prisma.checkIn.deleteMany();
   await prisma.session.deleteMany();
   await prisma.member.deleteMany();

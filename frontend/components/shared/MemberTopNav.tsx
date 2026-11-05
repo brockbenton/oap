@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import Brand from '@/components/shared/Brand';
 import AccountMenu from '@/components/shared/AccountMenu';
+import RoleSwitch from '@/components/shared/RoleSwitch';
+import { useAdminMe } from '@/hooks/useAdminMe';
 import { cn } from '@/lib/cn';
 
 type MemberNavKey = 'home' | 'vault' | 'leaderboard';
@@ -34,6 +36,8 @@ const NAV_ITEM_ACTIVE = 'bg-raised font-medium text-content';
 const NAV_ITEM_INACTIVE = 'text-content-secondary hover:text-content';
 
 export default function MemberTopNav({ active }: MemberTopNavProps) {
+  const { data: me } = useAdminMe();
+
   return (
     <header className="border-b border-line bg-canvas">
       <div className="mx-auto flex h-16 max-w-[1180px] items-center px-6">
@@ -49,7 +53,8 @@ export default function MemberTopNav({ active }: MemberTopNavProps) {
             </Link>
           ))}
         </nav>
-        <div className="ml-auto flex items-center">
+        <div className="ml-auto flex items-center gap-3">
+          {me?.isAdmin && <RoleSwitch active="member" />}
           <AccountMenu />
         </div>
       </div>

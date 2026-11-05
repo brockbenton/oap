@@ -357,10 +357,10 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
               className="relative grid h-[150px] place-items-center overflow-hidden"
               style={{ background: heroGradient }}
             >
-              <div className="absolute left-4 top-3.5 font-mono text-[15px] font-bold text-content">
+              <div className="absolute left-4 top-3.5 font-mono text-[15px] font-bold text-canvas">
                 {shortLabel}
               </div>
-              <div className="font-mono text-5xl font-bold text-content">
+              <div className="font-mono text-5xl font-bold text-canvas">
                 {editionLabel}
               </div>
             </div>
