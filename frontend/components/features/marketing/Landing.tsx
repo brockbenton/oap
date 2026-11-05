@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import AttendanceStack from '@/components/features/marketing/AttendanceStack';
 import MarketingNav from '@/components/shared/MarketingNav';
 import PageContainer from '@/components/shared/PageContainer';
 import Footer from '@/components/shared/Footer';
@@ -22,57 +23,6 @@ interface HeroStat {
 
 const HERO_STATS: HeroStat[] = [
   { value: '$0.00', label: 'gas to mint' },
-];
-
-interface ClusterToken {
-  topic?: string;
-  edition: string;
-  title: string;
-  meta?: string;
-  color: string;
-  positionClass: string;
-  headerHeightClass: string;
-  editionSizeClass: string;
-  titleSizeClass: string;
-  bodyPaddingClass: string;
-}
-
-const CLUSTER_TOKENS: ClusterToken[] = [
-  {
-    topic: 'ZK',
-    edition: '#087',
-    title: 'ZK Proofs 101',
-    meta: 'SEP 16',
-    color: TOKEN_COLORS.purple,
-    positionClass: 'top-6 left-10 w-[230px]',
-    headerHeightClass: 'h-[150px]',
-    editionSizeClass: 'text-[46px]',
-    titleSizeClass: 'text-[15px]',
-    bodyPaddingClass: 'p-4',
-  },
-  {
-    topic: 'SOL',
-    edition: '#128',
-    title: 'Intro to Solidity',
-    meta: 'APR 04',
-    color: TOKEN_COLORS.blue,
-    positionClass: 'top-[120px] right-6 z-[2] w-[230px]',
-    headerHeightClass: 'h-[150px]',
-    editionSizeClass: 'text-[46px]',
-    titleSizeClass: 'text-[15px]',
-    bodyPaddingClass: 'p-4',
-  },
-  {
-    edition: '#204',
-    title: 'DeFi Lending',
-    meta: 'OCT 08',
-    color: TOKEN_COLORS.green,
-    positionClass: 'bottom-2 left-16 w-[210px]',
-    headerHeightClass: 'h-[130px]',
-    editionSizeClass: 'text-[42px]',
-    titleSizeClass: 'text-[14px]',
-    bodyPaddingClass: 'px-4 py-3.5',
-  },
 ];
 
 interface HowStep {
@@ -186,49 +136,7 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="relative h-[440px]">
-            {CLUSTER_TOKENS.map((token) => (
-              <div
-                key={token.edition}
-                className={cn(
-                  'absolute overflow-hidden rounded-lg border border-line bg-surface',
-                  token.positionClass,
-                )}
-              >
-                <div
-                  className={cn(
-                    'relative grid place-items-center overflow-hidden',
-                    token.headerHeightClass,
-                  )}
-                  style={{ background: token.color }}
-                >
-                  {token.topic && (
-                    <div className="absolute left-4 top-3.5 font-mono text-[15px] font-bold leading-none text-content">
-                      {token.topic}
-                    </div>
-                  )}
-                  <div
-                    className={cn(
-                      'font-mono font-bold leading-none text-content',
-                      token.editionSizeClass,
-                    )}
-                  >
-                    {token.edition}
-                  </div>
-                </div>
-                <div className={token.bodyPaddingClass}>
-                  <div className={cn('font-semibold leading-[1.2]', token.titleSizeClass)}>
-                    {token.title}
-                  </div>
-                  {token.meta && (
-                    <div className="mt-2 font-mono text-xs font-medium leading-none text-content-secondary">
-                      {token.meta}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+          <AttendanceStack />
         </PageContainer>
       </section>
 

@@ -50,9 +50,13 @@ const config: Config = {
       fontWeight: { bold: '600' },
       keyframes: {
         fadeInUp: { from: { opacity:'0', transform:'translateY(6px)' }, to: { opacity:'1', transform:'none' } },
+        stackSpin: { from: { transform:'rotateY(45deg)' }, to: { transform:'rotateY(405deg)' } },
+        blockDrop: { from: { transform:'translateY(-90px)', opacity:'0' }, to: { transform:'none', opacity:'1' } },
       },
       animation: {
         'fade-in': 'fadeInUp 0.4s ease-out both',
+        'stack-spin': 'stackSpin 60s linear infinite',
+        'block-drop': 'blockDrop 0.7s ease-out 0.2s backwards',
       },
     },
   },
