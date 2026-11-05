@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { getAdminMe } from '@/lib/api/admin';
 import { queryKeys } from '@/lib/api/queryKeys';
 import { retryUnlessForbidden, ApiRequestError } from '@/lib/api/client';
-import { APP_NAME } from '@/lib/constants';
+import Brand from '@/components/shared/Brand';
 
 const NAV = [
   { href: '/admin', label: 'Overview', exact: true },
@@ -63,14 +63,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex h-screen overflow-hidden bg-canvas">
       <aside className="hidden md:flex md:w-60 shrink-0 flex-col bg-surface text-content-muted">
-        <div className="px-5 h-16 flex items-center gap-2 border-b border-line">
-          <span className="w-7 h-7 rounded-lg border border-line-strong flex items-center justify-center text-green text-sm font-bold">
-            A
-          </span>
-          <div className="leading-tight">
-            <p className="text-content text-sm font-semibold">Admin Dashboard</p>
-            <p className="text-[11px] text-content-muted">{APP_NAME}</p>
-          </div>
+        <div className="px-5 h-16 flex items-center gap-3 border-b border-line">
+          <Brand className="text-content" />
+          <p className="text-sm text-content-secondary">Admin Dashboard</p>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           {NAV.map((item) => (
@@ -102,7 +97,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <span className="hidden sm:inline text-xs text-content-secondary truncate max-w-[180px]">{account}</span>
-            <span className="inline-flex items-center rounded bg-status-pos-bg text-status-pos text-[11px] font-semibold px-2.5 py-1">
+            <span className="inline-flex items-center rounded bg-raised text-content-secondary text-xs px-2 py-1">
               Admin
             </span>
           </div>
