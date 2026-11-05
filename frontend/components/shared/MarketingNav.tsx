@@ -19,7 +19,7 @@ const NAV_ITEMS: MarketingNavItem[] = [
   { label: 'Protocol', href: '/#protocol' },
 ];
 
-const NAV_ITEM_CLASSES = 'px-3.5 py-2 text-sm text-content-secondary transition hover:text-content';
+const NAV_ITEM_CLASSES = 'px-3.5 py-2 text-sm text-content-secondary transition-colors hover:text-content';
 
 export default function MarketingNav() {
   const router = useRouter();

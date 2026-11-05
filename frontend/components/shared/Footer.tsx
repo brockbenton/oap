@@ -40,8 +40,8 @@ const FOOTER_COLUMNS: FooterColumn[] = [
   },
 ];
 
-const LINK_CLASSES = 'text-sm text-content transition hover:text-content-secondary';
-const HEADING_CLASSES = 'mb-3 font-mono text-xs uppercase tracking-[0.08em] text-content-secondary';
+const LINK_CLASSES = 'text-sm text-content transition-colors hover:text-content-secondary';
+const HEADING_CLASSES = 'mb-3 font-mono text-xs text-content-secondary';
 
 export default function Footer() {
   return (
