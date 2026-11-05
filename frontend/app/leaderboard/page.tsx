@@ -25,7 +25,7 @@ const EMPTY_TEXT = 'No tokens minted yet. Check in at a meeting to get on the bo
 
 const TABLE_COLS =
   'grid min-w-[560px] grid-cols-[56px_1fr_120px_120px_100px] items-center gap-3';
-const HEADER_CELL = 'font-mono text-xs uppercase tracking-[0.08em] text-content-secondary';
+const HEADER_CELL = 'font-mono text-xs text-content-secondary';
 
 const MOBILE_PODIUM_AVATAR_SIZE = 44;
 const MOBILE_WINNER_AVATAR_SIZE = 56;

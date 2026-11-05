@@ -30,7 +30,6 @@ const STAT_PLACEHOLDER = '-';
 interface ProfileStat {
   label: string;
   value: string;
-  accent?: boolean;
 }
 
 interface MenuLink {
@@ -64,7 +63,7 @@ export default function AccountPage() {
 
   const profileStats: ProfileStat[] = [
     { label: 'Tokens', value: statValue(stats?.tokensEarned) },
-    { label: 'Streak', value: statValue(stats?.currentStreak), accent: true },
+    { label: 'Streak', value: statValue(stats?.currentStreak) },
     {
       label: 'Attendance',
       value: stats ? `${stats.allTimeAttendancePct}%` : STAT_PLACEHOLDER,
@@ -83,10 +82,10 @@ export default function AccountPage() {
               label={displayName}
               colorIndex={avatarColor}
               size={AVATAR_SIZE}
-              className="mb-3.5"
+              className="mb-4"
             />
-            <div className="mb-1.5 flex items-center gap-2">
-              <span className="text-[20px] font-semibold leading-none">{displayName}</span>
+            <div className="mb-2 flex items-center gap-2">
+              <span className="text-[20px] font-medium leading-none">{displayName}</span>
               {stats && <Badge>{stats.statusTier}</Badge>}
             </div>
             <div className="font-mono text-xs font-medium text-content-secondary">
@@ -94,18 +93,13 @@ export default function AccountPage() {
             </div>
           </div>
 
-          <div className="mb-4 grid grid-cols-3 gap-2.5">
+          <div className="mb-4 grid grid-cols-3 gap-3">
             {profileStats.map((stat) => (
-              <div key={stat.label} className="rounded border border-line bg-surface p-3.5 text-center">
-                <div
-                  className={cn(
-                    'font-mono text-[20px] font-bold leading-none tabular-nums',
-                    stat.accent && 'text-status-warn',
-                  )}
-                >
+              <div key={stat.label} className="rounded border border-line bg-surface p-4 text-center">
+                <div className="font-mono text-[20px] font-medium leading-none tabular-nums">
                   {stat.value}
                 </div>
-                <div className="mt-1.5 text-[11px] font-medium text-content-secondary">{stat.label}</div>
+                <div className="mt-2 text-[11px] font-medium text-content-secondary">{stat.label}</div>
               </div>
             ))}
           </div>

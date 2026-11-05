@@ -148,7 +148,7 @@ export default function AdminRolesPage() {
       {roles && roles.length > 0 && (
         <div className="overflow-x-auto rounded-lg border border-line">
           <table className="min-w-full text-sm">
-            <thead className="bg-raised text-left text-xs font-semibold text-content-secondary uppercase tracking-wide">
+            <thead className="bg-raised text-left text-xs font-semibold text-content-secondary">
               <tr>
                 <th className="px-4 py-3">Wallet</th>
                 <th className="px-4 py-3">Granted By</th>

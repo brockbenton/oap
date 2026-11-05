@@ -22,7 +22,7 @@ export default function AdminOverviewPage() {
   });
 
   return (
-    <div className="max-w-5xl mx-auto w-full space-y-10">
+    <div className="max-w-6xl mx-auto w-full space-y-10">
       <div>
         <h1 className="text-2xl font-medium text-content">Overview</h1>
         <p className="text-sm text-content-secondary">
@@ -59,23 +59,25 @@ function OverviewBody({ data }: { data: AdminOverview }) {
         />
       </div>
 
-      <section className="rounded-2xl bg-surface border border-line p-5 sm:p-6">
-        <div className="flex items-baseline justify-between mb-4">
-          <h2 className="text-sm font-medium text-content">Attendance rate over time</h2>
-          {data.latest && (
-            <span className="text-xs text-content-secondary">
-              Latest {data.latest.attendanceRate}%
-              {data.wow && <DeltaText delta={data.wow.attendanceRateDelta} suffix="pts" />}
-            </span>
-          )}
-        </div>
-        <AttendanceChart series={data.series} />
-      </section>
+      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
+        <section className="rounded-2xl bg-surface border border-line p-6">
+          <div className="flex items-baseline justify-between mb-4">
+            <h2 className="text-sm font-medium text-content">Attendance rate over time</h2>
+            {data.latest && (
+              <span className="text-xs text-content-secondary">
+                Latest {data.latest.attendanceRate}%
+                {data.wow && <DeltaText delta={data.wow.attendanceRateDelta} suffix="pts" />}
+              </span>
+            )}
+          </div>
+          <AttendanceChart series={data.series} />
+        </section>
 
-      <section className="rounded-2xl bg-surface border border-line p-5 sm:p-6">
-        <h2 className="text-sm font-medium text-content mb-4">Per-session headcount</h2>
-        <HeadcountBars series={data.series} />
-      </section>
+        <section className="rounded-2xl bg-surface border border-line p-6">
+          <h2 className="text-sm font-medium text-content mb-4">Per-session headcount</h2>
+          <HeadcountBars series={data.series} />
+        </section>
+      </div>
     </div>
   );
 }
@@ -84,7 +86,7 @@ function Tile({ label, value, delta }: { label: string; value: number; delta?: n
   return (
     <div className="rounded-2xl bg-surface border border-line p-4">
       <div className="flex items-baseline gap-2">
-        <p className="text-3xl font-bold tabular-nums text-content">{value}</p>
+        <p className="font-mono text-3xl font-medium tabular-nums text-content">{value}</p>
         {delta != null && delta !== 0 && <DeltaBadge delta={delta} />}
       </div>
       <p className="mt-1 text-xs text-content-secondary">{label}</p>
@@ -95,12 +97,8 @@ function Tile({ label, value, delta }: { label: string; value: number; delta?: n
 function DeltaBadge({ delta }: { delta: number }) {
   const up = delta > 0;
   return (
-    <span
-      className={`text-[11px] font-semibold px-1.5 py-0.5 rounded ${
-        up ? 'bg-status-pos-bg text-status-pos' : 'bg-status-neg-bg text-status-neg'
-      }`}
-    >
-      {up ? '▲' : '▼'} {Math.abs(delta)}
+    <span className={`text-xs ${up ? 'text-status-pos' : 'text-status-neg'}`}>
+      {up ? '▲' : '▼'} {Math.abs(delta)} vs previous
     </span>
   );
 }
@@ -111,7 +109,7 @@ function DeltaText({ delta, suffix }: { delta: number; suffix: string }) {
   return (
     <span className={up ? 'text-status-pos' : 'text-status-neg'}>
       {' '}
-      {up ? '▲' : '▼'} {Math.abs(delta)} {suffix}
+      {up ? '▲' : '▼'} {Math.abs(delta)} {suffix} vs previous
     </span>
   );
 }
@@ -178,20 +176,22 @@ function HeadcountBars({ series }: { series: OverviewSessionPoint[] }) {
   const max = Math.max(1, ...series.map((s) => s.headcount));
   const ordered = [...series].reverse();
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-4">
       {ordered.map((s) => (
-        <div key={s.sessionIdOnchain} className="flex items-center gap-3 text-sm">
-          <div className="w-40 shrink-0 truncate text-content-secondary" title={s.name}>
-            {s.name}
+        <div key={s.sessionIdOnchain} className="text-sm">
+          <div className="flex items-baseline justify-between gap-3">
+            <div className="truncate text-content-secondary" title={s.name}>
+              {s.name}
+            </div>
+            <div className="shrink-0 font-mono tabular-nums text-content-secondary text-xs">
+              {s.headcount} · {s.attendanceRate}%
+            </div>
           </div>
-          <div className="flex-1 h-5 rounded bg-raised overflow-hidden">
+          <div className="mt-2 h-1 rounded-sm bg-raised overflow-hidden">
             <div
-              className="h-full rounded bg-line-strong"
+              className="h-full bg-line-strong"
               style={{ width: `${Math.round((s.headcount / max) * 100)}%` }}
             />
-          </div>
-          <div className="w-24 shrink-0 text-right tabular-nums text-content-secondary text-xs">
-            {s.headcount} · {s.attendanceRate}%
           </div>
         </div>
       ))}
