@@ -2,13 +2,13 @@
 
 export const dynamic = 'force-dynamic';
 
-import { usePrivy, getIdentityToken } from '@privy-io/react-auth';
+import { usePrivy } from '@privy-io/react-auth';
 import { usePathname } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { getAdminMe } from '@/lib/api/admin';
 import { queryKeys } from '@/lib/api/queryKeys';
-import { retryUnlessForbidden, ApiRequestError } from '@/lib/api/client';
+import { requireIdentityToken, retryUnlessForbidden, ApiRequestError } from '@/lib/api/client';
 import { APP_NAME } from '@/lib/constants';
 
 const NAV = [
@@ -31,8 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: me, isLoading, isError, error } = useQuery({
     queryKey: queryKeys.adminMe(user?.id),
     queryFn: async () => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       return getAdminMe(token);
     },
     enabled: ready && authenticated,

@@ -1,3 +1,4 @@
+import { getIdentityToken } from '@privy-io/react-auth';
 import { ApiError } from '@/types';
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
@@ -11,6 +12,13 @@ export class ApiRequestError extends Error {
     super(message);
     this.name = 'ApiRequestError';
   }
+}
+
+/** Privy identity token for backend auth; throws when the user is signed out. */
+export async function requireIdentityToken(): Promise<string> {
+  const token = await getIdentityToken();
+  if (!token) throw new Error('Not authenticated');
+  return token;
 }
 
 // TanStack Query retry with a function has NO built-in cap, so it must bound

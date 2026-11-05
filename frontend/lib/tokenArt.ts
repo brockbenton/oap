@@ -10,7 +10,7 @@ export const TOKEN_COLORS: Record<TokenColor, string> = {
   teal: '#143533',
 };
 
-export const TOKEN_COLOR_NAMES = Object.keys(TOKEN_COLORS) as TokenColor[];
+const TOKEN_COLOR_NAMES = Object.keys(TOKEN_COLORS) as TokenColor[];
 
 const GRADIENT_ANGLE = '135deg';
 

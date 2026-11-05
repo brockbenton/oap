@@ -3,14 +3,14 @@
 export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from 'react';
-import { usePrivy, getIdentityToken } from '@privy-io/react-auth';
+import { usePrivy } from '@privy-io/react-auth';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import QRCode from 'react-qr-code';
 import { getSession, getSessionQR } from '@/lib/api/admin';
 import { queryKeys } from '@/lib/api/queryKeys';
-import { ApiRequestError } from '@/lib/api/client';
+import { requireIdentityToken, ApiRequestError } from '@/lib/api/client';
 
 export default function AdminSessionQRPage() {
   const { ready, authenticated } = usePrivy();
@@ -29,8 +29,7 @@ export default function AdminSessionQRPage() {
   const { data: session } = useQuery({
     queryKey: queryKeys.session(sessionId),
     queryFn: async () => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       return getSession(sessionId, token);
     },
     enabled: authenticated && !!sessionId,
@@ -44,8 +43,7 @@ export default function AdminSessionQRPage() {
   } = useQuery({
     queryKey: queryKeys.sessionQR(sessionId),
     queryFn: async () => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       return getSessionQR(sessionId, token);
     },
     enabled: authenticated && !!sessionId,

@@ -2,11 +2,12 @@
 
 export const dynamic = 'force-dynamic';
 
-import { usePrivy, getIdentityToken } from '@privy-io/react-auth';
+import { usePrivy } from '@privy-io/react-auth';
 import { useQuery } from '@tanstack/react-query';
 import { getAdminOverview } from '@/lib/api/admin';
 import { queryKeys } from '@/lib/api/queryKeys';
 import { AdminOverview, OverviewSessionPoint } from '@/types';
+import { requireIdentityToken } from '@/lib/api/client';
 
 export default function AdminOverviewPage() {
   const { authenticated } = usePrivy();
@@ -14,8 +15,7 @@ export default function AdminOverviewPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: queryKeys.adminOverview(),
     queryFn: async () => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       return getAdminOverview(token);
     },
     enabled: authenticated,

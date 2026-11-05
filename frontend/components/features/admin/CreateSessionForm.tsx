@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { getIdentityToken } from '@privy-io/react-auth';
 import { useMutation } from '@tanstack/react-query';
 import { createSession } from '@/lib/api/admin';
-import { ApiRequestError } from '@/lib/api/client';
+import { requireIdentityToken, ApiRequestError } from '@/lib/api/client';
 
 interface CreateSessionFormProps {
   onSuccess: () => void;
@@ -18,8 +17,7 @@ export default function CreateSessionForm({ onSuccess }: CreateSessionFormProps)
 
   const { mutate, isPending } = useMutation({
     mutationFn: async () => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       const sessionId = Date.now().toString();
       return createSession(
         { sessionId, date: new Date(date).toISOString(), name: name.trim(), semester: semester.trim() },

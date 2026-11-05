@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Brand from '@/components/shared/Brand';
 import PageContainer from '@/components/shared/PageContainer';
-import { BASESCAN_URL, GITHUB_URL } from '@/lib/constants';
+import { CONTRACT_EXPLORER_URL, GITHUB_URL } from '@/lib/constants';
 
 interface FooterLink {
   label: string;
@@ -19,11 +19,6 @@ const TAGLINE = 'Proof you showed up. Onchain.';
 const NETWORK_NOTE = 'Running on Base Sepolia · testnet';
 const COPYRIGHT = '© 2026 Onchain Club Protocol';
 
-// Deep-link to the deployed registry on Basescan when the address is configured;
-// fall back to the explorer home so the link is never dead.
-const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
-const BASESCAN_HREF = contractAddress ? `${BASESCAN_URL}/address/${contractAddress}` : BASESCAN_URL;
-
 const FOOTER_COLUMNS: FooterColumn[] = [
   {
     heading: 'Product',
@@ -35,7 +30,7 @@ const FOOTER_COLUMNS: FooterColumn[] = [
     heading: 'Resources',
     links: [
       { label: 'GitHub', href: GITHUB_URL, external: true },
-      { label: 'Basescan', href: BASESCAN_HREF, external: true },
+      { label: 'Basescan', href: CONTRACT_EXPLORER_URL, external: true },
     ],
   },
 ];

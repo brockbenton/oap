@@ -2,16 +2,15 @@
 
 ## Phase 5 v1 target: participation reputation
 
-The current attendance backend is not yet the DAO implementation. For Phase 5, follow `../MASTER_PLAN.md`: ATs mint immediately; two distinct officers approve the final unique AT-holder list; permissionless paged credit awards 10 nominal Rep per eligible attendance using one session recognition timestamp. Preserve that timestamp on retries and delayed pages. No weekly Rep counters, budget reservations, deferred balances or claim jobs. Rep decays gradually (provisional 180-day half-life); passive decay emits no events, so timestamp and refresh/recompute cached influence and ranks even without new chain events. Use chain-consistent math and a common as-of time; keep lifetime attendance/ATs separate. Never substitute event-only balances for historical voting snapshots. Officers send session transactions from their wallets; the backend has no admin key and the QR signer is role-less. Governance role changes require proposals/Timelock. Preserve verification/anomaly monitoring; decay is not Sybil protection. Treasury/gas budgets remain separate from reputation issuance.
+The current attendance backend is not yet the DAO implementation. For Phase 5, follow `../MASTER_PLAN.md`.
 
 ## Stack
 - **Node.js** + **Express** + **TypeScript** (strict)
 - **PostgreSQL** + **Prisma ORM** — all DB access through Prisma client
-- **Alchemy SDK** — Base RPC provider, event webhooks
+- **Alchemy** — Base RPC endpoint, used through viem
 - **viem** — contract interaction, signing, encoding (server-side)
-- **Bull** + **Redis** — async job queue for transaction relay
+- **BullMQ** + **Redis** — async job queue for transaction relay
 - **zod** — request validation on all endpoints
-- **jsonwebtoken** — session tokens for admin auth (Privy-verified)
 
 ## Project Structure
 ```
@@ -25,18 +24,17 @@ backend/
     services/
       qr.service.ts     # QR payload sign/verify logic
       relay.service.ts  # Transaction relay (mint via contract)
-      indexer.service.ts# On-chain event → DB sync
       stats.service.ts  # Attendance stat calculations
     jobs/
-      mint.job.ts       # Bull job: send mint transaction
+      mint.job.ts       # BullMQ job: send mint transaction
     middleware/
       auth.ts           # Privy JWT verification
-      admin.ts          # Admin role check (DB + on-chain)
+      admin.ts          # Admin role check (on-chain)
       validate.ts       # Zod request validation wrapper
     lib/
       prisma.ts         # Prisma client singleton
-      alchemy.ts        # Alchemy provider singleton
-      contract.ts       # Contract instance + ABI
+      contract.ts       # viem clients and accounts
+      abi.ts            # Minimal contract ABI
     types/              # Shared TypeScript types
   prisma/
     schema.prisma
@@ -59,7 +57,7 @@ backend/
 
 ### Auth
 - Member auth: Privy JWT in `Authorization: Bearer <token>` header, verified server-side
-- Admin auth: Privy JWT + `admin` role check in DB (and optionally on-chain)
+- Admin auth: Privy JWT + on-chain `ADMIN_ROLE` check; fails closed
 - `req.user` is typed as `{ privyUserId: string, walletAddress: string }`
 
 ## QR Payload Spec
@@ -76,7 +74,7 @@ type QRPayload = {
 
 ## Transaction Relay
 - Relay wallet address holds `RELAY_ROLE` on the contract
-- Mints are queued as Bull jobs — never blocking the HTTP response
+- Mints are queued as BullMQ jobs — never blocking the HTTP response
 - Job retries: max 3, exponential backoff
 - Failed mints after retries: logged to DB with `status: 'failed'`, alertable
 - Relay wallet balance monitored — alert if below threshold
@@ -89,7 +87,7 @@ type QRPayload = {
 - BigInt from viem/contracts serialized as strings in JSON responses
 
 ## FORBIDDEN
-- Raw `fetch` to RPC — use Alchemy SDK
+- Raw `fetch` to RPC — use viem
 - Directly calling contract from route handler — always go through relay queue
 - Storing private keys anywhere except environment variables
 - `any` type
@@ -101,7 +99,6 @@ type QRPayload = {
 DATABASE_URL
 REDIS_URL
 ALCHEMY_API_KEY
-ALCHEMY_WEBHOOK_SECRET
 CONTRACT_ADDRESS
 RELAY_PRIVATE_KEY          # Wallet with RELAY_ROLE
 ADMIN_SIGNER_PRIVATE_KEY   # Wallet that signs QR payloads
