@@ -109,7 +109,7 @@ export default function AccountMenu() {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-1.5 rounded bg-raised py-[3px] pl-[3px] pr-1.5 transition hover:brightness-95"
+        className="flex items-center gap-1.5 transition-opacity hover:opacity-80"
       >
         <Avatar seed={avatarSeed} label={displayName} colorIndex={avatarColor} size={TRIGGER_AVATAR_SIZE} />
         <ChevronDown size={TRIGGER_CHEVRON_SIZE} className="text-content-secondary" />

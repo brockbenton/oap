@@ -10,6 +10,14 @@ interface CreateSessionFormProps {
   onSuccess: () => void;
 }
 
+// Keeps the picked day in local time, and the meeting timer starts from this time of day.
+function dayAtCurrentTime(day: string): string {
+  const [year, month, date] = day.split('-').map(Number);
+  const at = new Date();
+  at.setFullYear(year, month - 1, date);
+  return at.toISOString();
+}
+
 export default function CreateSessionForm({ onSuccess }: CreateSessionFormProps) {
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
@@ -22,7 +30,7 @@ export default function CreateSessionForm({ onSuccess }: CreateSessionFormProps)
       if (!token) throw new Error('Not authenticated');
       const sessionId = Date.now().toString();
       return createSession(
-        { sessionId, date: new Date(date).toISOString(), name: name.trim(), semester: semester.trim() },
+        { sessionId, date: dayAtCurrentTime(date), name: name.trim(), semester: semester.trim() },
         token,
       );
     },
@@ -69,9 +77,9 @@ export default function CreateSessionForm({ onSuccess }: CreateSessionFormProps)
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-content">Date &amp; Time</label>
+            <label className="block text-sm font-medium text-content">Date</label>
             <input
-              type="datetime-local"
+              type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
               className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green"

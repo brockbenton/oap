@@ -61,14 +61,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const account = user?.email?.address ?? user?.google?.email ?? me.walletAddress;
 
   return (
-    <div className="min-h-screen bg-canvas flex">
+    <div className="flex h-screen overflow-hidden bg-canvas">
       <aside className="hidden md:flex md:w-60 shrink-0 flex-col bg-surface text-content-muted">
         <div className="px-5 h-16 flex items-center gap-2 border-b border-line">
           <span className="w-7 h-7 rounded-lg border border-line-strong flex items-center justify-center text-green text-sm font-bold">
             A
           </span>
           <div className="leading-tight">
-            <p className="text-content text-sm font-semibold">Admin Console</p>
+            <p className="text-content text-sm font-semibold">Admin Dashboard</p>
             <p className="text-[11px] text-content-muted">{APP_NAME}</p>
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </span>
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-5 md:p-8">{children}</main>
+        <main className="min-h-0 flex-1 overflow-auto p-5 md:p-8">{children}</main>
       </div>
     </div>
   );
@@ -160,7 +160,7 @@ function AdminSignIn() {
           A
         </div>
         <div className="space-y-1">
-          <h1 className="text-content text-lg font-semibold">Admin Console</h1>
+          <h1 className="text-content text-lg font-semibold">Admin Dashboard</h1>
           <p className="text-content-muted text-sm">Sign in with an admin account to manage the club.</p>
         </div>
         <button

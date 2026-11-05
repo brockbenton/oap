@@ -58,7 +58,7 @@ export default function AdminRolesPage() {
           return;
         }
         if (err.status === 409) {
-          setFormError('That wallet already has ADMIN_ROLE.');
+          setFormError('That wallet is already an admin.');
           return;
         }
         if (err.status === 400) {
@@ -117,7 +117,7 @@ export default function AdminRolesPage() {
 
       {/* Grant form */}
       <form onSubmit={handleGrant} className="space-y-3">
-        <label className="block text-sm font-medium text-content">Grant ADMIN_ROLE</label>
+        <label className="block text-sm font-medium text-content">Grant admin role</label>
         <div className="flex gap-2">
           <input
             type="text"

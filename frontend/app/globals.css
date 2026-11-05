@@ -36,6 +36,10 @@
     font-weight: 500;
   }
 
+  input, select, textarea {
+    background-color: rgb(var(--canvas));
+  }
+
   th {
     font-family: var(--font-plex-mono), ui-monospace, monospace;
     font-size: 12px;
