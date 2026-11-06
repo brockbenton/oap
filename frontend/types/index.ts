@@ -1,16 +1,3 @@
-// QR envelope decoded from a scanned QR code
-export interface QRPayload {
-  sessionId: string;
-  issuedAt: number;
-  expiresAt: number;
-  nonce: string;
-}
-
-export interface QREnvelope {
-  payload: QRPayload;
-  signature: string;
-}
-
 // Session from the backend API
 export interface Session {
   id: string;
@@ -167,11 +154,7 @@ export interface CheckInResponse {
   status: 'PENDING';
 }
 
-// Generic API response wrappers
-export interface ApiSuccess<T> {
-  data: T;
-}
-
+// Error body returned by the backend API
 export interface ApiError {
   error: {
     code: string;
@@ -182,6 +165,7 @@ export interface ApiError {
 // A ranked row on the leaderboard, derived from the public member directory.
 export interface LeaderboardEntry {
   rank: number;
+  rankLabel: string;
   handle: string;
   avatarSeed: string;
   streak: number;

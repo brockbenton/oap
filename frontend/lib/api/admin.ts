@@ -64,7 +64,6 @@ export interface CreateSessionParams {
   sessionId: string;
   date: string;
   name: string;
-  semester: string;
 }
 
 export async function createSession(params: CreateSessionParams, token: string): Promise<Session> {

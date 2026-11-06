@@ -3,11 +3,12 @@
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
-import { usePrivy, getIdentityToken } from '@privy-io/react-auth';
+import { usePrivy } from '@privy-io/react-auth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import AdminPageHeader from '@/components/features/admin/AdminPageHeader';
 import { queryKeys } from '@/lib/api/queryKeys';
 import { listAdminRoles, grantAdminRole, revokeAdminRole } from '@/lib/api/admin';
-import { ApiRequestError } from '@/lib/api/client';
+import { requireIdentityToken, ApiRequestError } from '@/lib/api/client';
 import { AdminRole } from '@/types';
 
 function truncateWallet(addr: string): string {
@@ -32,16 +33,14 @@ export default function AdminRolesPage() {
   const { data: roles, isLoading, error } = useQuery({
     queryKey: queryKeys.adminRoles(),
     queryFn: async () => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       return listAdminRoles(token);
     },
   });
 
   const grantMutation = useMutation({
     mutationFn: async (walletAddress: string) => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       return grantAdminRole(walletAddress, token);
     },
     onSuccess: (newRole: AdminRole) => {
@@ -58,7 +57,7 @@ export default function AdminRolesPage() {
           return;
         }
         if (err.status === 409) {
-          setFormError('That wallet already has ADMIN_ROLE.');
+          setFormError('That wallet is already an admin.');
           return;
         }
         if (err.status === 400) {
@@ -72,8 +71,7 @@ export default function AdminRolesPage() {
 
   const revokeMutation = useMutation({
     mutationFn: async (walletAddress: string) => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       return revokeAdminRole(walletAddress, token);
     },
     onSuccess: (_data, walletAddress) => {
@@ -100,11 +98,11 @@ export default function AdminRolesPage() {
 
   if (notConfigured) {
     return (
-      <div className="max-w-2xl w-full">
-        <h1 className="text-2xl font-bold text-slate-900 mb-4">Admin Roles</h1>
-        <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-800 text-sm">
+      <div className="space-y-10">
+        <AdminPageHeader title="Roles" caption="Wallets that can manage the club" />
+        <div className="rounded-lg border border-amber bg-status-warn-bg p-4 text-status-warn text-sm">
           <strong>Role management is not configured.</strong> Set{' '}
-          <code className="font-mono bg-amber-100 px-1 rounded">DEFAULT_ADMIN_PRIVATE_KEY</code>{' '}
+          <code className="font-mono bg-status-warn-bg px-1 rounded">DEFAULT_ADMIN_PRIVATE_KEY</code>{' '}
           on the backend to enable granting and revoking admin roles from the dashboard.
         </div>
       </div>
@@ -112,87 +110,90 @@ export default function AdminRolesPage() {
   }
 
   return (
-    <div className="max-w-3xl w-full space-y-8">
-      <h1 className="text-2xl font-bold text-slate-900">Admin Roles</h1>
+    <div className="space-y-10">
+      <AdminPageHeader title="Roles" caption="Wallets that can manage the club" />
 
-      {/* Grant form */}
-      <form onSubmit={handleGrant} className="space-y-3">
-        <label className="block text-sm font-medium text-gray-700">Grant ADMIN_ROLE</label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newWallet}
-            onChange={(e) => setNewWallet(e.target.value)}
-            placeholder="0x…"
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            disabled={grantMutation.isPending || !newWallet.trim()}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {grantMutation.isPending ? 'Granting…' : 'Grant'}
-          </button>
-        </div>
-        {formError && <p className="text-sm text-red-600">{formError}</p>}
-      </form>
+      <section>
+        <h2 className="text-base font-medium text-content mb-4">Grant Role</h2>
+        <form onSubmit={handleGrant} className="bg-surface border border-line rounded-xl p-6 space-y-3">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newWallet}
+              onChange={(e) => setNewWallet(e.target.value)}
+              placeholder="0x…"
+              className="flex-1 rounded-md border border-line px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-green"
+            />
+            <button
+              type="submit"
+              disabled={grantMutation.isPending || !newWallet.trim()}
+              className="rounded-md bg-content px-4 py-2 text-sm font-medium text-canvas hover:bg-content-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {grantMutation.isPending ? 'Granting…' : 'Grant'}
+            </button>
+          </div>
+          {formError && <p className="text-sm text-status-neg">{formError}</p>}
+        </form>
+      </section>
 
-      {/* Active roles table */}
-      {isLoading && <p className="text-sm text-gray-500">Loading…</p>}
-      {error && <p className="text-sm text-red-600">Failed to load roles.</p>}
+      <section>
+        <h2 className="text-base font-medium text-content mb-4">Current Admins</h2>
+        {isLoading && <p className="text-sm text-content-secondary">Loading…</p>}
+        {error && <p className="text-sm text-status-neg">Failed to load roles.</p>}
 
-      {roles && roles.length === 0 && (
-        <p className="text-sm text-gray-500">No active admin roles.</p>
-      )}
+        {roles && roles.length === 0 && (
+          <p className="text-sm text-content-secondary">No active admin roles.</p>
+        )}
 
-      {roles && roles.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              <tr>
-                <th className="px-4 py-3">Wallet</th>
-                <th className="px-4 py-3">Granted By</th>
-                <th className="px-4 py-3">Granted At</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {roles.map((role) => {
-                const isSelf = role.walletAddress === myWallet;
-                const isRevoking =
-                  revokeMutation.isPending &&
-                  revokeMutation.variables === role.walletAddress;
+        {roles && roles.length > 0 && (
+          <div className="overflow-x-auto rounded-xl border border-line">
+            <table className="w-full text-sm">
+              <thead className="bg-raised text-content-secondary text-left">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Wallet</th>
+                  <th className="px-4 py-3 font-medium">Granted By</th>
+                  <th className="px-4 py-3 font-medium">Granted At</th>
+                  <th className="px-4 py-3 font-medium" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line bg-surface">
+                {roles.map((role) => {
+                  const isSelf = role.walletAddress === myWallet;
+                  const isRevoking =
+                    revokeMutation.isPending &&
+                    revokeMutation.variables === role.walletAddress;
 
-                return (
-                  <tr key={role.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono">
-                      <span title={role.walletAddress}>{truncateWallet(role.walletAddress)}</span>
-                      {isSelf && (
-                        <span className="ml-2 text-xs text-blue-600 font-sans">(you)</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-gray-500">
-                      <span title={role.grantedBy}>{truncateWallet(role.grantedBy)}</span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">{formatDate(role.grantedAt)}</td>
-                    <td className="px-4 py-3 text-right">
-                      {!isSelf && (
-                        <button
-                          onClick={() => revokeMutation.mutate(role.walletAddress)}
-                          disabled={isRevoking}
-                          className="text-xs text-red-600 hover:text-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isRevoking ? 'Revoking…' : 'Revoke'}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                  return (
+                    <tr key={role.id} className="hover:bg-raised">
+                      <td className="px-4 py-3 font-mono">
+                        <span title={role.walletAddress}>{truncateWallet(role.walletAddress)}</span>
+                        {isSelf && (
+                          <span className="ml-2 text-xs text-cyan font-sans">(you)</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-content-secondary">
+                        <span title={role.grantedBy}>{truncateWallet(role.grantedBy)}</span>
+                      </td>
+                      <td className="px-4 py-3 text-content-secondary">{formatDate(role.grantedAt)}</td>
+                      <td className="px-4 py-3 text-right">
+                        {!isSelf && (
+                          <button
+                            onClick={() => revokeMutation.mutate(role.walletAddress)}
+                            disabled={isRevoking}
+                            className="text-xs text-status-neg hover:text-status-neg disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isRevoking ? 'Revoking…' : 'Revoke'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Avatar, Button, Input } from '@/components/ui';
 import { useUpdateProfile, useEmbeddedAddress } from '@/hooks/useProfile';
 import { shortenAddress } from '@/lib/address';
-import { AVATAR_COLOR_COUNT, avatarGradientByIndex } from '@/lib/tokenArt';
+import { AVATAR_COLOR_COUNT, avatarColorByIndex } from '@/lib/tokenArt';
 import { ApiRequestError } from '@/lib/api/client';
 import { cn } from '@/lib/cn';
 
@@ -19,7 +19,7 @@ const COLOR_SWATCHES = Array.from({ length: AVATAR_COLOR_COUNT }, (_, i) => i);
 
 const HEADING = 'Welcome to OCP';
 const SUBHEADING =
-  'Set up your profile to get started. Pick a username and a color — you can change both anytime in Settings.';
+  'Set up your profile to get started. Pick a username and a color. You can change both anytime in Settings.';
 const USERNAME_LABEL = 'Username';
 const USERNAME_PLACEHOLDER = 'satoshi';
 const COLOR_LABEL = 'Profile color';
@@ -45,7 +45,7 @@ export default function Onboarding() {
       ? null
       : updateProfile.error instanceof ApiRequestError
         ? updateProfile.error.message
-        : "Couldn't save — check your connection and try again.";
+        : "Couldn't save. Check your connection and try again.";
 
   const seed = address ?? 'account';
   const previewName = username || (address ? shortenAddress(address) : FALLBACK_NAME);
@@ -56,11 +56,11 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#fbfbfc] px-6 py-12">
-      <div className="w-full max-w-md animate-fade-in rounded-lg border border-line bg-white p-8">
+    <div className="flex min-h-screen items-center justify-center bg-canvas px-6 py-12">
+      <div className="w-full max-w-md animate-fade-in rounded-lg border border-line bg-surface p-8">
         <div className="flex flex-col items-center text-center">
           <Avatar seed={seed} label={previewName} colorIndex={avatarColor} size={AVATAR_SIZE} />
-          <h1 className="mt-5 text-[26px] font-semibold leading-8 tracking-[-0.5px]">{HEADING}</h1>
+          <h1 className="mt-5 text-[26px] font-medium leading-8">{HEADING}</h1>
           <p className="mt-2 text-sm leading-5 text-content-secondary">{SUBHEADING}</p>
         </div>
 
@@ -96,10 +96,10 @@ export default function Onboarding() {
                   aria-pressed={avatarColor === i}
                   onClick={() => setAvatarColor(i)}
                   className={cn(
-                    'h-9 w-9 rounded-full ring-2 ring-offset-2 transition',
-                    avatarColor === i ? 'ring-ink' : 'ring-transparent hover:ring-line',
+                    'h-9 w-9 rounded-full ring-2 ring-offset-2 ring-offset-surface transition',
+                    avatarColor === i ? 'ring-green' : 'ring-transparent hover:ring-line-strong',
                   )}
-                  style={{ background: avatarGradientByIndex(i) }}
+                  style={{ background: avatarColorByIndex(i) }}
                 />
               ))}
             </div>

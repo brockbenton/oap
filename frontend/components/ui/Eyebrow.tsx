@@ -7,7 +7,7 @@ export default function Eyebrow({ className, ...props }: EyebrowProps) {
   return (
     <div
       className={cn(
-        'font-mono text-xs uppercase tracking-[0.06em] text-content-secondary',
+        'font-mono text-xs text-content-secondary',
         className,
       )}
       {...props}

@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import type { GradientName } from '@/lib/tokenArt';
-import { TOKEN_GRADIENTS, gradientForTopic } from '@/lib/tokenArt';
+import type { TokenColor } from '@/lib/tokenArt';
+import { TOKEN_COLORS, colorForTopic, inkOn } from '@/lib/tokenArt';
 import { cn } from '@/lib/cn';
 import { BASESCAN_URL } from '@/lib/constants';
 import { Button, CopyChip, IconButton } from '@/components/ui';
@@ -20,8 +20,7 @@ export interface TokenDetailData {
   mintedAt: string;
   chain: string;
   standard: string;
-  gradient?: GradientName;
-  rarity?: 'RARE' | null;
+  color?: TokenColor;
   traits: { label: string; value: string; tone?: TraitTone }[];
   /** Null while the mint is still pending — the tx row and Basescan link hide. */
   txHash: string | null;
@@ -34,7 +33,6 @@ export interface TokenDetailModalProps {
 }
 
 const ESCAPE_KEY = 'Escape';
-const RARITY_RARE = 'RARE';
 const TRAIT_TONE_INFO: TraitTone = 'info';
 
 const EDITION_PREFIX = '#';
@@ -49,44 +47,38 @@ const BADGE_LABEL = 'ATTENDANCE TOKEN';
 const TRAITS_LABEL = 'Traits';
 const CLOSE_LABEL = 'Close';
 const BASESCAN_LABEL = 'View on Basescan';
-const PENDING_TX_LABEL = 'Mint pending — the transaction hash appears once it confirms.';
+const PENDING_TX_LABEL = 'Mint pending. The transaction hash appears once it confirms.';
 const PENDING_TX_CLASSES = 'mb-[18px] text-[13px] leading-[18px] text-content-secondary';
 const SHARE_LABEL = 'Share';
 const META_MINTED = 'Minted';
 const META_CHAIN = 'Chain';
 const META_STANDARD = 'Standard';
 
-const OVERLAY_CLASSES = 'fixed inset-0 z-50 grid place-items-center bg-[rgba(1,3,4,0.5)] p-4';
+const OVERLAY_CLASSES = 'fixed inset-0 z-50 grid place-items-center bg-canvas/80 p-4';
 const PANEL_CLASSES =
-  'w-full max-w-[760px] overflow-hidden rounded-context border border-line bg-white shadow-elev-lg';
+  'w-full max-w-[760px] overflow-hidden rounded-context border border-line bg-surface';
 const GRID_CLASSES = 'grid grid-cols-1 md:grid-cols-[320px_1fr]';
 
 const ART_CLASSES = 'relative grid min-h-[440px] place-items-center overflow-hidden';
-const ART_OVERLAY_CLASSES =
-  'absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,.4),transparent_55%)]';
-const SHEEN_CLASSES =
-  'absolute inset-y-0 w-[35%] animate-sheen bg-[linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent)]';
-const RARE_TAG_CLASSES =
-  'absolute right-2.5 top-2.5 rounded-sm bg-black/35 px-1.5 py-0.5 text-[9px] font-bold leading-[14px] text-white';
-const EDITION_CLASSES = 'relative font-mono text-[72px] font-bold leading-none tracking-[-2px]';
+const EDITION_CLASSES = 'relative font-mono text-[72px] font-bold leading-none';
 const EDITION_FOOTER_CLASSES =
-  'absolute inset-x-0 bottom-[18px] text-center font-mono text-xs font-medium text-white/80';
+  'absolute inset-x-0 bottom-[18px] text-center font-mono text-xs font-medium';
 
 const META_CLASSES = 'relative px-7 pt-7 pb-[26px]';
-const CLOSE_CLASSES = 'absolute right-5 top-5 h-8 w-8 bg-card-filled text-content-secondary';
+const CLOSE_CLASSES = 'absolute right-5 top-5 h-8 w-8 bg-raised text-content-secondary';
 const BADGE_CLASSES =
-  'mb-3.5 inline-block rounded-sm bg-status-info-bg px-[9px] py-[3px] text-[11px] font-bold leading-4 text-blue-600';
-const TITLE_CLASSES = 'mb-1.5 text-[26px] font-semibold leading-[30px] tracking-[-0.8px]';
+  'mb-3.5 inline-block rounded-sm bg-status-info-bg px-[9px] py-[3px] text-[11px] font-bold leading-4 text-cyan';
+const TITLE_CLASSES = 'mb-1.5 text-[26px] font-semibold leading-[30px]';
 const SUBTITLE_CLASSES = 'mb-[22px] font-mono text-[13px] font-medium text-content-secondary';
 const META_GRID_CLASSES = 'mb-[22px] grid grid-cols-2 gap-x-5 gap-y-4';
 const META_LABEL_CLASSES =
-  'font-mono text-[11px] font-bold uppercase tracking-[0.06em] text-content-secondary';
-const META_VALUE_CLASSES = 'mt-1.5 text-[14px] font-medium leading-[1.3] text-ink';
+  'font-mono text-xs text-content-secondary';
+const META_VALUE_CLASSES = 'mt-1.5 text-[14px] font-medium leading-[1.3] text-content';
 
 const TRAIT_ROW_CLASSES = 'mb-[22px] flex flex-wrap gap-2';
-const TRAIT_CHIP_BASE = 'rounded-[8px] px-3 py-1.5 text-xs font-semibold';
-const TRAIT_CHIP_INFO = 'bg-status-info-bg text-blue-600';
-const TRAIT_CHIP_NEUTRAL = 'bg-card-filled';
+const TRAIT_CHIP_BASE = 'rounded px-3 py-1.5 text-xs font-semibold';
+const TRAIT_CHIP_INFO = 'bg-status-info-bg text-cyan';
+const TRAIT_CHIP_NEUTRAL = 'bg-raised';
 
 const ACTIONS_CLASSES = 'flex gap-2.5';
 const PRIMARY_BUTTON_CLASSES = 'h-[46px] flex-1';
@@ -113,9 +105,9 @@ export default function TokenDetailModal({ open, onClose, token }: TokenDetailMo
 
   if (!open || !token) return null;
 
-  const artBackground = token.gradient
-    ? TOKEN_GRADIENTS[token.gradient]
-    : gradientForTopic(token.topic);
+  const artBackground = token.color
+    ? TOKEN_COLORS[token.color]
+    : colorForTopic(token.topic);
 
   const metaItems: { label: string; value: string }[] = [
     { label: META_MINTED, value: token.mintedAt },
@@ -133,13 +125,8 @@ export default function TokenDetailModal({ open, onClose, token }: TokenDetailMo
         onClick={(event) => event.stopPropagation()}
       >
         <div className={GRID_CLASSES}>
-          <div className={ART_CLASSES} style={{ background: artBackground }}>
-            <div className={ART_OVERLAY_CLASSES} />
-            <div className={SHEEN_CLASSES} />
-            {token.rarity === RARITY_RARE ? (
-              <span className={RARE_TAG_CLASSES}>{RARITY_RARE}</span>
-            ) : null}
-            <div className="relative text-center text-white">
+          <div className={ART_CLASSES} style={{ background: artBackground, color: inkOn(artBackground) }}>
+            <div className="relative text-center">
               <div className={EDITION_CLASSES}>{`${EDITION_PREFIX}${token.editionNumber}`}</div>
             </div>
             <div className={EDITION_FOOTER_CLASSES}>

@@ -9,7 +9,7 @@ import Link from 'next/link';
 import CheckInFlow from '@/components/features/check-in/CheckInFlow';
 import { ArrowLeft } from '@/components/ui/icons';
 
-const PAGE_TITLE = 'Check in';
+const PAGE_TITLE = 'Check In';
 const BACK_HREF = '/';
 
 export default function CheckInPage() {
@@ -29,23 +29,23 @@ export default function CheckInPage() {
 
   if (!ready || !authenticated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-paper">
+      <div className="flex min-h-screen items-center justify-center bg-canvas">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-line border-t-ink" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-paper">
+    <div className="flex min-h-screen flex-col bg-canvas">
       <header className="flex items-center gap-3 border-b border-line px-6 py-4">
         <Link
           href={BACK_HREF}
           aria-label="Back"
-          className="grid h-9 w-9 place-items-center rounded-full text-content-secondary transition hover:bg-[rgba(1,3,4,0.06)] hover:text-ink"
+          className="grid h-9 w-9 place-items-center rounded-full text-content-secondary transition hover:bg-raised hover:text-content"
         >
           <ArrowLeft size={20} />
         </Link>
-        <h1 className="text-lg font-semibold tracking-[-0.2px] text-ink">{PAGE_TITLE}</h1>
+        <h1 className="text-lg font-medium text-content">{PAGE_TITLE}</h1>
       </header>
 
       <main className="flex flex-1 items-center justify-center px-6 py-8">

@@ -1,24 +1,24 @@
 import type { Metadata } from 'next';
-import localFont from 'next/font/local';
+import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
 import AppProviders from '@/components/providers/AppProviders';
 import { APP_NAME } from '@/lib/constants';
 import './globals.css';
 
-const geistSans = localFont({
-  src: './fonts/GeistVF.woff',
-  variable: '--font-geist-sans',
-  weight: '100 900',
+const plexSans = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-plex-sans',
 });
 
-const geistMono = localFont({
-  src: './fonts/GeistMono-VariableFont_wght.ttf',
-  variable: '--font-geist-mono',
-  weight: '100 900',
+const plexMono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-plex-mono',
 });
 
 export const metadata: Metadata = {
   title: APP_NAME,
-  description: `${APP_NAME} — an onchain protocol for clubs: QR check-in, gasless soulbound tokens, and member stats.`,
+  description: `${APP_NAME}: your club, onchain.`,
 };
 
 export default function RootLayout({
@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-paper min-h-screen`}>
+      <body className={`${plexSans.variable} ${plexMono.variable} min-h-screen`}>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

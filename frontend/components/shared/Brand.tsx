@@ -7,12 +7,12 @@ export interface BrandProps {
   className?: string;
 }
 
-const WORDMARK_CLASSES = 'font-bold text-[19px] tracking-[-0.02em]';
+const WORDMARK_CLASSES = 'font-mono font-medium text-[18px]';
 
 export default function Brand({ href, className }: BrandProps) {
   const wordmark = (
     <>
-      {APP_SHORT_NAME}<span className="text-cyan">.</span>
+      {APP_SHORT_NAME}<span className="text-green">.</span>
     </>
   );
 

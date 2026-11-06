@@ -7,6 +7,7 @@ import { generateQR } from '../services/qr.service';
 import { createSessionOnChain, closeSessionOnChain } from '../services/relay.service';
 import prisma from '../lib/prisma';
 import logger from '../lib/logger';
+import { findSessionOr404, semesterFor } from '../lib/session';
 
 const router = Router();
 
@@ -14,7 +15,6 @@ const createSessionSchema = z.object({
   sessionId: z.string().regex(/^\d+$/, 'sessionId must be a numeric string'),
   date: z.string().datetime(),
   name: z.string().min(1).max(200),
-  semester: z.string().min(1).max(100),
 });
 
 // POST /api/v1/sessions — admin creates a new session (DB + on-chain)
@@ -24,7 +24,8 @@ router.post(
   adminMiddleware,
   validate(createSessionSchema),
   async (req: Request, res: Response): Promise<void> => {
-    const { sessionId, date, name, semester } = req.body as z.infer<typeof createSessionSchema>;
+    const { sessionId, date, name } = req.body as z.infer<typeof createSessionSchema>;
+    const semester = semesterFor(new Date(date));
     const adminWallet = req.user!.walletAddress;
 
     const existing = await prisma.session.findUnique({
@@ -75,14 +76,8 @@ router.get(
   async (req: Request, res: Response): Promise<void> => {
     const { sessionId } = req.params;
 
-    const session = await prisma.session.findUnique({
-      where: { sessionIdOnchain: sessionId },
-    });
-
-    if (!session) {
-      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Session not found' } });
-      return;
-    }
+    const session = await findSessionOr404(sessionId, res);
+    if (!session) return;
 
     res.json({ data: serializeSession(session) });
   },
@@ -96,14 +91,8 @@ router.post(
   async (req: Request, res: Response): Promise<void> => {
     const { sessionId } = req.params;
 
-    const session = await prisma.session.findUnique({
-      where: { sessionIdOnchain: sessionId },
-    });
-
-    if (!session) {
-      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Session not found' } });
-      return;
-    }
+    const session = await findSessionOr404(sessionId, res);
+    if (!session) return;
 
     if (session.closedAt) {
       res.status(409).json({ error: { code: 'CONFLICT', message: 'Session already closed' } });
@@ -136,14 +125,8 @@ router.get(
   async (req: Request, res: Response): Promise<void> => {
     const { sessionId } = req.params;
 
-    const session = await prisma.session.findUnique({
-      where: { sessionIdOnchain: sessionId },
-    });
-
-    if (!session) {
-      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Session not found' } });
-      return;
-    }
+    const session = await findSessionOr404(sessionId, res);
+    if (!session) return;
 
     if (session.closedAt) {
       res.status(409).json({ error: { code: 'CONFLICT', message: 'Session is closed' } });

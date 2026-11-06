@@ -13,8 +13,9 @@ import { ExternalLinkIcon, PlusIcon } from '@/components/ui/icons';
 import { useProfile, useEmbeddedAddress, useDisplayName } from '@/hooks/useProfile';
 import { shortenAddress } from '@/lib/address';
 import { BASESCAN_URL } from '@/lib/constants';
+import FullPageSpinner from '@/components/shared/FullPageSpinner';
 
-const PAGE_TITLE = 'Wallet & keys';
+const PAGE_TITLE = 'Wallet & Keys';
 
 const AVATAR_SIZE = 64;
 const EXTERNAL_LINK_ICON_SIZE = 14;
@@ -32,18 +33,16 @@ const EMBEDDED_TITLE = 'Embedded wallet';
 const EMBEDDED_DESC = 'The self-custodial wallet OCP created for you. It holds your attendance tokens.';
 const BASESCAN_LABEL = 'View on Basescan';
 const EXPORT_KEY_LABEL = 'Export private key';
-const EXPORT_KEY_WARNING = 'Anyone with your private key controls this wallet — never share it.';
+const EXPORT_KEY_WARNING = 'Anyone with your private key controls this wallet. Never share it.';
 
 const CONNECTED_TITLE = 'Connected wallets';
 const CONNECTED_DESC = 'Link an external wallet to sign in and interact with it too.';
 const CONNECT_LABEL = 'Connect a wallet';
 const UNLINK_LABEL = 'Unlink';
 const CONNECTED_EMPTY = 'No external wallets connected.';
-const CONNECTED_CAPTION =
-  "Supports EVM wallets like MetaMask. Solana wallets (e.g. Phantom) aren't supported yet.";
 
 const EXTERNAL_LINK_CLASSES =
-  'inline-flex items-center gap-1.5 text-sm font-medium text-ink transition hover:text-content-secondary';
+  'inline-flex items-center gap-1.5 text-sm font-medium text-content transition hover:text-content-secondary';
 
 export default function WalletPage() {
   const { ready, authenticated, unlinkWallet } = usePrivy();
@@ -68,10 +67,10 @@ export default function WalletPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fbfbfc]">
+    <div className="min-h-screen bg-canvas">
       <MemberTopNav />
       <PageContainer className="pt-8 pb-24 md:pb-8">
-        <h1 className="mb-6 text-[30px] font-semibold leading-9 tracking-[-1px]">{PAGE_TITLE}</h1>
+        <h1 className="mb-10 text-[30px] font-medium leading-9">{PAGE_TITLE}</h1>
 
         <div className="mb-6 flex items-center gap-4">
           <Avatar
@@ -88,9 +87,9 @@ export default function WalletPage() {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-10">
           <Card className="p-6">
-            <h2 className="text-[17px] font-semibold">{EMBEDDED_TITLE}</h2>
+            <h2 className="text-[17px] font-medium">{EMBEDDED_TITLE}</h2>
             <p className="mt-1 text-sm text-content-secondary">{EMBEDDED_DESC}</p>
 
             <div className="mt-5 max-w-md space-y-4">
@@ -116,7 +115,7 @@ export default function WalletPage() {
           </Card>
 
           <Card className="p-6">
-            <h2 className="text-[17px] font-semibold">{CONNECTED_TITLE}</h2>
+            <h2 className="text-[17px] font-medium">{CONNECTED_TITLE}</h2>
             <p className="mt-1 text-sm text-content-secondary">{CONNECTED_DESC}</p>
 
             <div className="mt-5 max-w-md space-y-4">
@@ -146,21 +145,11 @@ export default function WalletPage() {
                 <PlusIcon size={BUTTON_ICON_SIZE} />
                 {CONNECT_LABEL}
               </Button>
-
-              <p className="text-xs text-content-secondary">{CONNECTED_CAPTION}</p>
             </div>
           </Card>
         </div>
       </PageContainer>
       <MobileTabBar />
-    </div>
-  );
-}
-
-function FullPageSpinner() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-[#fbfbfc]">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink border-t-transparent" />
     </div>
   );
 }

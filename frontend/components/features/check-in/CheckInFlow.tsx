@@ -12,7 +12,7 @@ import { ApiRequestError } from '@/lib/api/client';
 import { useEmbeddedAddress } from '@/hooks/useProfile';
 import { CheckInResponse, VaultToken } from '@/types';
 import { QrIcon, CheckIcon, ClockIcon, CloseIcon, type IconProps } from '@/components/ui/icons';
-import { TOKEN_GRADIENTS, gradientNameForTopic } from '@/lib/tokenArt';
+import { TOKEN_COLORS, colorNameForTopic, inkOn } from '@/lib/tokenArt';
 import { CLUB_NAME } from '@/lib/constants';
 
 // QrScanner accesses browser APIs — load client-side only
@@ -38,8 +38,8 @@ const SUBMITTING_SUB = 'Queuing your attendance token onchain.';
 
 // The mint is queued, not yet confirmed, when this screen first renders — the
 // chip reflects the token's real mint status rather than claiming success.
-const MINTED_CHIP_LABEL = 'Minted onchain';
-const QUEUED_CHIP_LABEL = 'Check-in recorded · minting';
+const MINTED_CHIP_LABEL = '> token minted ✓';
+const QUEUED_CHIP_LABEL = '> minting token…';
 const TOKEN_CARD_FALLBACK = 'Your token';
 const TOKEN_SHORT_MAX = 4;
 const EDITION_PAD = 3;
@@ -63,13 +63,9 @@ function findMintedToken(
 }
 
 function formatTokenDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', TOKEN_DATE_FORMAT).toUpperCase();
+  return new Date(iso).toLocaleDateString('en-US', TOKEN_DATE_FORMAT);
 }
 
-const SUCCESS_PANEL_BG = 'radial-gradient(120% 90% at 50% 0%,#0b1830 0%,#010304 60%)';
-const TOKEN_HERO_OVERLAY = 'radial-gradient(circle at 30% 25%,rgba(255,255,255,.4),transparent 55%)';
-const SHEEN_CLASSES =
-  'absolute inset-y-0 w-[40%] animate-sheen-fast bg-[linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent)]';
 
 interface ErrorVariantConfig {
   Icon: (props: IconProps) => JSX.Element;
@@ -82,21 +78,21 @@ interface ErrorVariantConfig {
 const ERROR_VARIANT_CONFIG: Record<ErrorVariant, ErrorVariantConfig> = {
   'already-in': {
     Icon: CheckIcon,
-    tileClass: 'bg-status-info-bg text-blue-600',
+    tileClass: 'bg-status-info-bg text-cyan',
     title: "You're already in",
     ctaLabel: 'View token',
     href: VAULT_HREF,
   },
   closed: {
     Icon: ClockIcon,
-    tileClass: 'bg-status-warn-bg text-yellow-700',
+    tileClass: 'bg-status-warn-bg text-status-warn',
     title: 'Check-in has closed',
     ctaLabel: 'Scan again',
     href: null,
   },
   invalid: {
     Icon: CloseIcon,
-    tileClass: 'bg-status-neg-bg text-red-600',
+    tileClass: 'bg-status-neg-bg text-status-neg',
     title: 'Code not recognized',
     ctaLabel: 'Scan again',
     href: null,
@@ -242,10 +238,10 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
   if (step === 'scan') {
     return (
       <div className="flex flex-col items-center text-center">
-        <div className="font-mono text-xs uppercase tracking-[0.08em] text-status-neutral">
+        <div className="font-mono text-xs text-status-neutral">
           {MEETING_EYEBROW}
         </div>
-        <h2 className="mt-2.5 text-[24px] font-semibold leading-[30px] tracking-[-0.5px] text-ink">
+        <h2 className="mt-2.5 text-[24px] font-medium leading-[30px] text-content">
           {MEETING_TOPIC}
         </h2>
         <p className="mt-1.5 max-w-[280px] text-sm leading-5 text-content-secondary">
@@ -257,8 +253,8 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
             <QrScanner onScan={handleScan} onError={handleScanError} />
           </div>
         ) : (
-          <div className="mt-7 h-[200px] w-[200px] rounded-lg border border-line bg-white p-[18px] shadow-elev-sm">
-            <svg width="100%" height="100%" viewBox="0 0 100 100" shapeRendering="crispEdges" className="text-ink">
+          <div className="mt-7 h-[200px] w-[200px] rounded-lg border border-line bg-surface p-[18px]">
+            <svg width="100%" height="100%" viewBox="0 0 100 100" shapeRendering="crispEdges" className="text-content">
               <rect x="0" y="0" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="8" />
               <rect x="10" y="10" width="8" height="8" fill="currentColor" />
               <rect x="72" y="0" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="8" />
@@ -299,7 +295,7 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
           <button
             type="button"
             onClick={() => setScannerOpen(true)}
-            className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-ink text-base font-semibold text-white transition active:scale-[0.98]"
+            className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded bg-green text-base font-medium text-canvas transition-colors hover:bg-green-dim"
           >
             <QrIcon size={18} />
             {OPEN_SCANNER_LABEL}
@@ -316,7 +312,7 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
       <div className="flex flex-col items-center justify-center gap-5 py-16 text-center">
         <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-line border-t-ink" />
         <div className="space-y-1">
-          <p className="text-base font-semibold text-ink">{title}</p>
+          <p className="text-base font-semibold text-content">{title}</p>
           <p className="text-sm text-content-secondary">{sub}</p>
         </div>
       </div>
@@ -333,53 +329,50 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
     const shortLabel = topic.slice(0, TOKEN_SHORT_MAX).toUpperCase();
     const editionLabel = mintedToken
       ? `#${String(mintedToken.meetingNumber).padStart(EDITION_PAD, '0')}`
-      : '#—';
+      : '#-';
     const dateMeta = mintedToken
       ? `${formatTokenDate(mintedToken.date)} · Meeting ${mintedToken.meetingNumber}`
       : '';
     const heroGradient = mintedToken
-      ? TOKEN_GRADIENTS[gradientNameForTopic(mintedToken.name)]
-      : TOKEN_GRADIENTS.blue;
+      ? TOKEN_COLORS[colorNameForTopic(mintedToken.name)]
+      : TOKEN_COLORS.blue;
     return (
       <div
-        className="flex min-h-[600px] flex-col rounded-context p-7 text-white"
-        style={{ background: SUCCESS_PANEL_BG }}
+        className="flex min-h-[600px] flex-col rounded-context p-7 text-content"
       >
         <div className="flex flex-1 flex-col items-center justify-center text-center">
           <div
             className={
               confirmed
-                ? 'inline-flex items-center gap-1.5 rounded-full bg-green-500/20 px-3.5 py-1.5 text-xs font-bold text-green-300'
-                : 'inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold text-[rgba(218,229,247,0.85)]'
+                ? 'inline-flex items-center gap-1.5 rounded border border-green/40 px-3 py-1.5 font-mono text-xs text-status-pos'
+                : 'inline-flex items-center gap-1.5 rounded border border-line px-3 py-1.5 font-mono text-xs text-content-secondary'
             }
           >
             {confirmed ? <CheckIcon size={14} /> : <ClockIcon size={14} />}
             {confirmed ? MINTED_CHIP_LABEL : QUEUED_CHIP_LABEL}
           </div>
 
-          <div className="mt-6 w-[214px] overflow-hidden rounded-[22px] border border-[rgba(173,199,238,0.2)] bg-[#0b0f16] shadow-[0_24px_70px_rgba(0,92,240,0.45)]">
+          <div className="mt-6 w-[214px] overflow-hidden rounded border border-line bg-surface">
             <div
               className="relative grid h-[150px] place-items-center overflow-hidden"
-              style={{ background: heroGradient }}
+              style={{ background: heroGradient, color: inkOn(heroGradient) }}
             >
-              <div className="absolute inset-0" style={{ background: TOKEN_HERO_OVERLAY }} />
-              <div className={SHEEN_CLASSES} />
-              <div className="absolute left-4 top-3.5 font-mono text-[15px] font-bold text-white/90">
+              <div className="absolute left-4 top-3.5 font-mono text-[15px] font-bold">
                 {shortLabel}
               </div>
-              <div className="font-mono text-5xl font-bold tracking-[-1px] text-white">
+              <div className="font-mono text-5xl font-bold">
                 {editionLabel}
               </div>
             </div>
             <div className="px-[18px] py-4 text-left">
               <div className="text-base font-semibold leading-[1.2]">{topic}</div>
               {dateMeta && (
-                <div className="mt-2 font-mono text-xs text-[rgba(218,229,247,0.6)]">{dateMeta}</div>
+                <div className="mt-2 font-mono text-xs text-content-secondary">{dateMeta}</div>
               )}
-              <div className="my-3.5 h-px bg-white/10" />
-              <div className="flex items-center justify-between font-mono text-[11px] text-[rgba(218,229,247,0.6)]">
+              <div className="my-3.5 h-px bg-raised" />
+              <div className="flex items-center justify-between font-mono text-[11px] text-content-secondary">
                 <span>{mintedToken?.semester ?? ''}</span>
-                <span className="text-cyan">{`${SESSION_REF_PREFIX}${sessionSuffix}`}</span>
+                <span className="text-green">{`${SESSION_REF_PREFIX}${sessionSuffix}`}</span>
               </div>
             </div>
           </div>
@@ -388,7 +381,7 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
         <div className="mt-8 flex flex-col gap-2.5">
           <Link
             href={VAULT_HREF}
-            className="flex h-14 items-center justify-center rounded-full bg-cyan text-base font-semibold text-ink transition active:scale-[0.98]"
+            className="flex h-14 items-center justify-center rounded bg-green text-base font-semibold text-canvas transition"
           >
             {ADD_TO_VAULT_LABEL}
           </Link>
@@ -404,14 +397,14 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
       <div className={`grid h-16 w-16 place-items-center rounded-tile ${variant.tileClass}`}>
         <Icon size={30} />
       </div>
-      <h2 className="mt-5 text-xl font-semibold leading-[26px] tracking-[-0.3px] text-ink">
+      <h2 className="mt-5 text-xl font-medium leading-[26px] text-content">
         {variant.title}
       </h2>
       <p className="mt-2 max-w-[280px] text-sm leading-[21px] text-content-secondary">{errorMessage}</p>
       {variant.href ? (
         <Link
           href={variant.href}
-          className="mt-6 flex h-12 w-full items-center justify-center rounded-full bg-ink text-[15px] font-semibold text-white transition active:scale-[0.98]"
+          className="mt-6 flex h-12 w-full items-center justify-center rounded bg-green text-[15px] font-medium text-canvas transition-colors hover:bg-green-dim"
         >
           {variant.ctaLabel}
         </Link>
@@ -419,7 +412,7 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
         <button
           type="button"
           onClick={onRestart}
-          className="mt-6 flex h-12 w-full items-center justify-center rounded-full bg-ink text-[15px] font-semibold text-white transition active:scale-[0.98]"
+          className="mt-6 flex h-12 w-full items-center justify-center rounded bg-green text-[15px] font-medium text-canvas transition-colors hover:bg-green-dim"
         >
           {variant.ctaLabel}
         </button>

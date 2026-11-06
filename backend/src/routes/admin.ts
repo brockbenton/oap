@@ -7,6 +7,7 @@ import logger from '../lib/logger';
 import { grantAdminRoleOnChain, revokeAdminRoleOnChain, setBaseCidOnChain } from '../services/relay.service';
 import { buildMemberStats, buildAdminOverview } from '../services/stats.service';
 import { publishSemesterMetadata } from '../services/ipfs.service';
+import { findSessionOr404 } from '../lib/session';
 
 const router = Router();
 
@@ -61,14 +62,8 @@ router.get('/sessions', async (_req: Request, res: Response): Promise<void> => {
 router.get('/sessions/:sessionId/attendees', async (req: Request, res: Response): Promise<void> => {
   const { sessionId } = req.params;
 
-  const session = await prisma.session.findUnique({
-    where: { sessionIdOnchain: sessionId },
-  });
-
-  if (!session) {
-    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Session not found' } });
-    return;
-  }
+  const session = await findSessionOr404(sessionId, res);
+  if (!session) return;
 
   const checkIns = await prisma.checkIn.findMany({
     where: { sessionId: session.id },
@@ -134,14 +129,8 @@ router.patch(
 router.get('/export/sessions/:sessionId', async (req: Request, res: Response): Promise<void> => {
   const { sessionId } = req.params;
 
-  const session = await prisma.session.findUnique({
-    where: { sessionIdOnchain: sessionId },
-  });
-
-  if (!session) {
-    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Session not found' } });
-    return;
-  }
+  const session = await findSessionOr404(sessionId, res);
+  if (!session) return;
 
   const checkIns = await prisma.checkIn.findMany({
     where: { sessionId: session.id },

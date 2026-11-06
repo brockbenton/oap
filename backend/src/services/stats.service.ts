@@ -3,6 +3,7 @@ import { getPrivy } from '../middleware/auth';
 import logger from '../lib/logger';
 import { tokenMetadataUri, buildMeetingNumberMap } from './ipfs.service';
 import { semesterArtUrl, tierBadgeUrl, badgeTierFor } from './art.service';
+import { semesterFor } from '../lib/session';
 
 export type StatusTier = 'General Member' | 'Official Member';
 
@@ -60,10 +61,13 @@ export interface RecentSession {
   date: string;
 }
 
-export async function buildMemberStats(includeLinkedAccount = true): Promise<{
+export async function buildMemberStats(
+  includeLinkedAccount = true,
+  now: number = Date.now(),
+): Promise<{
   members: MemberStat[];
   totalSessions: number;
-  currentSemester: string | null;
+  currentSemester: string;
   recentSessions: RecentSession[];
 }> {
   // 1. All confirmed sessions (needed for attendance % denominators)
@@ -74,7 +78,7 @@ export async function buildMemberStats(includeLinkedAccount = true): Promise<{
   });
 
   const totalSessions = sessions.length;
-  const currentSemester = sessions[0]?.semester ?? null;
+  const currentSemester = semesterFor(new Date(now));
   const confirmedSessionIds = new Set(sessions.map((s) => s.id));
   const currentSemesterSessionIds = new Set(
     sessions.filter((s) => s.semester === currentSemester).map((s) => s.id),
@@ -103,7 +107,7 @@ export async function buildMemberStats(includeLinkedAccount = true): Promise<{
 
   // Resolve privyUserId → display name. Skipped for the public directory, which
   // strips linkedAccount (PII) anyway — avoids a needless Privy round-trip and
-  // never fetches PII on the unauthenticated path (see AUDIT.md).
+  // never fetches PII on the unauthenticated path.
   const privyDisplayMap = new Map<string, string | null>();
   if (includeLinkedAccount) {
     try {
@@ -125,7 +129,7 @@ export async function buildMemberStats(includeLinkedAccount = true): Promise<{
   // 4. Compute per-member stats
   const data: MemberStat[] = members.map((m) => {
     // A token is "earned" only once its mint CONFIRMS on-chain — PENDING/FAILED
-    // must not be counted as a held token (see AUDIT.md). Stats stay ≤ on-chain holdings.
+    // must not be counted as a held token. Stats stay ≤ on-chain holdings.
     const earnedCheckIns = m.checkIns.filter(
       (c) => confirmedSessionIds.has(c.sessionId) && c.mintStatus === CONFIRMED_STATUS,
     );
@@ -180,7 +184,7 @@ export async function buildMemberStats(includeLinkedAccount = true): Promise<{
 
 // ── Phase 3: per-member vault & personal stats ──────────────────────────────
 // Attendance is sourced from confirmed-session check-ins (there is no on-chain
-// event indexer; check_ins is the recorded-attendance table — see AUDIT.md).
+// event indexer; check_ins is the recorded-attendance table).
 
 export interface VaultToken {
   tokenId: string;
@@ -256,7 +260,7 @@ export interface PersonalStats {
   tokensEarned: number;
   totalSessions: number;
   allTimeAttendancePct: number;
-  currentSemester: string | null;
+  currentSemester: string;
   currentSemesterTotal: number;
   currentSemesterAttendancePct: number;
   statusTier: StatusTier;
@@ -283,7 +287,7 @@ export async function buildPersonalStats(
   });
 
   const totalSessions = confirmedSessions.length;
-  const currentSemester = confirmedSessions[0]?.semester ?? null;
+  const currentSemester = semesterFor(new Date(now));
   const currentSemesterTotal = confirmedSessions.filter(
     (s) => s.semester === currentSemester,
   ).length;
@@ -431,7 +435,7 @@ export interface OverviewSessionPoint {
 export interface AdminOverview {
   totalMembers: number;
   totalSessions: number;
-  currentSemester: string | null;
+  currentSemester: string;
   avgHeadcount: number;
   series: OverviewSessionPoint[];
   latest: { headcount: number; attendanceRate: number } | null;
@@ -439,7 +443,7 @@ export interface AdminOverview {
   wow: { headcountDelta: number; attendanceRateDelta: number } | null;
 }
 
-export async function buildAdminOverview(): Promise<AdminOverview> {
+export async function buildAdminOverview(now: number = Date.now()): Promise<AdminOverview> {
   const [sessions, members] = await Promise.all([
     prisma.session.findMany({
       where: { onchainStatus: CONFIRMED_STATUS },
@@ -477,7 +481,7 @@ export async function buildAdminOverview(): Promise<AdminOverview> {
   });
 
   const totalSessions = series.length;
-  const currentSemester = totalSessions > 0 ? series[totalSessions - 1].semester : null;
+  const currentSemester = semesterFor(new Date(now));
   const avgHeadcount =
     totalSessions > 0
       ? Math.round(series.reduce((sum, p) => sum + p.headcount, 0) / totalSessions)

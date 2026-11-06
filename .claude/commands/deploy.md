@@ -112,7 +112,6 @@ Run `/sync-abi` to propagate the newly compiled ABI to frontend and backend.
 Remind the user to update:
 - `backend/.env`: `CONTRACT_ADDRESS=<new address>`
 - `frontend/.env.local`: `NEXT_PUBLIC_CONTRACT_ADDRESS=<new address>`
-- `frontend/.env.local`: `NEXT_PUBLIC_CHAIN_ID=<84532 or 8453>`
 
 ---
 

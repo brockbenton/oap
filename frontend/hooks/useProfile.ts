@@ -1,23 +1,17 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getIdentityToken, usePrivy, useWallets } from '@privy-io/react-auth';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { getMyProfile, updateMyProfile, type ProfilePatch } from '@/lib/api/profile';
 import { queryKeys } from '@/lib/api/queryKeys';
-import { retryUnlessForbidden } from '@/lib/api/client';
+import { requireIdentityToken, retryUnlessForbidden } from '@/lib/api/client';
 import { shortenAddress } from '@/lib/address';
-
-async function requireToken(): Promise<string> {
-  const token = await getIdentityToken();
-  if (!token) throw new Error('Not authenticated');
-  return token;
-}
 
 export function useProfile() {
   const { ready, authenticated, user } = usePrivy();
   return useQuery({
     queryKey: queryKeys.myProfile(user?.id),
-    queryFn: async () => getMyProfile(await requireToken()),
+    queryFn: async () => getMyProfile(await requireIdentityToken()),
     enabled: ready && authenticated,
     retry: retryUnlessForbidden,
   });
@@ -27,7 +21,7 @@ export function useUpdateProfile() {
   const { user } = usePrivy();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (patch: ProfilePatch) => updateMyProfile(patch, await requireToken()),
+    mutationFn: async (patch: ProfilePatch) => updateMyProfile(patch, await requireIdentityToken()),
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.myProfile(user?.id), data);
     },

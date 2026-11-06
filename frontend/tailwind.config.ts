@@ -1,53 +1,64 @@
 import type { Config } from 'tailwindcss';
 
+const token = (name: string) => `rgb(var(--${name}) / <alpha-value>)`;
+const tint = (name: string) => `rgb(var(--${name}) / 0.12)`;
+
 const config: Config = {
   content: [
-    './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    // Closed palette: anything outside these tokens produces no CSS.
+    colors: {
+      transparent: 'transparent',
+      current: 'currentColor',
+      white: '#ffffff',
+      canvas: token('canvas'),
+      surface: token('surface'),
+      raised: token('raised'),
+      line: { DEFAULT: token('line'), strong: token('line-strong') },
+      content: {
+        DEFAULT: token('content'),
+        secondary: token('content-secondary'),
+        muted: token('content-muted'),
+      },
+      green: { DEFAULT: token('green'), dim: token('green-dim') },
+      amber: token('amber'),
+      red: token('red'),
+      cyan: token('cyan'),
+      status: {
+        info: token('cyan'), 'info-bg': tint('cyan'),
+        pos: token('green'), 'pos-bg': tint('green'),
+        warn: token('amber'), 'warn-bg': tint('amber'),
+        neg: token('red'), 'neg-bg': tint('red'),
+        neutral: token('content-secondary'), 'neutral-bg': token('raised'),
+      },
+    },
+    borderRadius: {
+      none: '0', sm: '2px', DEFAULT: '4px', md: '4px', lg: '4px', xl: '4px', '2xl': '4px', '3xl': '4px',
+      card: '4px', tile: '4px', context: '4px', full: '9999px',
+    },
+    boxShadow: { none: 'none' },
     extend: {
-      colors: {
-        ink: '#010304',
-        paper: '#ffffff',
-        cyan: '#26ddf9',
-        gray: { 50:'#f7f7f7',100:'#e6e6e6',200:'#cccdcd',300:'#b3b3b4',400:'#999a9b',500:'#808181',600:'#676868',700:'#4d4f4f',800:'#343536',900:'#1a1c1d' },
-        red: { 50:'#fff6f6',100:'#fedada',200:'#feb6b6',300:'#fd9191',400:'#fd6d6d',500:'#fc4848',600:'#ca3a3a',700:'#972b2b',800:'#651d1d',900:'#320e0e' },
-        yellow: { 50:'#fefaf2',100:'#fdeccc',200:'#fbd899',300:'#f9c566',400:'#f7b133',500:'#f59e00',600:'#c47e00',700:'#935f00',800:'#623f00',900:'#312000' },
-        green: { 50:'#f3fbf5',100:'#cfedd9',200:'#a0dbb3',300:'#70ca8e',400:'#41b868',500:'#11a642',600:'#0e8535',700:'#0a6428',800:'#07421a',900:'#03210d' },
-        blue: { 50:'#f2f7fe',100:'#ccdefc',200:'#99bef9',300:'#669df6',400:'#337df3',500:'#005cf0',600:'#004ac0',700:'#003790',800:'#002560',900:'#001230' },
-        purple: { 50:'#f7f5ff',100:'#e1d6ff',200:'#c3adff',300:'#a485ff',400:'#865cff',500:'#6833ff',600:'#5329cc',700:'#3e1f99',800:'#2a1466',900:'#150a33' },
-        content: { DEFAULT:'var(--content-default)', secondary:'var(--content-secondary)', disabled:'var(--content-disabled)', highlight:'var(--content-highlight)' },
-        line: { DEFAULT:'var(--border-default)', strong:'var(--border-strong)' },
-        card: { DEFAULT:'var(--card-bg)', filled:'var(--card-filled)', border:'var(--card-border)' },
-        status: {
-          info:'var(--status-info-content)', 'info-bg':'var(--status-info-bg)',
-          pos:'var(--status-pos-content)', 'pos-bg':'var(--status-pos-bg)',
-          warn:'var(--status-warn-content)', 'warn-bg':'var(--status-warn-bg)',
-          neg:'var(--status-neg-content)', 'neg-bg':'var(--status-neg-bg)',
-          rew:'var(--status-rew-content)', 'rew-bg':'var(--status-rew-bg)',
-          neutral:'var(--status-neutral-content)', 'neutral-bg':'var(--status-neutral-bg)',
+      fontFamily: {
+        sans: ['var(--font-plex-sans)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-plex-mono)', 'ui-monospace', 'monospace'],
+      },
+      // Plex loads 400/500/600 only, so bold must not synthesize a heavier weight.
+      fontWeight: { bold: '600' },
+      keyframes: {
+        fadeInUp: { from: { opacity:'0', transform:'translateY(6px)' }, to: { opacity:'1', transform:'none' } },
+        fanDrift: { from: { transform:'rotateX(16deg) rotateY(-32deg)' }, to: { transform:'rotateX(4deg) rotateY(14deg)' } },
+        fanBreathe: {
+          from: { transform:'translateZ(var(--fan-z)) rotate(calc(var(--fan-a) * 0.7))' },
+          to: { transform:'translateZ(calc(var(--fan-z) * 1.7)) rotate(calc(var(--fan-a) * 1.1))' },
         },
       },
-      fontFamily: {
-        sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
-        mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
-      },
-      borderRadius: { sm:'5px', md:'10px', card:'16px', tile:'18px', lg:'20px', context:'24px', full:'999px' },
-      boxShadow: {
-        'elev-sm':'0 8px 32px 0 rgba(0,0,0,0.08)',
-        'elev-md':'0 16px 64px 0 rgba(0,0,0,0.10)',
-        'elev-lg':'0 24px 96px 0 rgba(0,0,0,0.12)',
-      },
-      keyframes: {
-        ocpSheen: { '0%': { transform:'translateX(-120%)' }, '100%': { transform:'translateX(220%)' } },
-        fadeInUp: { from: { opacity:'0', transform:'translateY(6px)' }, to: { opacity:'1', transform:'none' } },
-      },
       animation: {
-        sheen: 'ocpSheen 3s cubic-bezier(0.2,0.8,0.4,1) infinite',
-        'sheen-fast': 'ocpSheen 2.4s cubic-bezier(0.2,0.8,0.4,1) infinite',
         'fade-in': 'fadeInUp 0.4s ease-out both',
+        'fan-drift': 'fanDrift 9s ease-in-out infinite alternate',
+        'fan-breathe': 'fanBreathe 5s ease-in-out infinite alternate',
       },
     },
   },

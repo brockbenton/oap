@@ -3,13 +3,14 @@
 export const dynamic = 'force-dynamic';
 
 import { Fragment, useState } from 'react';
-import { usePrivy, getIdentityToken } from '@privy-io/react-auth';
+import { usePrivy } from '@privy-io/react-auth';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import AdminPageHeader from '@/components/features/admin/AdminPageHeader';
 import Link from 'next/link';
 import { listAdminSessions, getSessionAttendees, downloadSessionCSV } from '@/lib/api/admin';
 
 import { queryKeys } from '@/lib/api/queryKeys';
-import { retryUnlessForbidden } from '@/lib/api/client';
+import { requireIdentityToken, retryUnlessForbidden } from '@/lib/api/client';
 import { SessionWithCount, Attendee } from '@/types';
 import CreateSessionForm from '@/components/features/admin/CreateSessionForm';
 
@@ -22,8 +23,7 @@ export default function AdminSessionsPage() {
   const { mutate: exportSessionCSV } = useMutation({
     mutationFn: async (sessionId: string) => {
       setDownloadingSessionId(sessionId);
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       await downloadSessionCSV(sessionId, token);
     },
     onSettled: () => setDownloadingSessionId(null),
@@ -36,8 +36,7 @@ export default function AdminSessionsPage() {
   } = useQuery({
     queryKey: queryKeys.adminSessions(),
     queryFn: async () => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       return listAdminSessions(token);
     },
     enabled: authenticated,
@@ -47,38 +46,37 @@ export default function AdminSessionsPage() {
   const { data: attendees, isLoading: loadingAttendees } = useQuery({
     queryKey: queryKeys.sessionAttendees(expandedSessionId ?? ''),
     queryFn: async () => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
+      const token = await requireIdentityToken();
       return getSessionAttendees(expandedSessionId!, token);
     },
     enabled: !!expandedSessionId,
   });
 
   return (
-    <div className="max-w-5xl mx-auto w-full space-y-8">
-      <h1 className="text-2xl font-bold text-slate-900">Sessions</h1>
+    <div className="space-y-10">
+      <AdminPageHeader title="Sessions" caption="Create meetings and see who checked in" />
 
       <CreateSessionForm
         onSuccess={() => queryClient.invalidateQueries({ queryKey: queryKeys.adminSessions() })}
       />
 
         <section>
-          <h2 className="text-base font-semibold text-gray-900 mb-4">All Sessions</h2>
+          <h2 className="text-base font-medium text-content mb-4">All Sessions</h2>
 
           {isLoading ? (
             <div className="flex justify-center py-12">
-              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-4 border-green border-t-transparent rounded-full animate-spin" />
             </div>
           ) : error ? (
-            <p className="text-red-600 text-sm text-center py-12">
+            <p className="text-status-neg text-sm text-center py-12">
               {error instanceof Error ? error.message : 'Failed to load sessions.'}
             </p>
           ) : !sessions?.length ? (
-            <p className="text-gray-500 text-sm text-center py-12">No sessions yet.</p>
+            <p className="text-content-secondary text-sm text-center py-12">No sessions yet.</p>
           ) : (
-            <div className="border border-gray-200 rounded-xl overflow-hidden">
+            <div className="overflow-x-auto rounded-xl border border-line">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-gray-500 text-left">
+                <thead className="bg-raised text-content-secondary text-left">
                   <tr>
                     <th className="px-4 py-3 font-medium">Name</th>
                     <th className="px-4 py-3 font-medium">Date</th>
@@ -88,17 +86,17 @@ export default function AdminSessionsPage() {
                     <th className="px-4 py-3 font-medium" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-line">
                   {sessions.map((session) => (
                     <Fragment key={session.id}>
-                      <tr className="bg-white hover:bg-gray-50">
-                        <td className="px-4 py-3 font-medium text-gray-900">{session.name}</td>
-                        <td className="px-4 py-3 text-gray-600">{formatDate(session.date)}</td>
-                        <td className="px-4 py-3 text-gray-600">{session.semester}</td>
+                      <tr className="bg-surface hover:bg-raised">
+                        <td className="px-4 py-3 font-medium text-content">{session.name}</td>
+                        <td className="px-4 py-3 text-content-secondary">{formatDate(session.date)}</td>
+                        <td className="px-4 py-3 text-content-secondary">{session.semester}</td>
                         <td className="px-4 py-3">
                           <SessionStatusBadge session={session} />
                         </td>
-                        <td className="px-4 py-3 text-right text-gray-700">
+                        <td className="px-4 py-3 text-right text-content">
                           {session.attendeeCount}
                         </td>
                         <td className="px-4 py-3 text-right">
@@ -106,7 +104,7 @@ export default function AdminSessionsPage() {
                             {session.onchainStatus === 'CONFIRMED' && !session.closedAt && (
                               <Link
                                 href={`/admin/sessions/${encodeURIComponent(session.sessionId)}/qr`}
-                                className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                                className="text-cyan hover:text-content text-xs font-medium"
                               >
                                 QR
                               </Link>
@@ -115,7 +113,7 @@ export default function AdminSessionsPage() {
                               <button
                                 onClick={() => exportSessionCSV(session.sessionId)}
                                 disabled={downloadingSessionId === session.sessionId}
-                                className="text-blue-600 hover:text-blue-800 text-xs font-medium disabled:opacity-50"
+                                className="text-cyan hover:text-content text-xs font-medium disabled:opacity-50"
                               >
                                 {downloadingSessionId === session.sessionId ? '…' : 'CSV'}
                               </button>
@@ -128,7 +126,7 @@ export default function AdminSessionsPage() {
                                     : session.sessionId,
                                 )
                               }
-                              className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                              className="text-cyan hover:text-content text-xs font-medium"
                             >
                               {expandedSessionId === session.sessionId ? 'Hide' : 'Attendees'}
                             </button>
@@ -137,7 +135,7 @@ export default function AdminSessionsPage() {
                       </tr>
                       {expandedSessionId === session.sessionId && (
                         <tr>
-                          <td colSpan={6} className="px-4 py-3 bg-blue-50">
+                          <td colSpan={6} className="px-4 py-3 bg-status-info-bg">
                             <AttendeeList attendees={attendees ?? []} loading={loadingAttendees} />
                           </td>
                         </tr>
@@ -174,27 +172,27 @@ interface SessionStatusBadgeProps {
 function SessionStatusBadge({ session }: SessionStatusBadgeProps) {
   if (session.closedAt) {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-raised text-content-secondary">
         Closed
       </span>
     );
   }
   if (session.onchainStatus === 'CONFIRMED') {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-status-pos-bg text-status-pos">
         Active
       </span>
     );
   }
   if (session.onchainStatus === 'FAILED') {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-600">
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-status-neg-bg text-status-neg">
         Failed
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">
+    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-status-warn-bg text-status-warn">
       Pending
     </span>
   );
@@ -209,20 +207,20 @@ function AttendeeList({ attendees, loading }: AttendeeListProps) {
   if (loading) {
     return (
       <div className="flex justify-center py-3">
-        <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-green border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
   if (!attendees.length) {
-    return <p className="text-gray-500 text-xs text-center py-2">No check-ins yet.</p>;
+    return <p className="text-content-secondary text-xs text-center py-2">No check-ins yet.</p>;
   }
   return (
     <div className="space-y-1.5">
       {attendees.map((a) => (
         <div key={a.walletAddress} className="flex items-center justify-between text-xs">
-          <span className="font-mono text-gray-700 truncate">{a.walletAddress}</span>
+          <span className="font-mono text-content truncate">{a.walletAddress}</span>
           <div className="flex items-center gap-3 shrink-0 ml-4">
-            <span className="text-gray-500">{formatTime(a.checkedInAt)}</span>
+            <span className="text-content-secondary">{formatTime(a.checkedInAt)}</span>
             <MintStatusBadge status={a.mintStatus} />
           </div>
         </div>
@@ -234,20 +232,20 @@ function AttendeeList({ attendees, loading }: AttendeeListProps) {
 function MintStatusBadge({ status }: { status: Attendee['mintStatus'] }) {
   if (status === 'CONFIRMED') {
     return (
-      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-status-pos-bg text-status-pos">
         Minted
       </span>
     );
   }
   if (status === 'FAILED') {
     return (
-      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-600">
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-status-neg-bg text-status-neg">
         Failed
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-status-warn-bg text-status-warn">
       Minting
     </span>
   );

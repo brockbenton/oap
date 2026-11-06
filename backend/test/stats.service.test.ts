@@ -6,6 +6,7 @@ import {
   buildAdminOverview,
   RECENT_SESSION_WINDOW,
 } from '../src/services/stats.service';
+import { semesterFor } from '../src/lib/session';
 
 const ALICE = '0x1111111111111111111111111111111111111111';
 const DAVE = '0x4444444444444444444444444444444444444444';
@@ -13,6 +14,19 @@ const CAROL = '0x3333333333333333333333333333333333333333';
 const UNKNOWN = '0x0000000000000000000000000000000000000009';
 // Fixed "now" so rolling-window assertions don't depend on the wall clock.
 const NOW = Date.parse('2026-07-07T12:00:00Z');
+
+describe('semesterFor', () => {
+  it.each([
+    ['2026-01-01T00:00:00Z', 'Spring 2026'],
+    ['2026-07-31T23:59:59Z', 'Spring 2026'],
+    ['2026-08-01T00:00:00Z', 'Fall 2026'],
+    ['2026-11-05T12:00:00Z', 'Fall 2026'],
+    ['2026-12-31T23:59:59Z', 'Fall 2026'],
+    ['2027-01-01T00:00:00Z', 'Spring 2027'],
+  ])('%s is %s', (date, expected) => {
+    expect(semesterFor(new Date(date))).toBe(expected);
+  });
+});
 
 describe('buildPersonalStats', () => {
   it('alice: perfect attendance, founding, full streak', async () => {
@@ -130,7 +144,7 @@ describe('buildMemberStats', () => {
 
 describe('buildAdminOverview', () => {
   it('computes headcount, eligibility-based rate, and session-over-session delta', async () => {
-    const o = await buildAdminOverview();
+    const o = await buildAdminOverview(NOW);
     expect(o.totalSessions).toBe(16);
     expect(o.series).toHaveLength(16);
 
@@ -143,6 +157,8 @@ describe('buildAdminOverview', () => {
     expect(o.wow).not.toBeNull();
     expect(o.wow!.headcountDelta).toBe(-1); // 3 vs previous 4
     expect(o.currentSemester).toBe('Spring 2026');
+    // The date decides the semester, even before a fall meeting exists.
+    expect((await buildAdminOverview(Date.parse('2026-11-05T12:00:00Z'))).currentSemester).toBe('Fall 2026');
     // attendees are always eligible, so rate can never exceed 100%
     expect(o.series.every((p) => p.attendanceRate >= 0 && p.attendanceRate <= 100)).toBe(true);
   });

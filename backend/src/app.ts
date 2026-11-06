@@ -1,5 +1,5 @@
 // Patches Express 4 to forward async handler rejections to the error middleware
-// (Express 4 does not do this natively — see AUDIT.md). Must load before routers.
+// (Express 4 does not do this natively). Must load before routers.
 import 'express-async-errors';
 import express from 'express';
 import cors from 'cors';

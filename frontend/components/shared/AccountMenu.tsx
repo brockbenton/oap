@@ -2,12 +2,9 @@
 
 import type { ComponentType } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { usePrivy, getIdentityToken, useWallets } from '@privy-io/react-auth';
-import { useQuery } from '@tanstack/react-query';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import Link from 'next/link';
-import { getAdminMe } from '@/lib/api/admin';
-import { queryKeys } from '@/lib/api/queryKeys';
-import { retryUnlessForbidden } from '@/lib/api/client';
+import { useAdminMe } from '@/hooks/useAdminMe';
 import { useProfile } from '@/hooks/useProfile';
 import { shortenAddress } from '@/lib/address';
 import { Avatar, Button, CopyChip } from '@/components/ui';
@@ -39,14 +36,14 @@ interface MenuItem {
 
 const MENU_ITEMS: MenuItem[] = [
   { label: 'Profile', href: '/settings#profile', Icon: UserIcon },
-  { label: 'Wallet & keys', href: '/wallet', Icon: WalletIcon },
+  { label: 'Wallet & Keys', href: '/wallet', Icon: WalletIcon },
   { label: 'Settings', href: '/settings', Icon: GearIcon },
-  { label: 'Admin dashboard', href: '/admin', Icon: GridIcon, adminOnly: true },
+  { label: 'Admin Dashboard', href: '/admin', Icon: GridIcon, adminOnly: true },
 ];
 
 const MENU_ITEM_BASE =
   'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors';
-const MENU_ITEM_DEFAULT = 'text-ink hover:bg-card-filled';
+const MENU_ITEM_DEFAULT = 'text-content hover:bg-raised';
 const MENU_ITEM_DESTRUCTIVE = 'text-status-neg hover:bg-status-neg-bg';
 
 // Compact account control: a single avatar button that opens a dropdown, so the
@@ -69,18 +66,7 @@ export default function AccountMenu() {
     return () => document.removeEventListener('mousedown', onDocClick);
   }, []);
 
-  const { data: me } = useQuery({
-    queryKey: queryKeys.adminMe(user?.id),
-    queryFn: async () => {
-      const token = await getIdentityToken();
-      if (!token) throw new Error('Not authenticated');
-      return getAdminMe(token);
-    },
-    enabled: ready && authenticated,
-    retry: retryUnlessForbidden,
-    staleTime: 0,
-    gcTime: 0,
-  });
+  const { data: me } = useAdminMe();
 
   if (!ready) {
     return (
@@ -109,7 +95,7 @@ export default function AccountMenu() {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-1.5 rounded-full bg-card-filled py-[3px] pl-[3px] pr-1.5 transition hover:brightness-95"
+        className="flex items-center gap-1.5 transition-opacity hover:opacity-80"
       >
         <Avatar seed={avatarSeed} label={displayName} colorIndex={avatarColor} size={TRIGGER_AVATAR_SIZE} />
         <ChevronDown size={TRIGGER_CHEVRON_SIZE} className="text-content-secondary" />
@@ -118,13 +104,13 @@ export default function AccountMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-20 mt-2 w-[280px] overflow-hidden rounded-card border border-line bg-white shadow-elev-md"
+          className="absolute right-0 z-20 mt-2 w-[280px] overflow-hidden rounded-card border border-line bg-surface"
         >
           <div className="border-b border-line p-4">
             <div className="mb-3 flex items-center gap-3">
               <Avatar seed={avatarSeed} label={displayName} colorIndex={avatarColor} size={HEADER_AVATAR_SIZE} />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[15px] font-semibold text-ink">{displayName}</div>
+                <div className="truncate text-[15px] font-semibold text-content">{displayName}</div>
                 <div className="mt-[5px] font-mono text-xs font-medium text-content-secondary">
                   {CLUB_NAME}
                 </div>
