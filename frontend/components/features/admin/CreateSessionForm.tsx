@@ -20,7 +20,6 @@ function dayAtCurrentTime(day: string): string {
 export default function CreateSessionForm({ onSuccess }: CreateSessionFormProps) {
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
-  const [semester, setSemester] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
   const { mutate, isPending } = useMutation({
@@ -28,14 +27,13 @@ export default function CreateSessionForm({ onSuccess }: CreateSessionFormProps)
       const token = await requireIdentityToken();
       const sessionId = Date.now().toString();
       return createSession(
-        { sessionId, date: dayAtCurrentTime(date), name: name.trim(), semester: semester.trim() },
+        { sessionId, date: dayAtCurrentTime(date), name: name.trim() },
         token,
       );
     },
     onSuccess: () => {
       setName('');
       setDate('');
-      setSemester('');
       setErrorMessage('');
       onSuccess();
     },
@@ -50,7 +48,7 @@ export default function CreateSessionForm({ onSuccess }: CreateSessionFormProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !date || !semester.trim()) return;
+    if (!name.trim() || !date) return;
     setErrorMessage('');
     mutate();
   };
@@ -62,14 +60,14 @@ export default function CreateSessionForm({ onSuccess }: CreateSessionFormProps)
         onSubmit={handleSubmit}
         className="bg-surface border border-line rounded-xl p-6 space-y-4"
       >
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="block text-sm font-medium text-content">Meeting Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Spring Kickoff"
+              placeholder="e.g. Kickoff"
               className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green"
               required
             />
@@ -80,17 +78,6 @@ export default function CreateSessionForm({ onSuccess }: CreateSessionFormProps)
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green"
-              required
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-content">Semester</label>
-            <input
-              type="text"
-              value={semester}
-              onChange={(e) => setSemester(e.target.value)}
-              placeholder="e.g. Spring 2026"
               className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green"
               required
             />

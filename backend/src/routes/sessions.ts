@@ -7,7 +7,7 @@ import { generateQR } from '../services/qr.service';
 import { createSessionOnChain, closeSessionOnChain } from '../services/relay.service';
 import prisma from '../lib/prisma';
 import logger from '../lib/logger';
-import { findSessionOr404 } from '../lib/session';
+import { findSessionOr404, semesterFor } from '../lib/session';
 
 const router = Router();
 
@@ -15,7 +15,6 @@ const createSessionSchema = z.object({
   sessionId: z.string().regex(/^\d+$/, 'sessionId must be a numeric string'),
   date: z.string().datetime(),
   name: z.string().min(1).max(200),
-  semester: z.string().min(1).max(100),
 });
 
 // POST /api/v1/sessions — admin creates a new session (DB + on-chain)
@@ -25,7 +24,8 @@ router.post(
   adminMiddleware,
   validate(createSessionSchema),
   async (req: Request, res: Response): Promise<void> => {
-    const { sessionId, date, name, semester } = req.body as z.infer<typeof createSessionSchema>;
+    const { sessionId, date, name } = req.body as z.infer<typeof createSessionSchema>;
+    const semester = semesterFor(new Date(date));
     const adminWallet = req.user!.walletAddress;
 
     const existing = await prisma.session.findUnique({
