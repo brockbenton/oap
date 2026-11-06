@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { usePrivy } from '@privy-io/react-auth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import AdminPageHeader from '@/components/features/admin/AdminPageHeader';
 import { listAdminMembers, toggleFoundingMember, downloadMembersCSV } from '@/lib/api/admin';
 import { queryKeys } from '@/lib/api/queryKeys';
 import { requireIdentityToken, retryUnlessForbidden } from '@/lib/api/client';
@@ -40,27 +41,25 @@ export default function AdminMembersPage() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto w-full space-y-10">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-medium text-content">Members</h1>
-          {data?.currentSemester && (
-            <p className="text-sm text-content-secondary">
-              Current semester: {data.currentSemester} &middot; {data.totalSessions} session
-              {data.totalSessions !== 1 ? 's' : ''} total
-            </p>
-          )}
-        </div>
-        {data?.members.length ? (
-          <button
-            onClick={() => exportCSV()}
-            disabled={exporting}
-            className="text-sm text-cyan hover:text-content font-medium disabled:opacity-50"
-          >
-            {exporting ? 'Exporting…' : 'Export CSV'}
-          </button>
-        ) : null}
-      </div>
+    <div className="space-y-10">
+      <AdminPageHeader
+        title="Members"
+        caption={
+          data?.currentSemester &&
+          `Current semester: ${data.currentSemester} · ${data.totalSessions} session${data.totalSessions !== 1 ? 's' : ''} total`
+        }
+        action={
+          data?.members.length ? (
+            <button
+              onClick={() => exportCSV()}
+              disabled={exporting}
+              className="text-sm text-cyan hover:text-content font-medium disabled:opacity-50"
+            >
+              {exporting ? 'Exporting…' : 'Export CSV'}
+            </button>
+          ) : null
+        }
+      />
 
       <div>
         {isLoading ? (
@@ -74,8 +73,8 @@ export default function AdminMembersPage() {
         ) : !data?.members.length ? (
           <p className="text-content-secondary text-sm text-center py-16">No members yet.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border border-line rounded-xl overflow-hidden">
+          <div className="overflow-x-auto rounded-xl border border-line">
+            <table className="w-full text-sm">
               <thead className="bg-raised text-content-secondary text-left">
                 <tr>
                   <th className="px-4 py-3 font-medium">#</th>

@@ -14,8 +14,6 @@ export { default as IconButton } from './IconButton';
 export type { IconButtonProps } from './IconButton';
 export { default as Input } from './Input';
 export type { InputProps } from './Input';
-export { default as Textarea } from './Textarea';
-export type { TextareaProps } from './Textarea';
 export { default as CopyChip } from './CopyChip';
 export type { CopyChipProps } from './CopyChip';
 export { default as MonoNum } from './MonoNum';

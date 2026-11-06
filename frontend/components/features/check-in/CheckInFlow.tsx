@@ -12,7 +12,7 @@ import { ApiRequestError } from '@/lib/api/client';
 import { useEmbeddedAddress } from '@/hooks/useProfile';
 import { CheckInResponse, VaultToken } from '@/types';
 import { QrIcon, CheckIcon, ClockIcon, CloseIcon, type IconProps } from '@/components/ui/icons';
-import { TOKEN_COLORS, colorNameForTopic } from '@/lib/tokenArt';
+import { TOKEN_COLORS, colorNameForTopic, inkOn } from '@/lib/tokenArt';
 import { CLUB_NAME } from '@/lib/constants';
 
 // QrScanner accesses browser APIs — load client-side only
@@ -355,12 +355,12 @@ export default function CheckInFlow({ onRestart }: CheckInFlowProps) {
           <div className="mt-6 w-[214px] overflow-hidden rounded border border-line bg-surface">
             <div
               className="relative grid h-[150px] place-items-center overflow-hidden"
-              style={{ background: heroGradient }}
+              style={{ background: heroGradient, color: inkOn(heroGradient) }}
             >
-              <div className="absolute left-4 top-3.5 font-mono text-[15px] font-bold text-canvas">
+              <div className="absolute left-4 top-3.5 font-mono text-[15px] font-bold">
                 {shortLabel}
               </div>
-              <div className="font-mono text-5xl font-bold text-canvas">
+              <div className="font-mono text-5xl font-bold">
                 {editionLabel}
               </div>
             </div>

@@ -30,7 +30,7 @@ export default function AppProviders({ children }: AppProvidersProps) {
           supportedChains: [baseSepolia],
           appearance: {
             theme: 'dark',
-            accentColor: '#3DDC84',
+            accentColor: '#22D974',
           },
           embeddedWallets: {
             ethereum: {

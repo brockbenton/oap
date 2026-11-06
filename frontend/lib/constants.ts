@@ -11,8 +11,8 @@ export const CLUB_NAME = 'Blockchain Club';
 export const ATTENDANCE_GOOD_PCT = 75;
 export const ATTENDANCE_OK_PCT = 50;
 
-// Docs headings, shared by the landing index and the /docs page.
-export const DOC_SECTIONS = [
+// Docs rows on the landing page. Add `body` to fill a row's expanded text.
+export const DOC_SECTIONS: { id: string; title: string; body?: string }[] = [
   { id: 'what-is-a-dao', title: 'What is a DAO?' },
   { id: 'dao-vs-firm', title: 'When does a DAO make sense over a traditional firm?' },
   { id: 'ocp-structure', title: 'How does OCP design its DAO structure?' },

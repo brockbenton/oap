@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { usePrivy } from '@privy-io/react-auth';
 import { useQuery } from '@tanstack/react-query';
+import AdminPageHeader from '@/components/features/admin/AdminPageHeader';
 import { getAdminOverview } from '@/lib/api/admin';
 import { queryKeys } from '@/lib/api/queryKeys';
 import { AdminOverview, OverviewSessionPoint } from '@/types';
@@ -22,13 +23,11 @@ export default function AdminOverviewPage() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto w-full space-y-10">
-      <div>
-        <h1 className="text-2xl font-medium text-content">Overview</h1>
-        <p className="text-sm text-content-secondary">
-          {data?.currentSemester ? `Current semester: ${data.currentSemester}` : 'Club attendance at a glance'}
-        </p>
-      </div>
+    <div className="space-y-10">
+      <AdminPageHeader
+        title="Overview"
+        caption={data?.currentSemester ? `Current semester: ${data.currentSemester}` : 'Club attendance at a glance'}
+      />
 
       {isLoading ? (
         <OverviewSkeleton />

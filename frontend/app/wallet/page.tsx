@@ -15,7 +15,7 @@ import { shortenAddress } from '@/lib/address';
 import { BASESCAN_URL } from '@/lib/constants';
 import FullPageSpinner from '@/components/shared/FullPageSpinner';
 
-const PAGE_TITLE = 'Wallet & keys';
+const PAGE_TITLE = 'Wallet & Keys';
 
 const AVATAR_SIZE = 64;
 const EXTERNAL_LINK_ICON_SIZE = 14;
@@ -40,8 +40,6 @@ const CONNECTED_DESC = 'Link an external wallet to sign in and interact with it 
 const CONNECT_LABEL = 'Connect a wallet';
 const UNLINK_LABEL = 'Unlink';
 const CONNECTED_EMPTY = 'No external wallets connected.';
-const CONNECTED_CAPTION =
-  "Supports EVM wallets like MetaMask. Solana wallets (e.g. Phantom) aren't supported yet.";
 
 const EXTERNAL_LINK_CLASSES =
   'inline-flex items-center gap-1.5 text-sm font-medium text-content transition hover:text-content-secondary';
@@ -147,8 +145,6 @@ export default function WalletPage() {
                 <PlusIcon size={BUTTON_ICON_SIZE} />
                 {CONNECT_LABEL}
               </Button>
-
-              <p className="text-xs text-content-secondary">{CONNECTED_CAPTION}</p>
             </div>
           </Card>
         </div>

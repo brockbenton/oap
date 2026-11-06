@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import type { TokenColor } from '@/lib/tokenArt';
-import { TOKEN_COLORS, colorForTopic } from '@/lib/tokenArt';
+import { TOKEN_COLORS, colorForTopic, inkOn } from '@/lib/tokenArt';
 import { cn } from '@/lib/cn';
 import { BASESCAN_URL } from '@/lib/constants';
 import { Button, CopyChip, IconButton } from '@/components/ui';
@@ -62,7 +62,7 @@ const GRID_CLASSES = 'grid grid-cols-1 md:grid-cols-[320px_1fr]';
 const ART_CLASSES = 'relative grid min-h-[440px] place-items-center overflow-hidden';
 const EDITION_CLASSES = 'relative font-mono text-[72px] font-bold leading-none';
 const EDITION_FOOTER_CLASSES =
-  'absolute inset-x-0 bottom-[18px] text-center font-mono text-xs font-medium text-canvas';
+  'absolute inset-x-0 bottom-[18px] text-center font-mono text-xs font-medium';
 
 const META_CLASSES = 'relative px-7 pt-7 pb-[26px]';
 const CLOSE_CLASSES = 'absolute right-5 top-5 h-8 w-8 bg-raised text-content-secondary';
@@ -125,8 +125,8 @@ export default function TokenDetailModal({ open, onClose, token }: TokenDetailMo
         onClick={(event) => event.stopPropagation()}
       >
         <div className={GRID_CLASSES}>
-          <div className={ART_CLASSES} style={{ background: artBackground }}>
-            <div className="relative text-center text-canvas">
+          <div className={ART_CLASSES} style={{ background: artBackground, color: inkOn(artBackground) }}>
+            <div className="relative text-center">
               <div className={EDITION_CLASSES}>{`${EDITION_PREFIX}${token.editionNumber}`}</div>
             </div>
             <div className={EDITION_FOOTER_CLASSES}>

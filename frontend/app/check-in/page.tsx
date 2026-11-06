@@ -9,7 +9,7 @@ import Link from 'next/link';
 import CheckInFlow from '@/components/features/check-in/CheckInFlow';
 import { ArrowLeft } from '@/components/ui/icons';
 
-const PAGE_TITLE = 'Check in';
+const PAGE_TITLE = 'Check In';
 const BACK_HREF = '/';
 
 export default function CheckInPage() {

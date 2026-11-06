@@ -1,10 +1,8 @@
-import Link from 'next/link';
 import EnterButton from '@/components/features/marketing/EnterButton';
 import TokenFan from '@/components/features/marketing/TokenFan';
 import Brand from '@/components/shared/Brand';
 import Footer from '@/components/shared/Footer';
 import PageContainer from '@/components/shared/PageContainer';
-import { ArrowRight } from '@/components/ui/icons';
 import { APP_NAME, DOC_SECTIONS } from '@/lib/constants';
 
 export default function Landing() {
@@ -28,19 +26,26 @@ export default function Landing() {
         </PageContainer>
       </section>
 
-      <section>
-        <PageContainer className="pb-24 pt-8">
+      <section className="border-t border-line bg-surface">
+        <PageContainer className="py-16 md:py-24">
           <h2 className="mb-6 text-sm text-content-secondary">Docs</h2>
           <ul className="border-b border-line">
             {DOC_SECTIONS.map((section) => (
               <li key={section.id} className="border-t border-line">
-                <Link
-                  href={`/docs#${section.id}`}
-                  className="flex items-center justify-between gap-6 py-6 font-mono text-[18px] leading-7 transition-colors hover:text-green sm:text-2xl"
-                >
-                  {section.title}
-                  <ArrowRight size={18} className="shrink-0" />
-                </Link>
+                <details className="group">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-6 font-mono text-[18px] leading-7 transition-colors hover:text-green sm:text-2xl [&::-webkit-details-marker]:hidden">
+                    {section.title}
+                    <span
+                      aria-hidden="true"
+                      className="shrink-0 text-content-secondary transition-transform duration-200 group-open:rotate-45 group-open:text-green"
+                    >
+                      +
+                    </span>
+                  </summary>
+                  <p className="max-w-[60ch] animate-fade-in pb-6 text-sm leading-[22px] text-content-secondary">
+                    {section.body ?? 'Coming soon'}
+                  </p>
+                </details>
               </li>
             ))}
           </ul>

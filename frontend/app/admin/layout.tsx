@@ -83,7 +83,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <RoleSwitch active="admin" />
           </div>
         </header>
-        <main className="min-h-0 flex-1 overflow-auto p-6 md:p-12">{children}</main>
+        <main className="min-h-0 flex-1 overflow-auto p-6 md:p-12">
+          <div className="mx-auto w-full max-w-6xl">{children}</div>
+        </main>
       </div>
     </div>
   );

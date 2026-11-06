@@ -16,16 +16,10 @@ interface FooterColumn {
 
 const HOME_ROUTE = '/';
 const TAGLINE = 'Your club, onchain';
-const NETWORK_NOTE = 'Running on Base Sepolia · testnet';
+const NETWORK_NOTE = 'Running on Base';
 const COPYRIGHT = '© 2026 Onchain Club Protocol';
 
 const FOOTER_COLUMNS: FooterColumn[] = [
-  {
-    heading: 'Product',
-    links: [
-      { label: 'Docs', href: '/docs' },
-    ],
-  },
   {
     heading: 'Resources',
     links: [
@@ -47,7 +41,7 @@ export default function Footer() {
             <Brand href={HOME_ROUTE} />
             <p className="mt-3 text-sm text-content-secondary">{TAGLINE}</p>
           </div>
-          <div className="grid grid-cols-2 gap-10 sm:gap-16">
+          <div className="flex gap-10 sm:gap-16">
             {FOOTER_COLUMNS.map((column) => (
               <div key={column.heading}>
                 <div className={HEADING_CLASSES}>{column.heading}</div>

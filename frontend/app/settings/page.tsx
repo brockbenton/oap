@@ -7,7 +7,7 @@ import { usePrivy, useLinkAccount } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
 import MemberTopNav from '@/components/shared/MemberTopNav';
 import PageContainer from '@/components/shared/PageContainer';
-import { Avatar, Badge, Button, Input, Textarea } from '@/components/ui';
+import { Avatar, Badge, Button, Input } from '@/components/ui';
 import { CheckIcon, SignOutIcon } from '@/components/ui/icons';
 import { useProfile, useUpdateProfile, useEmbeddedAddress } from '@/hooks/useProfile';
 import { shortenAddress } from '@/lib/address';
@@ -19,19 +19,16 @@ import FullPageSpinner from '@/components/shared/FullPageSpinner';
 
 const USERNAME_REGEX = /^[a-z0-9_.-]{3,20}$/;
 const USERNAME_HINT = '3–20 characters: a–z, 0–9, and . _ -';
-const BIO_MAX_LENGTH = 160;
 const AVATAR_SIZE = 64;
 const COLOR_SWATCHES = Array.from({ length: AVATAR_COLOR_COUNT }, (_, i) => i);
 
 const SECTION_PROFILE = 'profile';
 const SECTION_LOGINS = 'logins';
-const SECTION_NOTIFICATIONS = 'notifications';
 const SECTION_ACCOUNT = 'account';
 
 const SECTION_NAV: ReadonlyArray<{ id: string; label: string }> = [
   { id: SECTION_PROFILE, label: 'Profile' },
   { id: SECTION_LOGINS, label: 'Logins' },
-  { id: SECTION_NOTIFICATIONS, label: 'Notifications' },
   { id: SECTION_ACCOUNT, label: 'Account' },
 ];
 
@@ -63,7 +60,6 @@ export default function SettingsPage() {
 
   const [username, setUsername] = useState('');
   const [avatarColor, setAvatarColor] = useState<number | null>(null);
-  const [bio, setBio] = useState('');
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
@@ -74,7 +70,6 @@ export default function SettingsPage() {
     if (profile && !initialized) {
       setUsername(profile.username ?? '');
       setAvatarColor(profile.avatarColor);
-      setBio(profile.bio ?? '');
       setInitialized(true);
     }
   }, [profile, initialized]);
@@ -88,7 +83,6 @@ export default function SettingsPage() {
   const patch: ProfilePatch = {};
   if (username && username !== (profile?.username ?? '')) patch.username = username;
   if (avatarColor !== (profile?.avatarColor ?? null)) patch.avatarColor = avatarColor;
-  if ((bio || null) !== (profile?.bio ?? null)) patch.bio = bio || null;
   const dirty = Object.keys(patch).length > 0;
 
   const usernameTaken =
@@ -186,19 +180,6 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <label className="block">
-                  <span className="mb-1.5 block text-[13px] font-semibold">Bio</span>
-                  <Textarea
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    placeholder="A little about you…"
-                    maxLength={BIO_MAX_LENGTH}
-                  />
-                  <span className="mt-1.5 block text-right text-xs text-content-secondary tabular-nums">
-                    {bio.length}/{BIO_MAX_LENGTH}
-                  </span>
-                </label>
-
                 <div className="flex items-center gap-3">
                   <Button
                     variant="primary"
@@ -220,7 +201,6 @@ export default function SettingsPage() {
             </section>
 
             <LoginsSection />
-            <NotificationsSection />
             <AccountSection />
           </div>
         </div>
@@ -323,46 +303,6 @@ function LoginsSection() {
   );
 }
 
-function NotificationsSection() {
-  const { data: profile } = useProfile();
-  const updateNotify = useUpdateProfile();
-
-  const savedNotify = profile?.notifyEmail ?? false;
-  const pendingNotify = updateNotify.isPending ? updateNotify.variables?.notifyEmail : undefined;
-  const checked = pendingNotify ?? savedNotify;
-
-  const toggle = () => {
-    if (updateNotify.isPending) return;
-    updateNotify.mutate({ notifyEmail: !checked });
-  };
-
-  return (
-    <section id={SECTION_NOTIFICATIONS} className={SECTION_CARD}>
-      <h2 className={SECTION_HEADING}>Notifications</h2>
-      <p className={SECTION_CAPTION}>Choose what lands in your inbox</p>
-
-      <div className="mt-5 flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="text-sm font-semibold">Email me attendance summaries</div>
-          <p className="mt-1 text-xs text-content-secondary">
-            We&apos;ll only use this once notifications ship. No emails are sent yet.
-          </p>
-        </div>
-        <ToggleSwitch
-          checked={checked}
-          disabled={updateNotify.isPending}
-          onChange={toggle}
-          label="Email me attendance summaries"
-        />
-      </div>
-
-      {updateNotify.isError && (
-        <p className="mt-3 text-xs text-status-neg">Couldn&apos;t update your preference. Please try again.</p>
-      )}
-    </section>
-  );
-}
-
 function AccountSection() {
   const { logout } = usePrivy();
 
@@ -376,45 +316,6 @@ function AccountSection() {
           <SignOutIcon size={16} /> Sign out
         </Button>
       </div>
-
-      <div className="mt-6 rounded-md border border-line bg-raised p-4">
-        <div className="text-[13px] font-semibold text-status-neg">Danger zone</div>
-        <p className="mt-1 text-xs text-content-secondary">
-          Disconnecting or deleting your account isn&apos;t available yet. When it ships it&apos;ll permanently
-          remove your profile and unlink your logins.
-        </p>
-      </div>
     </section>
-  );
-}
-
-interface ToggleSwitchProps {
-  checked: boolean;
-  disabled?: boolean;
-  onChange: () => void;
-  label: string;
-}
-
-function ToggleSwitch({ checked, disabled, onChange, label }: ToggleSwitchProps) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      disabled={disabled}
-      onClick={onChange}
-      className={cn(
-        'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50',
-        checked ? 'bg-raised' : 'bg-line',
-      )}
-    >
-      <span
-        className={cn(
-          'inline-block h-5 w-5 rounded-full bg-surface transition-transform',
-          checked ? 'translate-x-[1.375rem]' : 'translate-x-0.5',
-        )}
-      />
-    </button>
   );
 }

@@ -49,11 +49,16 @@ const config: Config = {
       fontWeight: { bold: '600' },
       keyframes: {
         fadeInUp: { from: { opacity:'0', transform:'translateY(6px)' }, to: { opacity:'1', transform:'none' } },
-        fanDrift: { from: { transform:'rotateX(8deg) rotateY(-14deg)' }, to: { transform:'rotateX(8deg) rotateY(-4deg)' } },
+        fanDrift: { from: { transform:'rotateX(16deg) rotateY(-32deg)' }, to: { transform:'rotateX(4deg) rotateY(14deg)' } },
+        fanBreathe: {
+          from: { transform:'translateZ(var(--fan-z)) rotate(calc(var(--fan-a) * 0.7))' },
+          to: { transform:'translateZ(calc(var(--fan-z) * 1.7)) rotate(calc(var(--fan-a) * 1.1))' },
+        },
       },
       animation: {
         'fade-in': 'fadeInUp 0.4s ease-out both',
-        'fan-drift': 'fanDrift 16s ease-in-out infinite alternate',
+        'fan-drift': 'fanDrift 9s ease-in-out infinite alternate',
+        'fan-breathe': 'fanBreathe 5s ease-in-out infinite alternate',
       },
     },
   },

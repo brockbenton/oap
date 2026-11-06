@@ -6,18 +6,18 @@
 :root {
   color-scheme: dark;
 
-  --canvas: 0 0 0;
-  --surface: 18 18 18;
-  --raised: 30 30 30;
-  --line: 42 42 42;
-  --line-strong: 72 72 72;
+  --canvas: 14 15 17;
+  --surface: 22 23 26;
+  --raised: 32 34 38;
+  --line: 46 48 53;
+  --line-strong: 78 81 87;
 
   --content: 245 245 243;
   --content-secondary: 180 180 178;
   --content-muted: 142 142 140;
 
-  --green: 61 220 132;
-  --green-dim: 47 191 111;
+  --green: 34 217 116;
+  --green-dim: 28 186 99;
   --amber: 245 184 75;
   --red: 255 107 107;
   --cyan: 124 199 255;
@@ -47,7 +47,8 @@
     font-weight: 400;
   }
 
-  :focus-visible {
+  /* Interactive elements only, and not Privy's modal, which focuses its own panels. */
+  :where(a, button, input, select, textarea, summary):focus-visible:not(#privy-dialog *) {
     outline: 1px solid rgb(var(--green));
     outline-offset: 2px;
   }

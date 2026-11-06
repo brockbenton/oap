@@ -36,9 +36,9 @@ interface MenuItem {
 
 const MENU_ITEMS: MenuItem[] = [
   { label: 'Profile', href: '/settings#profile', Icon: UserIcon },
-  { label: 'Wallet & keys', href: '/wallet', Icon: WalletIcon },
+  { label: 'Wallet & Keys', href: '/wallet', Icon: WalletIcon },
   { label: 'Settings', href: '/settings', Icon: GearIcon },
-  { label: 'Admin dashboard', href: '/admin', Icon: GridIcon, adminOnly: true },
+  { label: 'Admin Dashboard', href: '/admin', Icon: GridIcon, adminOnly: true },
 ];
 
 const MENU_ITEM_BASE =

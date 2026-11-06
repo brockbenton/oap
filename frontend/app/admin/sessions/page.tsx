@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { Fragment, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import AdminPageHeader from '@/components/features/admin/AdminPageHeader';
 import Link from 'next/link';
 import { listAdminSessions, getSessionAttendees, downloadSessionCSV } from '@/lib/api/admin';
 
@@ -52,8 +53,8 @@ export default function AdminSessionsPage() {
   });
 
   return (
-    <div className="max-w-5xl mx-auto w-full space-y-10">
-      <h1 className="text-2xl font-medium text-content">Sessions</h1>
+    <div className="space-y-10">
+      <AdminPageHeader title="Sessions" caption="Create meetings and see who checked in" />
 
       <CreateSessionForm
         onSuccess={() => queryClient.invalidateQueries({ queryKey: queryKeys.adminSessions() })}
@@ -73,7 +74,7 @@ export default function AdminSessionsPage() {
           ) : !sessions?.length ? (
             <p className="text-content-secondary text-sm text-center py-12">No sessions yet.</p>
           ) : (
-            <div className="border border-line rounded-xl overflow-hidden">
+            <div className="overflow-x-auto rounded-xl border border-line">
               <table className="w-full text-sm">
                 <thead className="bg-raised text-content-secondary text-left">
                   <tr>
