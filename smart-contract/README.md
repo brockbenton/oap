@@ -8,4 +8,4 @@ forge test
 forge fmt
 ```
 
-Deployment steps are in [`.claude/commands/deploy.md`](../.claude/commands/deploy.md).
+Deployment steps are in [`DEPLOY.md`](DEPLOY.md).
